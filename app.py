@@ -50,6 +50,7 @@ def show_users():
         return 'No users found'
     return '<br>'.join([f'Id {id}, Username: {username}, Email: {email}, Pass: {password}' for id, username, email, password in arr])
 
+
 #Adding users
 @app.route('/add_user',methods=['GET', 'POST'])
 def add_user_route():
@@ -59,13 +60,17 @@ def add_user_route():
         password = request.form.get('password')
 
         # Call your add_user function from setup_db
-        adduser_glob(username, email, password)
+        success = adduser_glob(username, email, password)
+        if not success:
+            return "Email already exists"
+
 
         # After adding user, redirect to home or another page
-        return redirect(url_for('show_users'))
+        return render_template('signup_success.html', username=username)
+        #return redirect(url_for('show_users'))
 
     # If GET request, just render the base template with form
-    return render_template('base.html')
+    return render_template('signup.html')
 
 
 

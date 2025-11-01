@@ -59,7 +59,7 @@
 
 
 
-### Day 3: Signup page and (db + form integration)
+### Day 3: Database Integration and User Registration
     + Created two additional files - models.py and setup_db.py
     + in the app.py file, instance file created, db connected/configured and database was created (using create_all() function)
     + First only created teh setup_db.py file, which would define a db variable using SQLAlchemy and defines a class named User (defines the structure of db) and the CRUD help functions
@@ -72,7 +72,27 @@
         work flow is like: base page or /add_user page -> add_user fn (in setup_db.py) 
                         -> (user added) and show_users page load -> showing all the users and detsails in db
     
-    + Needs modification ------------
+    + Added .gitignore file
+    + Add viewing for the database (added the 'sqlite' extension)
+    + now can query on the db using the 'sqlite3 instance/database.db' command on `cmd`
+
+    +The pages are more arranged now.
+    + Now have the pages:
+        - base (main)
+        - about & - contact
+        - signup (has the signup form)
+        - signup_success (once signup done, show a success msg)
+        - /show_users (not page, but for testing purpose)
+
+    ------ New modification ------
+    + Added password hashing
+    + email uniqueness validation.
+
+
+    🧩 Next steps:
+    - Start structuring routes into modules (e.g., Blueprints).
+    - Learn basic query operations (read, update, delete).
+
     
 
 

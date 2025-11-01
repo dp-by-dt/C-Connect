@@ -7,21 +7,21 @@
     <title>C-Connect</title>
 </head>
 <body>
-    <h1>This would be a heading</h1>
+    <h1>C-Connect: Social Network</h1>
     <nav>
+        <a href="{{url_for('base')}}">Home</a>
         <a href="{{url_for('about')}}">About</a>
         <a href="{{url_for('contact')}}">Contact</a>
-        <button onclick="window.location.href='{{url_for('about')}}'">About_button</button>
+        <!-- <button onclick="window.location.href='{{url_for('about')}}'">About_button</button>  -->
     </nav>
-    
-    <!--form for adding users -->
-    <form action="{{ url_for('add_user_route') }}" method="post">
-        <input type="text" name="username" placeholder="Enter username" required>
-        <input type="email" name="email" placeholder="Enter email" required>
-        <input type="password" name="password" placeholder="Enter password" required>
-        <button type="submit">Add User</button>
-    </form>
+
     {% block body %}
+        <!-- Space for the child elements
+         It will override this body section -->
+    <p>This is the main base page</p>
+
+    <button onclick="window.location.href='{{url_for('add_user_route')}}'">SignUp</button>
+
     {% endblock %}
 </body>
 </html>
