@@ -1,6 +1,7 @@
 from . import auth
-from flask import render_template,  request
+from flask import render_template,  request, flash, redirect, url_for
 from setup_db import add_user as adduser_glob
+
 
 #Adding users
 @auth.route('/add_user',methods=['GET', 'POST'])
@@ -13,11 +14,14 @@ def add_user_route():
         # Call your add_user function from setup_db
         success = adduser_glob(username, email, password)
         if not success:
-            return "Email already exists"
-
+            flash("Email already exists", "error")
+            return redirect(url_for('auth.add_user_route'))
 
         # After adding user, redirect to home or another page
-        return render_template('auth/signup_success.html', username=username)
+        return redirect(url_for('auth.signup_success',username=username))
+    
+        # return render_template('auth/signup_success.html', username=username)
+
         #return redirect(url_for('show_users'))
 
     # If GET request, just render the base template with form
@@ -25,4 +29,8 @@ def add_user_route():
 
 @auth.route('/signup_success')
 def signup_success():
-    return render_template('/auth/signup_success.html')
+    return render_template('/auth/signup_success.html', username=request.args.get('username'))
+
+
+
+

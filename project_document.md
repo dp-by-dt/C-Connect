@@ -88,10 +88,76 @@
     + Added password hashing
     + email uniqueness validation.
 
+    + Implemented  BLUEPRINT structuring
+        - It helps to arrange different features of the project in different blueprint folders
+        - You can create independent and individual templates and other resources for each blueprint folder. Also there is seperate routes.py file for each
+        - Only have to register these blueprints in the main app.py file
+    
+    Blueprint folder structure (sample):
+    C-Connect/
+        │
+        ├── app.py                      # Main Flask app entry point (or factory function)
+        ├── models.py                   # Central place for your database models
+        ├── setup_db.py                 # Database setup and initialization
+        ├── requirements.txt            # Python dependencies
+        │
+        ├── blueprints/                 # Containing all blueprints (modular app components)
+        │   │
+        │   ├── auth/                   # Authentication related routes & logic
+        │   │   ├── __init__.py         # Blueprint setup
+        │   │   ├── routes.py           # Route handlers (e.g., signup, login)
+        │   │   ├── templates/          # Templates specific to auth feature
+        │   │   │   └── auth/           # Namespace to avoid template name collisions
+        │   │   │       ├── signup.html
+        │   │   │       ├── login.html
+        │   │   │       └── signup_success.html
+        │   │   └── static/             # Static files for auth feature (if any)
+        │   │
+        │   ├── main/                   # Main/general pages like home, about, contact
+        │   │   ├── __init__.py
+        │   │   ├── routes.py           # Handlers for home, about, contact routes
+        │   │   ├── templates/
+        │   │   │   └── main/
+        │   │   │       ├── base.html
+        │   │   │       ├── about.html
+        │   │   │       └── contact.html
+        │   │   └── static/             # Static files for main blueprint (e.g., CSS)
+        │   │
+        │   ├── profile/                # User profile management section
+        │   │   ├── __init__.py
+        │   │   ├── routes.py           # Profile related routes
+        │   │   ├── templates/
+        │   │   │   └── profile/
+        │   │   │       ├── profile_view.html
+        │   │   │       └── edit_profile.html
+        │   │   └── static/
+        │   │
+        │   ├── blog/                   # Blog or post related functionality
+        │   │   ├── __init__.py
+        │   │   ├── routes.py
+        │   │   ├── templates/
+        │   │   │   └── blog/
+        │   │   │       ├── create_post.html
+        │   │   │       ├── view_post.html
+        │   │   │       └── edit_post.html
+        │   │   └── static/
+        │   │
+        │   └── admin/                  # Admin panel related features
+        │       ├── __init__.py
+        │       ├── routes.py
+        │       ├── templates/
+        │       │   └── admin/
+        │       │       ├── dashboard.html
+        │       │       └── user_management.html
+        │       └── static/
+        │
+        ├── static/                     # General static files (site-wide stylesheets, images)
+        │   └── style.css
+        │
+        └── instance/                   # Instance folder for runtime files and db
+            └── database.db
 
-    🧩 Next steps:
-    - Start structuring routes into modules (e.g., Blueprints).
-    - Learn basic query operations (read, update, delete).
+
 
     
 

@@ -1,17 +1,10 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block body %}
-
-<h5>SIGNUP</h5>
-
-    <div>
-    <!--form for adding users -->
-    <form action="{{ url_for('auth.add_user_route') }}" method="post">
-        <input type="text" name="username" placeholder="Enter username" required>
-        <input type="email" name="email" placeholder="Enter email" required>
-        <input type="password" name="password" placeholder="Enter password" required>
-        <button type="submit">Add User</button>
-    </form>
-    </div>
-
+<h2>Sign Up</h2>
+<form method="POST">
+  <input type="text" name="username" placeholder="Username" required><br>
+  <input type="email" name="email" placeholder="Email" required><br>
+  <input type="password" name="password" placeholder="Password" required><br>
+  <input type="submit" value="Sign Up">
+</form>
 {% endblock %}

@@ -11,8 +11,7 @@ def create_app():
     app = Flask(__name__)
 
     #configure the Database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+ os.path.join(app.instance_path, 'database.db') #connects sqlite to that .db file in instance folder
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #avoid unwanted change tracking
+    app.config.from_object('config.Config')
 
     db.init_app(app) # Binding db to the flask app 
 
