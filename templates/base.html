@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/style.css">
     <title>C-Connect</title>
 </head>
 <body>
@@ -13,6 +13,14 @@
         <a href="{{url_for('contact')}}">Contact</a>
         <button onclick="window.location.href='{{url_for('about')}}'">About_button</button>
     </nav>
+    
+    <!--form for adding users -->
+    <form action="{{ url_for('add_user_route') }}" method="post">
+        <input type="text" name="username" placeholder="Enter username" required>
+        <input type="email" name="email" placeholder="Enter email" required>
+        <input type="password" name="password" placeholder="Enter password" required>
+        <button type="submit">Add User</button>
+    </form>
     {% block body %}
     {% endblock %}
 </body>

@@ -59,9 +59,23 @@
 
 
 
+### Day 3: Signup page and (db + form integration)
+    + Created two additional files - models.py and setup_db.py
+    + in the app.py file, instance file created, db connected/configured and database was created (using create_all() function)
+    + First only created teh setup_db.py file, which would define a db variable using SQLAlchemy and defines a class named User (defines the structure of db) and the CRUD help functions
+    + But this introduced a cycle of calls between the two files giving error
+    + So created an additional file named models.py which would define db and database structure
+    + These were imported to the setup_db file and it's CRUD function was imported to the app.py file
+
+    + It created instances folder, in which is database.db file (that is the actual db)
+    + There is a form in the html, when filled with details, you can register new users
+        work flow is like: base page or /add_user page -> add_user fn (in setup_db.py) 
+                        -> (user added) and show_users page load -> showing all the users and detsails in db
+    
+    + Needs modification ------------
     
 
-| Day 2     | Flask Project Skeleton | Set up app.py, /templates, /static, and verify Hello World works |
+
 | Day 3     | Database & Models   | Add User model, initialize database.db, verify via sqlitebrowser  |
 | Day 4     | Signup Page        | Create form, hash password, insert user in DB                    |
 | Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |
