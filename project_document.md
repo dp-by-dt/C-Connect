@@ -185,7 +185,10 @@
         │       └── style.css
         ----------------
 
-    + 
+    + It can use db now. The flow is as follows:
+        - The login.html page has form -> When data is entered it loads the database values as a dictionary -> Check there if the user exist (else error msg) and if yes, check if the password math -> If matches, redirects to profile dashboard and passes the username for the greeting (If any error occurs, it would give a flash error message)
+    + Hashed password check is not implemented. But the flow works.
+    + need to make it more secure too, and also do with best practices for the flow
 
 
 
