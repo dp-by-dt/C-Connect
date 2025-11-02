@@ -9,6 +9,7 @@ from models import User  # Importing User model for querying
 #registering blueprints
 def create_app():
     app = Flask(__name__)
+    app.secret_key = 'supersecret123key' # later replace with os.urandom(24)
 
     #configure the Database
     app.config.from_object('config.Config')

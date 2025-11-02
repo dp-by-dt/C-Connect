@@ -205,7 +205,18 @@
 
 
 
-### Day 5: 
+### Day 5: Secure Authentication & User Session Management
+
+    + Added the password hashing and checking it
+    + Added 'secret_key' too. It is in app.py file and also in config.py
+    + deleted old db and created new db with all the passwords hashed
+    + Modified the old sqlite3 db handling with new SQLAlchemy method
+    + removed unwanted session data and clearing, and use user_id to verify logging status
+
+    + still one can be logged in after refresh or gone back and forth
+
+
+    
 
                   |
 | Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |

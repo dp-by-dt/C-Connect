@@ -1,8 +1,8 @@
 from . import auth
 from flask import render_template,  request, flash, redirect, url_for, session, current_app
 from setup_db import add_user as adduser_glob
-import sqlite3
-import os
+from models import User
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 
@@ -14,9 +14,9 @@ def add_user_route():
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
-        password = request.form.get('password')
+        password = request.form.get('password') #hashing done in 'setup_db.py'
 
-        # Call your add_user function from setup_db
+        # Call your add_user function from setup_db (hashing is in here)
         success = adduser_glob(username, email, password)
         if not success:
             flash("Email already exists", "error")
@@ -43,60 +43,29 @@ def signup_success():
 @auth.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()#use sqlalchemy to get user by username
 
-        #check for empty inputs
-        if not username or not password:
-            flash("Please enter both username and password", "error")
-            return redirect(url_for('auth.login'))
-
-
-        #path of the db file dynamically
-        db_path = os.path.join(current_app.instance_path, 'database.db')
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row  # allows access like a dictionary
-        cursor = conn.cursor()
-
-        #sql query on db
-        cursor.execute('SELECT * FROM user WHERE username = ?', (username,))
-        user = cursor.fetchone() #fetch only one matching
-        conn.close()
-
-        # Check if user exists
-        if not user:
-            flash("Username doesn't exist", "error")
-            session.pop('username', None)
-            session.pop('loggedin', None)
-            session.pop('id', None)
-
-            return redirect(url_for('auth.login'))
-        
-        elif user['password'] == password: #successful login
-            session['username'] = username
-            session['loggedin'] = True
-            session['id'] = user['id']
-            flash("Login successful!", "success")
-            return redirect(url_for('auth.dashboard',username=username))
-        
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id # Storing user id in session for session management
+            session['username'] = user.username
+            flash('Login successful!', 'success')
+            return redirect(url_for('auth.dashboard'))
         else:
-            session.pop('username', None)
-            session.pop('loggedin', None)
-            session.pop('id', None)
-
-            flash("Invalid Username/Password", "error")
+            flash('Invalid username or password', 'error')
             return redirect(url_for('auth.login'))
-        
-    return render_template('/auth/login.html')
+
+    return render_template('auth/login.html')
+
 
 
 
 @auth.route('/dashboard',methods=['GET','POST'])
 def dashboard():
     username = session.get('username')
-    login_state = session.get('loggedin', False) #avoid crash if key missing
 
-    if not login_state: #not logged in
+    if 'user_id' not in session: #not logged in
         flash("Please log in first", "error")
         return redirect(url_for('auth.login'))
     return render_template('/auth/dashboard.html', username=username)
