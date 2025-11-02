@@ -32,5 +32,19 @@ def signup_success():
     return render_template('/auth/signup_success.html', username=request.args.get('username'))
 
 
+@auth.route('/login',methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        print(username,password)
+        return 'Welcome'
+    else:
+        return render_template('/auth/login.html')
+        #return redirect(url_for('auth.login'))
+    return render_template('auth/login.html')
+
+
+
 
 
