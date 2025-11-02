@@ -1,9 +1,8 @@
 from . import auth
-from flask import render_template,  request, flash, redirect, url_for
+from flask import render_template,  request, flash, redirect, url_for, session, current_app
 from setup_db import add_user as adduser_glob
 import sqlite3
 import os
-from flask import current_app
 
 
 
@@ -67,11 +66,24 @@ def login():
         # Check if user exists
         if not user:
             flash("Username doesn't exist", "error")
+            session.pop('username', None)
+            session.pop('loggedin', None)
+            session.pop('id', None)
+
             return redirect(url_for('auth.login'))
+        
         elif user['password'] == password: #successful login
+            session['username'] = username
+            session['loggedin'] = True
+            session['id'] = user['id']
             flash("Login successful!", "success")
             return redirect(url_for('auth.dashboard',username=username))
+        
         else:
+            session.pop('username', None)
+            session.pop('loggedin', None)
+            session.pop('id', None)
+
             flash("Invalid Username/Password", "error")
             return redirect(url_for('auth.login'))
         
@@ -81,5 +93,18 @@ def login():
 
 @auth.route('/dashboard',methods=['GET','POST'])
 def dashboard():
-    username = request.args.get('username')
-    return render_template('/auth/dashboard.html',username=username)
+    username = session.get('username')
+    login_state = session.get('loggedin', False) #avoid crash if key missing
+
+    if not login_state: #not logged in
+        flash("Please log in first", "error")
+        return redirect(url_for('auth.login'))
+    return render_template('/auth/dashboard.html', username=username)
+
+
+@auth.route('/logout')
+def logout():
+    session.clear()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('auth.login'))
+

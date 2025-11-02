@@ -4,5 +4,6 @@
 {% block body %}
 <p>Hello {{ username }}! Welcome to C-Connect!</p>
 <p>This is your profile</p>
+<button onclick="window.location.href='{{url_for('auth.logout')}}'">Logout</button>
 
 {% endblock %}

@@ -190,9 +190,24 @@
     + Hashed password check is not implemented. But the flow works.
     + need to make it more secure too, and also do with best practices for the flow
 
+    + added a logout button, also a will clean the session if the session state is not logged in
 
 
-| Day 4     | Signup Page        | Create form, hash password, insert user in DB                    |
+
+    + Enhanced the Flask app by adding user interactivity through form handling.
+    + Implemented `login`, `dashboard`, and `logout` routes under the `auth` blueprint.
+    + Connected login functionality with the database for credential validation.
+    + Learned about Flask `POST` methods, blueprints, and route redirection.
+    + Created separate templates for login and dashboard pages.
+    + Gained conceptual understanding of user sessions and authentication flow.
+    + Next steps: implement password hashing, session-based login persistence, and access control.
+
+
+
+
+### Day 5: 
+
+                  |
 | Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |
 | Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |
 | Day 7     | Polish + Push + Docs | CSS cleanup, error messages, commit + push + write README.md summary |
