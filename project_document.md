@@ -160,9 +160,35 @@
 
 
     
+### Day 4: Making Login Page & Interactive
+    + Added the login page and dashboard page
+    + Now it would, when given a username and passowrd, loads the dashboard of the user (primitive page)
+    + But doesn't user the db yet
+
+    + ------- Learned about: -------------
+        - POST and GET: these would modify db or take db data (respectively)
+        - difference between: `request.args.get()` and `request.form.get()`
+          First one takes data from the url. Only small data strings, not secure
+          Takes data submitted to a html form. More complex data types possible, more secure
+        - Learned the flow of working and requests too
+    
+
+    + Changed the strucre of css file from:
+        ------------
+        ├── static/                     
+        │   └── style.css
+        ------------
+    to the following:
+        -------------
+        ├── static/ 
+        |   └── css/                    # seems more best practice / conventional way
+        │       └── style.css
+        ----------------
+
+    + 
 
 
-| Day 3     | Database & Models   | Add User model, initialize database.db, verify via sqlitebrowser  |
+
 | Day 4     | Signup Page        | Create form, hash password, insert user in DB                    |
 | Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |
 | Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |

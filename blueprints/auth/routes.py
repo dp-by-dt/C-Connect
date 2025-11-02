@@ -37,8 +37,8 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        print(username,password)
-        return 'Welcome'
+        print(username,password,'------------------------------------------')
+        return redirect(url_for('auth.dashboard',username=username))
     else:
         return render_template('/auth/login.html')
         #return redirect(url_for('auth.login'))
@@ -46,5 +46,9 @@ def login():
 
 
 
-
-
+@auth.route('/dashboard',methods=['GET','POST'])
+def dashboard():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        return render_template('/auth/dashboard.html',username=username)
+    return "Nothing came"
