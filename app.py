@@ -1,5 +1,6 @@
 from flask import Flask, url_for, render_template, request, redirect
 import os
+from flask_login import LoginManager
 
 from models import db  # Just the db object
 from setup_db import add_user as adduser_glob
@@ -10,6 +11,15 @@ from models import User  # Importing User model for querying
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'supersecret123key' # later replace with os.urandom(24)
+
+    #registering loginManager for flask-login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    #loading user
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     #configure the Database
     app.config.from_object('config.Config')

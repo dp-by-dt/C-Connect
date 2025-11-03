@@ -3,6 +3,7 @@ from flask import render_template,  request, flash, redirect, url_for, session, 
 from setup_db import add_user as adduser_glob
 from models import User
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, logout_user, login_required, current_user
 
 
 
@@ -48,8 +49,7 @@ def login():
         user = User.query.filter_by(username=username).first()#use sqlalchemy to get user by username
 
         if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id # Storing user id in session for session management
-            session['username'] = user.username
+            login_user(user)  # Log the user in
             flash('Login successful!', 'success')
             return redirect(url_for('auth.dashboard'))
         else:
@@ -61,19 +61,18 @@ def login():
 
 
 
-@auth.route('/dashboard',methods=['GET','POST'])
+@auth.route('/dashboard')
+@login_required  # this decorator restricts access to logged-in users only
 def dashboard():
-    username = session.get('username')
+    # current_user is the loaded User model object for logged in user
+    return render_template('auth/dashboard.html', username=current_user.username)
 
-    if 'user_id' not in session: #not logged in
-        flash("Please log in first", "error")
-        return redirect(url_for('auth.login'))
-    return render_template('/auth/dashboard.html', username=username)
 
 
 @auth.route('/logout')
+@login_required #same as before
 def logout():
-    session.clear()
+    logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for('auth.login'))
 
