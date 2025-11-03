@@ -215,8 +215,34 @@
 
     + still one can be logged in after refresh or gone back and forth
 
+    + Updated the login mechanism to Flask-Login (which would handle the session cookies automatically, instead of defining manual logic with session mechanism)
+    + Still testing is pending to see upto which extend would this work as intended. 
+    + Now in the dev tools, once i delete the session cookies and refresh the page, the user is not logged in. 
+    + And after logging out from the session would take you out of the profile/dashboard page to the login page, and refresh won't change anything. But one can go back to the logged in page even after that by pressing back. But if refreshed after getting in,the user is indeed out of the dashboard.
+    + Later need to look on this further to make it more secure and implement best practices if required. 
 
+    + (The flask-login was implemented by replacing the session mechanism)
+    Need to make the secure_key more secure. It seems like there are two secure_keys defined in two different files. (Need to look on that more)
+    + Also right now using flash() for messages
+
+    ---- Update -----
+    + Found the duplicate secret_key. One was in `app.py` and another in config.py
+      Deleted the one in `app.py` and in that file, put `app.config....` command right after Flask app declaration. 
+    + Added the following segment:
+        `    @app.after_request
+             def add_header(response):......`
+        This prevents keeping cache after logged out. So no going back in the browser after loggin out allowed. It is applied to only selected sensitive pages only (but list can be extended)
     
+    + Added a common system to show the flash msgs (in the base.html). Need to style it later with css
+
+    ---------------------
+    + In future need to set the login credential to email, instead of username (more conventional)
+    + While signing up: validate:
+        Non-empty username/email
+        Email format (lightweight check)
+        Password minimum length
+    
+
 
                   |
 | Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |

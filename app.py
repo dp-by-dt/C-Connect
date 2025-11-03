@@ -1,6 +1,6 @@
-from flask import Flask, url_for, render_template, request, redirect
+from flask import Flask, url_for, render_template, request, redirect, make_response
 import os
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 
 from models import db  # Just the db object
 from setup_db import add_user as adduser_glob
@@ -10,19 +10,36 @@ from models import User  # Importing User model for querying
 #registering blueprints
 def create_app():
     app = Flask(__name__)
-    app.secret_key = 'supersecret123key' # later replace with os.urandom(24)
+
+    
+    #configure the Database
+    app.config.from_object('config.Config')
 
     #registering loginManager for flask-login
     login_manager = LoginManager()
     login_manager.init_app(app)
 
+    #Flask-Login will redirect unauthorized users to the right login route
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message_category = 'info'   # optional
+
+
     #loading user
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    #not storing unwanted cache for sensitive pages
+    @app.after_request
+    def add_header(response):
 
-    #configure the Database
-    app.config.from_object('config.Config')
+        #maintains no-cache only for auth blueprint pages when user is logged in
+        if current_user.is_authenticated and request.blueprint == 'auth':
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '-1'
+        return response
+
 
     db.init_app(app) # Binding db to the flask app 
 

@@ -1,5 +1,5 @@
 from . import auth
-from flask import render_template,  request, flash, redirect, url_for, session, current_app
+from flask import render_template,  request, flash, redirect, url_for, session, current_app, make_response
 from setup_db import add_user as adduser_glob
 from models import User
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -48,7 +48,7 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()#use sqlalchemy to get user by username
 
-        if user and check_password_hash(user.password, password):
+        if user and user.check_password(password): # could also use------  'check_password_hash(user.password, password)':
             login_user(user)  # Log the user in
             flash('Login successful!', 'success')
             return redirect(url_for('auth.dashboard'))
