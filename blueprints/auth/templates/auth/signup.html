@@ -1,16 +1,234 @@
 {% extends "base.html" %}
 
+{% block title %}Sign Up{% endblock %}
+
 {% block body %}
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="auth-card glass-card">
+                    <div class="auth-header text-center mb-4">
+                        <div class="auth-icon mb-3">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <h2 class="auth-title">Join C-Connect</h2>
+                        <p class="auth-subtitle">Create your campus network account</p>
+                    </div>
 
-  <h2>Sign Up</h2>
-  
-  <form method="POST">
-    <input type="text" name="username" placeholder="Username" required><br>
-    <input type="email" name="email" placeholder="Email" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <input type="submit" value="Sign Up">
-  </form>
+                    <form method="POST" action="{{ url_for('auth.signup') }}" class="needs-validation" novalidate id="signupForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person me-1"></i>Username
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="username" 
+                                name="username" 
+                                placeholder="Choose a unique username"
+                                required
+                                minlength="3"
+                                maxlength="20"
+                                pattern="[a-zA-Z0-9_]+"
+                                autofocus
+                            >
+                            <div class="form-text">3-20 characters, letters, numbers, and underscores only</div>
+                            <div class="invalid-feedback">
+                                Username must be 3-20 characters (letters, numbers, underscores).
+                            </div>
+                        </div>
 
-  
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Campus Email
+                            </label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="email" 
+                                name="email" 
+                                placeholder="your.name@campus.edu"
+                                required
+                            >
+                            <div class="form-text">Use your official campus email</div>
+                            <div class="invalid-feedback">
+                                Please enter a valid email address.
+                            </div>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-key me-1"></i>Password
+                            </label>
+                            <div class="password-input-wrapper">
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="Create a strong password"
+                                    required
+                                    minlength="8"
+                                >
+                                <button 
+                                    type="button" 
+                                    class="password-toggle" 
+                                    onclick="togglePassword('password')"
+                                    tabindex="-1"
+                                >
+                                    <i class="bi bi-eye" id="password-icon"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="passwordStrength"></div>
+                            <div class="form-text">At least 8 characters</div>
+                            <div class="invalid-feedback">
+                                Password must be at least 8 characters.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">
+                                <i class="bi bi-key me-1"></i>Confirm Password
+                            </label>
+                            <div class="password-input-wrapper">
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    id="confirm_password" 
+                                    name="confirm_password" 
+                                    placeholder="Re-enter your password"
+                                    required
+                                >
+                                <button 
+                                    type="button" 
+                                    class="password-toggle" 
+                                    onclick="togglePassword('confirm_password')"
+                                    tabindex="-1"
+                                >
+                                    <i class="bi bi-eye" id="confirm_password-icon"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="confirmPasswordFeedback">
+                                Passwords must match.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input 
+                                    type="checkbox" 
+                                    class="form-check-input" 
+                                    id="terms" 
+                                    name="terms"
+                                    required
+                                >
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a>
+                                </label>
+                                <div class="invalid-feedback">
+                                    You must agree to the terms and conditions.
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary-custom w-100 mb-3" id="signupBtn">
+                            <i class="bi bi-person-check me-2"></i>Create Account
+                        </button>
+
+                        <div class="text-center">
+                            <span class="text-muted">Already have an account?</span>
+                            <a href="{{ url_for('auth.login') }}" class="auth-link ms-1">Login</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Reuse auth styles from login */
+.auth-container { min-height: calc(100vh - 200px); display: flex; align-items: center; padding: 2rem 0; }
+.auth-card { padding: 2.5rem; animation: fadeInUp 0.6s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.auth-icon { width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; box-shadow: var(--shadow-md); }
+.auth-title { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+.auth-subtitle { color: var(--text-secondary); font-size: 1rem; margin-bottom: 0; }
+.password-input-wrapper { position: relative; }
+.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.5rem; transition: color 0.3s ease; }
+.password-toggle:hover { color: var(--primary-color); }
+.password-strength { height: 4px; background: var(--border-color); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; position: relative; }
+.password-strength::before { content: ''; position: absolute; height: 100%; width: 0; background: var(--primary-color); transition: width 0.3s ease, background 0.3s ease; }
+.password-strength.weak::before { width: 33%; background: #ef4444; }
+.password-strength.medium::before { width: 66%; background: #f59e0b; }
+.password-strength.strong::before { width: 100%; background: #10b981; }
+.auth-link { color: var(--primary-color); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+.auth-link:hover { color: var(--primary-hover); text-decoration: underline; }
+</style>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(`${inputId}-icon`);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength += 1;
+    if (password.length >= 12) strength += 1;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+    if (/\d/.test(password)) strength += 1;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
+    return strength;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const passwordInput = document.getElementById('password');
+    const strengthIndicator = document.getElementById('passwordStrength');
+    
+    passwordInput.addEventListener('input', function() {
+        const strength = checkPasswordStrength(this.value);
+        strengthIndicator.className = 'password-strength';
+        if (this.value.length === 0) {
+            strengthIndicator.className = 'password-strength';
+        } else if (strength <= 2) {
+            strengthIndicator.classList.add('weak');
+        } else if (strength <= 3) {
+            strengthIndicator.classList.add('medium');
+        } else {
+            strengthIndicator.classList.add('strong');
+        }
+    });
+    
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    function validatePasswordMatch() {
+        if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+            confirmPasswordInput.setCustomValidity('Passwords do not match');
+        } else {
+            confirmPasswordInput.setCustomValidity('');
+        }
+    }
+    
+    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+    passwordInput.addEventListener('input', validatePasswordMatch);
+    
+    const signupForm = document.getElementById('signupForm');
+    signupForm.addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            const signupBtn = document.getElementById('signupBtn');
+            window.cconnect.showLoading(signupBtn);
+        }
+    });
+});
+</script>
 {% endblock %}
