@@ -1,53 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/css/style.css">
-    <title>C-Connect</title>
+    <meta name="description" content="C-Connect - Campus networking platform for students">
+    
+    <title>{% block title %}C-Connect - Campus Networking{% endblock %}</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <h1>C-Connect: Social Network</h1>
-    <nav>
-        <a href="{{url_for('main.home')}}">Home</a>
-        <a href="{{url_for('main.about')}}">About</a>
-        <a href="{{url_for('main.contact')}}">Contact</a>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg fixed-top glass-nav">
+        <div class="container-fluid px-4">
+            <!-- Brand/Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.home') }}">
+                <div class="brand-icon me-2">
+                    <i class="bi bi-buildings"></i>
+                </div>
+                <span class="brand-text">C-Connect</span>
+            </a>
 
-        {# Folloing is jinja comment syntax #}
-        <button onclick="window.location.href='{{url_for('auth.login')}}'">Login</button>
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Nav Links -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <!-- Logged In Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.dashboard') }}">
+                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.discover') }}">
+                                <i class="bi bi-people me-1"></i>Discover
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.messages') }}">
+                                <i class="bi bi-chat-dots me-1"></i>Messages
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                <div class="user-avatar me-2">
+                                    {{ current_user.username[0].upper() }}
+                                </div>
+                                <span class="d-none d-md-inline">{{ current_user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.dashboard') }}">
+                                    <i class="bi bi-person me-2"></i>Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- Logged Out Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.contact') }}">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom ms-2" href="{{ url_for('auth.add_user_route') }}">
+                                Sign Up
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Theme Toggle -->
+                    <li class="nav-item ms-3">
+                        <div class="theme-toggle-container">
+                            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                                <i class="bi bi-sun-fill theme-icon-light"></i>
+                                <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
+                            </button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </nav>
 
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <ul class="flashes">
-        {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-    {% endwith %}
-
-
-
-    {% block body %}
-        <!-- Space for the child elements
-         It will override this body section -->
-    <p>This is the main base page</p>
-
-
-    <!-- These shows flash msgs, sytle it later with css-->
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} alert-dismissible fade show glass-alert" role="alert">
+                        <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
-        {% endwith %}
+    {% endwith %}
 
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block body %}{% endblock %}
+    </main>
 
-    <button onclick="window.location.href='{{url_for('auth.add_user_route')}}'">SignUp</button>
+    <!-- Footer -->
+    <footer class="footer mt-auto py-4">
+        <div class="container text-center">
+            <p class="mb-2">&copy; 2024 C-Connect. Connecting Campus Communities.</p>
+            <div class="footer-links">
+                <a href="{{ url_for('main.about') }}">About</a>
+                <span class="mx-2">•</span>
+                <a href="{{ url_for('main.contact') }}">Contact</a>
+                <span class="mx-2">•</span>
+                <a href="#">Privacy</a>
+            </div>
+        </div>
+    </footer>
 
-    {% endblock %}
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global JS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
