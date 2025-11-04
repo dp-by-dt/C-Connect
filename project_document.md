@@ -244,7 +244,12 @@
     
 
 
-                  |
-| Day 5     | Login Page         | Authenticate user, manage session via Flask-Login                |
+
+### Day 6: Frontend Foundation & Template Structuring
+    + 
+
+
+
+               |
 | Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |
 | Day 7     | Polish + Push + Docs | CSS cleanup, error messages, commit + push + write README.md summary |
