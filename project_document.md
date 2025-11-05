@@ -246,9 +246,80 @@
 
 
 ### Day 6: Frontend Foundation & Template Structuring
+    + Used Claude AI to produce the front end for the application and also refine the back end a bit to make the usages (of the variables and method names) more conventional
+
+    + Now there is a robust UX with sleek UI (but needs more modifications in the design). right now the design feels more robotic or ai generated like, we need more calm and comforting/rewarding kind of minimal (less clutter) design. But we can take care of that later as right now the working is the main thing.
+
+    + I have tested the new ui codes in a new branch in github and now need to merge that with the main one. (there is one more branch with another ui, but this one only is much better, we are to discard that other branch)
+
+    + Now the cache and cookies of the site is much better and UX oriented. One can set `remember me` option which logging in. The signing up would take to the dashboard. There are lot's of options in the profile too
+    + There is option to discover other users, follow them, a section for messages, profile settings option, contact or connect the developer, join a group, set schedule and such thigs. But all these are not connected to the back end point, since they need to be developed further. Now it has only dummy values or place holders. 
+    + But this provides a solid base and framework. 
+
+    + The file/folder structure is more developed now with more files included for usability and also used standard naming conventions. 
+    The current folder structure is like:
+
+    C-Connect/
+        ├── .git/
+        ├── blueprints/
+        │   ├── auth/
+        │   │   ├── static/
+        │   │   │   ├── css/
+        │   │   │   │   └── auth_style.css
+        │   │   │   └── js/
+        │   │   │       └── auth_script.js
+        │   │   ├── templates/
+        │   │   │   └── auth/
+        │   │   │       ├── dashboard.html
+        │   │   │       ├── login.html
+        │   │   │       ├── profile.html
+        │   │   │       └── signup.html
+        │   │   ├── __init__.py
+        │   │   └── routes.py
+        │   └── main/
+        │       ├── static/
+        │       │   ├── css/
+        │       │   │   └── main_style.css
+        │       │   └── js/
+        │       │       └── main_script.js
+        │       ├── templates/
+        │       │   └── main/
+        │       │       ├── about.html
+        │       │       ├── contact.html
+        │       │       ├── discover.html
+        │       │       ├── home.html
+        │       │       ├── messages.html
+        │       │       └── settings.html
+        │       ├── __init__.py
+        │       └── routes.py
+        ├── static/
+        │   ├── css/
+        │   │   └── global.css
+        │   └── js/
+        │       └── global.js
+        ├── templates/
+        │   └── base.html
+        ├── testing_old/
+        │   ├── db_testing.sql
+        │   └── logic_testing.ipynb
+        ├── tests/
+        │   ├── __init__.py
+        │   ├── conftest.py
+        │   └── test_db.py
+        ├── .gitignore
+        ├── app.py
+        ├── config.py
+        ├── models.py
+        ├── project_document.md
+        ├── requirements.txt
+        └── setup_db.py
+
+
+    + still needs to read and understand the code a bit more, but the general working is known. Additionally, now i have a cheatsheet file with the usages of css classes. As file name: `css_cheatsheet.md`
+
+### Day 7: Interactive Dashboard Prototype
+
     + 
-
-
 
                |
 | Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |

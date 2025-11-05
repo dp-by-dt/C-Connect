@@ -3,51 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/css/style.css">
-    <title>C-Connect</title>
+    <title>{% block title %}C-Connect{% endblock %} | Campus Connect</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Poppins for modern, clean look -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Global CSS - Main styling and theme system -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    
+    <!-- Blueprint-specific CSS - Each page can add its own styles -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <h1>C-Connect: Social Network</h1>
-    <nav>
-        <a href="{{url_for('main.home')}}">Home</a>
-        <a href="{{url_for('main.about')}}">About</a>
-        <a href="{{url_for('main.contact')}}">Contact</a>
+    <!-- Theme Data (hidden) - Used by JavaScript for theme management -->
+    <div id="theme-data" data-theme="light" style="display: none;"></div>
 
-        {# Folloing is jinja comment syntax #}
-        <button onclick="window.location.href='{{url_for('auth.login')}}'">Login</button>
+    <!-- Navigation Bar - Glassmorphism design with transparency -->
+    <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
+        <div class="container-fluid px-4">
+            <!-- Logo/Brand -->
+            <a class="navbar-brand brand-logo" href="{{ url_for('main.home') }}">
+                <span class="brand-c">C</span><span class="brand-connect">-Connect</span>
+            </a>
+            
+            <!-- Mobile Menu Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if current_user.is_authenticated %}
+                        {# Logged-in user navigation #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.dashboard') }}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.discover') }}">
+                                <i class="bi bi-compass"></i> Discover
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.messages') }}">
+                                <i class="bi bi-chat-dots"></i> Messages
+                            </a>
+                        </li>
+                        <!-- User Dropdown Menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="bi bi-person"></i> Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.settings') }}">
+                                    <i class="bi bi-gear"></i> Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        {# Guest navigation #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.contact') }}">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom btn-sm" href="{{ url_for('auth.signup') }}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Theme Toggle Button - Sun/Moon icon -->
+                    <li class="nav-item ms-3">
+                        <button class="btn btn-theme-toggle" id="themeToggle" title="Toggle theme">
+                            <i class="bi bi-sun-fill" id="themeIcon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </nav>
 
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <ul class="flashes">
-        {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-    {% endwith %}
-
-
-
-    {% block body %}
-        <!-- Space for the child elements
-         It will override this body section -->
-    <p>This is the main base page</p>
-
-
-    <!-- These shows flash msgs, sytle it later with css-->
+    <!-- Flash Messages - Auto-dismissing notifications -->
+    <!-- CHANGED: Single, properly styled flash message system (removed duplicate) -->
+    <!-- REASON: Having two flash message blocks causes duplicate messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show glass-alert" role="alert">
+                        <i class="bi bi-{{ 'check-circle' if category == 'success' else 'info-circle' if category == 'info' else 'exclamation-triangle' }}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
-        {% endwith %}
+    {% endwith %}
 
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block body %}
+        {# Child templates will override this block #}
+        {% endblock %}
+    </main>
 
-    <button onclick="window.location.href='{{url_for('auth.add_user_route')}}'">SignUp</button>
+    <!-- Footer -->
+    <footer class="footer-glass mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <span class="brand-c">C</span><span class="brand-connect">-Connect</span>
+                    <p class="footer-tagline mb-0">Connecting Campus Communities</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="{{ url_for('main.about') }}" class="footer-link">About</a>
+                    <a href="{{ url_for('main.contact') }}" class="footer-link">Contact</a>
+                    <a href="#" class="footer-link">Privacy</a>
+                    <a href="#" class="footer-link">Terms</a>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col text-center">
+                    <small class="text-muted">&copy; 2024 C-Connect. Made with <i class="bi bi-heart-fill text-danger"></i> for students.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    {% endblock %}
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global JavaScript - Theme system and utilities -->
+    <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+    
+    <!-- Page-specific JavaScript -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
