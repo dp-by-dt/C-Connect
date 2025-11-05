@@ -1,5 +1,146 @@
 {% extends "base.html" %}
+
 {% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    padding: 6rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.hero-visual {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.hero-card {
+    padding: 2rem;
+    animation: floatIn 0.8s ease forwards;
+    opacity: 0;
+}
+
+.hero-card:nth-child(1) {
+    grid-column: 1 / -1;
+}
+
+@keyframes floatIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-card-inner {
+    text-align: center;
+}
+
+.hero-icon {
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.hero-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.hero-card p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.hero-decoration {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
+    opacity: 0.1;
+    animation: float 8s ease-in-out infinite;
+}
+
+.hero-decoration-1 {
+    width: 400px;
+    height: 400px;
+    top: -200px;
+    right: -100px;
+}
+
+.hero-decoration-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -150px;
+    left: -50px;
+    animation-delay: 2s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    .hero-buttons {
+        flex-direction: column;
+    }
+    .hero-buttons .btn {
+        width: 100%;
+    }
+    .hero-visual {
+        grid-template-columns: 1fr;
+    }
+    .hero-card:nth-child(1) {
+        grid-column: 1;
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
 <section class="hero-section">
     <div class="container">
@@ -62,25 +203,66 @@
     <div class="hero-decoration hero-decoration-2"></div>
 </section>
 
-<style>
-.hero-section { padding: 6rem 0 4rem; position: relative; overflow: hidden; }
-.hero-title { font-size: 3.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; color: var(--text-primary); }
-.hero-subtitle { font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6; }
-.hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
-.hero-visual { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
-.hero-card { padding: 2rem; animation: floatIn 0.8s ease forwards; opacity: 0; }
-.hero-card:nth-child(1) { grid-column: 1 / -1; }
-@keyframes floatIn { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(30px); } }
-.hero-icon { font-size: 3rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
-.hero-decoration { position: absolute; border-radius: 50%; background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%); opacity: 0.1; animation: float 8s ease-in-out infinite; }
-.hero-decoration-1 { width: 400px; height: 400px; top: -200px; right: -100px; }
-.hero-decoration-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; animation-delay: 2s; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-@media (max-width: 768px) {
-    .hero-title { font-size: 2rem; }
-    .hero-subtitle { font-size: 1rem; }
-    .hero-buttons { flex-direction: column; }
-    .hero-buttons .btn { width: 100%; }
-}
-</style>
+<!-- Features Section -->
+<section class="py-5" style="background: var(--bg-primary);">
+    <div class="container">
+        <div class="text-center mb-5 animate-on-scroll">
+            <h2 class="section-title">Why Choose C-Connect?</h2>
+            <p class="section-subtitle">Your campus social network designed for students, by students</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="glass-card text-center" style="padding: 2rem; height: 100%;">
+                    <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Campus-Focused</h3>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Connect exclusively with students from your campus. No noise, just your community.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="glass-card text-center" style="padding: 2rem; height: 100%;">
+                    <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Safe & Private</h3>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Your data is secure. Only verified students can join your campus network.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="glass-card text-center" style="padding: 2rem; height: 100%;">
+                    <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                        <i class="bi bi-stars"></i>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Interest-Based</h3>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Find people who share your interests, hobbies, and academic passions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+{% if not current_user.is_authenticated %}
+<section class="py-5">
+    <div class="container">
+        <div class="glass-card text-center animate-on-scroll" style="padding: 4rem 2rem;">
+            <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">Ready to Connect?</h2>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); margin-bottom: 2rem;">Join your campus community today and start building meaningful connections</p>
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-primary-custom btn-lg">
+                <i class="bi bi-rocket-takeoff me-2"></i>Get Started Now
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
 {% endblock %}
