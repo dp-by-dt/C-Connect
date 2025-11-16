@@ -330,6 +330,8 @@
             defined the classes for the tables *profile* and *connection*
             created the tables in flask shell using `db.create_all()` comment
         3. Populate these tables
+            Used a seeding python file (`seed.py`) to populate the table
+            It adds dummy details for the users in the db
         4. Dynamically fetch the db data and show in the respective pages (discover page)
         5. confirmation for logout (complete anytime)
         6. visual refinements (optional)
