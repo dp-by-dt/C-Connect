@@ -12,7 +12,7 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
     # CHANGED: Redirect to dashboard if already logged in (Best Practice: UX improvement)
     # REASON: Logged-in users shouldn't access signup page
     if current_user.is_authenticated:
-        return redirect(url_for('auth.dashboard'))
+        return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
         username = request.form.get('username')
@@ -30,7 +30,7 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
         user = User.query.filter_by(email=email).first()
         login_user(user)
         flash(f'Welcome to C-Connect, {username}!', 'success')
-        return redirect(url_for('auth.dashboard'))
+        return redirect(url_for('main.dashboard'))
 
     # If GET request, render the signup template
     return render_template('auth/signup.html')
@@ -45,7 +45,7 @@ def login():
     # CHANGED: Redirect to dashboard if already logged in (Best Practice: UX improvement)
     # REASON: Logged-in users shouldn't access login page again
     if current_user.is_authenticated:
-        return redirect(url_for('auth.dashboard'))
+        return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
         # CHANGED: Use email instead of username for login (Best Practice: More secure & standard)
@@ -69,7 +69,7 @@ def login():
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)
-            return redirect(url_for('auth.dashboard'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash('Invalid email or password. Please try again.', 'danger')  # CHANGED: More specific error message
             return redirect(url_for('auth.login'))
@@ -77,11 +77,7 @@ def login():
     return render_template('auth/login.html')
 
 
-@auth.route('/dashboard')
-@login_required  # Restricts access to logged-in users only
-def dashboard():
-    # No changes needed - works perfectly with new frontend
-    return render_template('auth/dashboard.html', username=current_user.username)
+
 
 
 @auth.route('/logout')

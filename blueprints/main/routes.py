@@ -25,6 +25,14 @@ def contact():
     return render_template('main/contact.html', name='Guest')
 
 
+
+@main.route('/dashboard')
+@login_required  # Restricts access to logged-in users only
+def dashboard():
+    # No changes needed - works perfectly with new frontend
+    return render_template('main/dashboard.html', username=current_user.username)
+
+
 # NEW ROUTE: User discovery page
 # REASON: Core feature for social network; allows users to find and connect with others
 @main.route('/discover')

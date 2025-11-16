@@ -319,7 +319,24 @@
 
 ### Day 7: Interactive Dashboard Prototype
 
-    + 
+    Things already done while using frontend
+        - created dashboard.html and discover.html
+        - glass, hover, layout effects
+        - theme toggle and browser cache
+    
+    Things to do on this day7 (remaining)
+        1. move dashboard.html from ~auth/~ blueprint to ~main/~ blueprint folder (✅done)
+        2. add more tables in the database (users:already exist, profiles, connections, visibility, etc.)(✅done)
+            defined the classes for the tables *profile* and *connection*
+            created the tables in flask shell using `db.create_all()` comment
+        3. Populate these tables
+        4. Dynamically fetch the db data and show in the respective pages (discover page)
+        5. confirmation for logout (complete anytime)
+        6. visual refinements (optional)
+
+
+
+        
 
                |
 | Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |

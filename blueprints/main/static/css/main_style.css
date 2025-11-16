@@ -424,6 +424,79 @@
     color: var(--primary-color);
 }
 
+
+/* ===== DASHBOARD STYLES ===== */
+.dashboard-container {
+    min-height: calc(100vh - 200px);
+}
+
+.welcome-banner {
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--bg-glass), var(--bg-glass));
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%);
+    opacity: 0.1;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.welcome-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 0;
+}
+
+
+
+/* ===== DASHBOARD CARDS ===== */
+.dashboard-card {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-title-custom {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 992px) {
     .hero-title {
