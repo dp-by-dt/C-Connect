@@ -70,7 +70,7 @@
                                     <i class="bi bi-gear"></i> Settings
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <li><a class="dropdown-item" href="#" onclick="confirmLogout()">
                                     <i class="bi bi-box-arrow-right"></i> Logout
                                 </a></li>
                             </ul>
@@ -157,6 +157,15 @@
     
     <!-- Global JavaScript - Theme system and utilities -->
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+
+    <!-- Script function for logout confirmation -->
+     <script>
+        function confirmLogout(){
+            if (confirm("Are you sure you want to logout?")){
+                window.location.href = "{{ url_for('auth.logout') }}";
+            }
+        }
+     </script>
     
     <!-- Page-specific JavaScript -->
     {% block extra_js %}{% endblock %}

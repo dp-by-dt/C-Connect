@@ -79,7 +79,7 @@ def login():
 
 
 
-
+#for more clarity, use get and post methods here and also add a logout_confirmation html page which is triggered for confirmation before logout
 @auth.route('/logout')
 @login_required
 def logout():

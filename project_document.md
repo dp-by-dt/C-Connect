@@ -329,17 +329,20 @@
         2. add more tables in the database (users:already exist, profiles, connections, visibility, etc.)(✅done)
             defined the classes for the tables *profile* and *connection*
             created the tables in flask shell using `db.create_all()` comment
-        3. Populate these tables
+        3. Populate these tables (✅done)
             Used a seeding python file (`seed.py`) to populate the table
             It adds dummy details for the users in the db
-        4. Dynamically fetch the db data and show in the respective pages (discover page)
-        5. confirmation for logout (complete anytime)
-        6. visual refinements (optional)
+        4. Dynamically fetch the db data and show in the respective pages (discover page) (✅done)
+            (The ui, i.e., discover.html already had the feature to load users dynamically from the table)
+            Now it shows the user name, and email fetched from the db
+            (later we might want to add a logical algo to sort or prioriotize which users we show to the user)
+        5. confirmation for logout (done; partially)
+            added a script in the base.html which asks confirmation when logout clicked
+            But ui refinement needed for the confirmation window (can be added later)
+            when use the tail url `/logout`, it is directly logging out, not asking confirmation (can be taken care of later)
+        6. visual refinements (optional) - will do later
 
 
 
-        
+--------------------------------      FIRST WEEK COMPLETED -----------------------------------
 
-               |
-| Day 6     | Logout & Basic Navigation | Add logout route + redirect + navbar linking                  |
-| Day 7     | Polish + Push + Docs | CSS cleanup, error messages, commit + push + write README.md summary |
