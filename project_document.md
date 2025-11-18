@@ -346,3 +346,12 @@
 
 --------------------------------      FIRST WEEK COMPLETED -----------------------------------
 
+
+
+
+## Week 2
+
+### Day 8: Architechture Improvements
+
+
+
