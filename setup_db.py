@@ -1,4 +1,5 @@
-from models import User, db 
+from extensions import db 
+from models import User
 
 
 #CRUD helper functions

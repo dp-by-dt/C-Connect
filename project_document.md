@@ -353,5 +353,31 @@
 
 ### Day 8: Architechture Improvements
 
+    Did some modifications in the code flow architechture.
+
+    Now the flow is:
+    1. app.py runs:
+        allocation application (initiates it)
+        app.config.from_object(Config) -> imports:
+            SECRET_KEY, DB location, (global settings) etc
+        initiates db & login_manager (models & authentication connected to app and activated)
+        Register the blueprints
+        Only on first run, create the db
+
+        ----- All objects binded to the App
+    2. Listens to app.run() and creates development WSGI server
+         * Running on http://127.0.0.1:5000/
+    3. In WSGI server, if it receives a http request (like /login)
+        Flask generate a `request context` and calls that 
+
+    
+    ---> More modifications made in the architechture:
+    + Direct blueprint & db initiation moved to `factory_helpers.py` file and calls it inside the app.py (so removed the direct initiation)
+    + The above step helps to minimalise the `app.py` file
+    + Set the secret key more securely
+    + Add other minor architechture modifications
+    + Modified the imports according to this re-structuring. 
+
+    --- These imporves the structure to production ready & scalable ---
 
 

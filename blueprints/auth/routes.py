@@ -3,6 +3,7 @@ from flask import render_template, request, flash, redirect, url_for
 from setup_db import add_user as adduser_glob
 from models import User
 from flask_login import login_user, logout_user, login_required, current_user
+from extensions import login_manager
 
 
 # CHANGED: /add_user → /signup (Best Practice: Cleaner, more intuitive URL)
@@ -39,17 +40,6 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
 # REMOVED: signup_success route (No longer needed with auto-login)
 # REASON: signup_success.html is redundant; users are logged in and redirected to dashboard
 
-
-#not storing unwanted cache for sensitive pages
-@auth.after_request
-def add_header(response):
-
-    #maintains no-cache only for auth blueprint pages when user is logged in
-    if current_user.is_authenticated and request.blueprint == 'auth':
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
-    return response
 
 
 @auth.route('/login', methods=['GET', 'POST'])

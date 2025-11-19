@@ -31,7 +31,7 @@ class Profile(db.Model):
     year=db.Column(db.String(20),nullable=True)
     interests=db.Column(db.String(300),nullable=True) #optional now
 
-    user = db.relationship('User', backref=db.backref('profiles', lazy=True, uselist=False))
+    user = db.relationship('User', backref=db.backref('profile', lazy=True, uselist=False)) #here changed 'profiles' to 'profile'
 
 
 # CONNECTIONS

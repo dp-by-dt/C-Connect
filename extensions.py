@@ -1,6 +1,6 @@
 #----Initialise the things here that will be used across the application----
 
-
+from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 # from flask_migrate import Migrate
@@ -17,3 +17,4 @@ login_manager.login_message_category = 'info'  # Flash category for login messag
 # migrate = Migrate()
 
 # You can add more extensions as needed like csrf protection, mail, etc.
+
