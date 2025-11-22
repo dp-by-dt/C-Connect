@@ -3,10 +3,10 @@ from flask import render_template, request, flash, redirect, url_for
 from setup_db import add_user as adduser_glob
 from models import User
 from flask_login import login_user, logout_user, login_required, current_user
-from extensions import login_manager
+from extensions import login_manager, db
 from .forms import SignupForm, LoginForm
 from urllib.parse import urlparse, urljoin
-
+from flask import current_app as app
 
 # ------- functions --------
 def is_safe_url(target): #check the sanity of links
@@ -50,30 +50,6 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
     return render_template('auth/signup.html',form=form)
 
 
-
-    #----------- Old code without CSRF (to be removed) -----------
-    # if request.method == 'POST':
-    #     username = request.form.get('username')
-    #     email = request.form.get('email')
-    #     password = request.form.get('password')
-
-    #     # Call your add_user function from setup_db (hashing is in here)
-    #     success = adduser_glob(username, email, password)
-    #     if not success:
-    #         flash("Email already exists. Please use a different email.", "danger")  # CHANGED: category to 'danger' for Bootstrap styling
-    #         return redirect(url_for('auth.signup'))
-
-    #     # CHANGED: Auto-login after signup + redirect to dashboard (Best Practice: Better UX)
-    #     # REASON: No need for separate success page, users want to get started immediately
-    #     user = User.query.filter_by(email=email).first()
-    #     login_user(user)
-    #     flash(f'Welcome to C-Connect, {username}!', 'success')
-    #     return redirect(url_for('main.dashboard'))
-
-    # # If GET request, render the signup template
-    # return render_template('auth/signup.html')
-
-
 # REMOVED: signup_success route (No longer needed with auto-login)
 # REASON: signup_success.html is redundant; users are logged in and redirected to dashboard
 
@@ -98,6 +74,15 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
+            # Update last_login timestamp
+            user.last_login = db.func.now()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                # optional: log error but still login_user (or decide to fail)
+                app.logger.exception("Failed to update last_login for user %s", user.email)
+
             login_user(user, remember=remember)
             
             flash('Login successful!', 'success')

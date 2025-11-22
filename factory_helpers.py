@@ -2,6 +2,13 @@
 
 from flask import render_template
 from extensions import db, login_manager, csrf, migrate
+import pytz
+from datetime import datetime
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+
+
 
 
 
@@ -35,3 +42,31 @@ def register_errorhandlers(app):
     def internal_error(error):
         db.session.rollback()  # In case of a database error
         return render_template('500.html'), 500
+
+
+# convert utc to ist
+def to_ist(utc_dt):
+    ist = pytz.timezone('Asia/Kolkata')
+    return utc_dt.replace(tzinfo=pytz.utc).astimezone(ist)
+
+
+
+#logs errors in the logs/cconnect.log file
+def configure_logging(app):
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+
+    file_handler = RotatingFileHandler(
+        os.path.join(log_dir, "cconnect.log"),
+        maxBytes=1024 * 1024,  # 1 MB per file
+        backupCount=5          # keep last 5 logs
+    )
+
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
+
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+
+    app.logger.addHandler(file_handler)
