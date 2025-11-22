@@ -3,6 +3,7 @@
 from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 # from flask_migrate import Migrate
 
 # Initializing SQLAlchemy
@@ -18,3 +19,6 @@ login_manager.login_message_category = 'info'  # Flash category for login messag
 
 # You can add more extensions as needed like csrf protection, mail, etc.
 
+
+#initiating csrf protection
+csrf = CSRFProtect()

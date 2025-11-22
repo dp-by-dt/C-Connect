@@ -4,6 +4,16 @@ from setup_db import add_user as adduser_glob
 from models import User
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager
+from .forms import SignupForm, LoginForm
+from urllib.parse import urlparse, urljoin
+
+
+# ------- functions --------
+def is_safe_url(target): #check the sanity of links
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http','https') and ref_url.netloc == test_url.netloc
+
 
 
 # CHANGED: /add_user → /signup (Best Practice: Cleaner, more intuitive URL)
@@ -15,26 +25,53 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+    
+    #using CSRF for login from the Class SignupForm
+    form = SignupForm()
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
+        password = form.password.data
 
-        # Call your add_user function from setup_db (hashing is in here)
+        #checking duplicate email form db
         success = adduser_glob(username, email, password)
-        if not success:
-            flash("Email already exists. Please use a different email.", "danger")  # CHANGED: category to 'danger' for Bootstrap styling
-            return redirect(url_for('auth.signup'))
+        if not success: #if False: email already in db
+            form.email.errors.append("This email is already registered.")
+            #rendering template instead of redirect to keep form data
+            return render_template('auth/signup.html',form=form)
 
-        # CHANGED: Auto-login after signup + redirect to dashboard (Best Practice: Better UX)
-        # REASON: No need for separate success page, users want to get started immediately
+        #adding user to db and logging in 
         user = User.query.filter_by(email=email).first()
         login_user(user)
         flash(f'Welcome to C-Connect, {username}!', 'success')
         return redirect(url_for('main.dashboard'))
 
-    # If GET request, render the signup template
-    return render_template('auth/signup.html')
+    # If GET request or vadiation error, render the signup template
+    return render_template('auth/signup.html',form=form)
+
+
+
+    #----------- Old code without CSRF (to be removed) -----------
+    # if request.method == 'POST':
+    #     username = request.form.get('username')
+    #     email = request.form.get('email')
+    #     password = request.form.get('password')
+
+    #     # Call your add_user function from setup_db (hashing is in here)
+    #     success = adduser_glob(username, email, password)
+    #     if not success:
+    #         flash("Email already exists. Please use a different email.", "danger")  # CHANGED: category to 'danger' for Bootstrap styling
+    #         return redirect(url_for('auth.signup'))
+
+    #     # CHANGED: Auto-login after signup + redirect to dashboard (Best Practice: Better UX)
+    #     # REASON: No need for separate success page, users want to get started immediately
+    #     user = User.query.filter_by(email=email).first()
+    #     login_user(user)
+    #     flash(f'Welcome to C-Connect, {username}!', 'success')
+    #     return redirect(url_for('main.dashboard'))
+
+    # # If GET request, render the signup template
+    # return render_template('auth/signup.html')
 
 
 # REMOVED: signup_success route (No longer needed with auto-login)
@@ -49,19 +86,18 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     
-    if request.method == 'POST':
-        # CHANGED: Use email instead of username for login (Best Practice: More secure & standard)
-        # REASON: Emails are unique; usernames can be duplicated in future. Plus, most platforms use email login.
-        email = request.form.get('email')  # Changed from username
-        password = request.form.get('password')
+
+    #using CSRF for login from the Class LoginForm
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data.lower().strip()
+        password = form.password.data
+        remember = form.remember_me.data #checkbox data
         
         # CHANGED: Query by email instead of username
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            # CHANGED: Added remember_me functionality (Best Practice: Better UX)
-            # REASON: Users can choose to stay logged in
-            remember = request.form.get('remember', False)  # Checkbox value
             login_user(user, remember=remember)
             
             flash('Login successful!', 'success')
@@ -69,14 +105,17 @@ def login():
             # CHANGED: Handle 'next' parameter for protected page redirects (Best Practice: Security)
             # REASON: If user tried to access a protected page, redirect them there after login
             next_page = request.args.get('next')
-            if next_page:
+            if next_page and is_safe_url(next_page): #check safety of url
                 return redirect(next_page)
             return redirect(url_for('main.dashboard'))
-        else:
-            flash('Invalid email or password. Please try again.', 'danger')  # CHANGED: More specific error message
-            return redirect(url_for('auth.login'))
 
-    return render_template('auth/login.html')
+        #csrf form error handling
+        form.email.errors.append("Invalid email or password.")
+
+        # CHANGED: More specific error message
+        return render_template('auth/login.html', form=form)
+
+    return render_template('auth/login.html',form=form)
 
 
 

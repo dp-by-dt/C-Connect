@@ -17,38 +17,50 @@
                     </div>
 
                     <form method="POST" action="{{ url_for('auth.login') }}" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+
                         <!-- CHANGED: Using email instead of username for login (Best Practice) -->
                         <div class="mb-3">
-                            <label for="email" class="form-label">
-                                <i class="bi bi-envelope me-1"></i>Email Address
-                            </label>
-                            <input 
-                                type="email" 
-                                class="form-control" 
-                                id="email" 
-                                name="email" 
-                                placeholder="your.email@campus.edu"
-                                required
-                                autofocus
-                            >
-                            <div class="invalid-feedback">
-                                Please enter a valid email address.
-                            </div>
+                            
+
+                        <div class="input-group ">
+                                <i class="bi bi-envelope me-1 form-label"></i>
+                                {{ form.email.label(class="form-label") }}
                         </div>
 
+                            {{form.email(
+                                class="form-control"+ (" is-invalid" if form.email.erros else ""),
+                                id="email",
+                                placeholder="your.name@campus.edu",
+                                required=True,
+                                autofocus=True
+                            )}}
+
+
+                            {% for err in form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{err}}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+
+                        <!-- Password section -->
                         <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="bi bi-key me-1"></i>Password
-                            </label>
-                            <div class="password-input-wrapper">
-                                <input 
-                                    type="password" 
-                                    class="form-control" 
-                                    id="password" 
-                                    name="password" 
-                                    placeholder="Enter your password"
-                                    required
-                                >
+
+                            <div class="input-group">
+                                <i class="bi bi-key me-1 form-label"></i>
+                                {{ form.password.label(class="form-label") }}
+                            </div>
+
+                        <div class="password-input-wrapper">
+                            {{ form.password(
+                                class="form-control" + (" is-invalid" if form.password.errors else ""),
+                                id="password",
+                                placeholder="Enter your password",
+                                required=True
+                            )}}
+
                                 <button 
                                     type="button" 
                                     class="password-toggle" 
@@ -58,10 +70,15 @@
                                     <i class="bi bi-eye" id="password-icon"></i>
                                 </button>
                             </div>
-                            <div class="invalid-feedback">
-                                Password is required.
+
+                            {% for err in form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ err }}
                             </div>
+                            {% endfor %}
                         </div>
+
+
 
                         <!-- ADDED: Remember me checkbox (New Feature) -->
                         <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -79,6 +96,7 @@
                             <a href="#" class="auth-link">Forgot password?</a>
                         </div>
 
+                        <!-- Login button-->
                         <button type="submit" class="btn btn-primary-custom w-100 mb-3" id="loginBtn">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Login
                         </button>

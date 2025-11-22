@@ -2,12 +2,14 @@
 
 from flask import render_template
 from extensions import db, login_manager
+from extensions import csrf
 
 
 #function to register extensions
 def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
+    csrf.init_app(app)
     # Add other extensions here as needed
 
 
