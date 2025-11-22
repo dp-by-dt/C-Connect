@@ -566,3 +566,23 @@ from project root
 (create fresh new db)
 
 
+3. Added `to_ist()` function {to convert ust timestamp to ist} and `configure_logging()` fucntion {for loging in details to .log files} in the `factory_helpers.py` file
+* Now creating new user notes the created_time
+* Loggin in updates the last_login time in the `db`
+* timestamp storing is in ust and later show it in ist in output
+
+4. Added `EditProfileForm` in the `auth/forms.py` file
+5. Update `auth/routes.py` file:
+* Added the `save_profile_picture()`
+* Added `profile_edit()` segment with robust handling
+
+6. Modified `auth/profile.html` to show the profile details from the table `profile`
+
+7. Added `auth/profile_edit.html` file which shows the fields for editing (uses form.hidden_tag()) (but need more editing with ui) 
+* Also the username is not loading in the field
+
+8. Added `UPLOAD_FOLDER` values in the `config.py` file and added it in the `.gitignore`
+9. Since __table_args__ are already added, run the following commands:
+> python -m flask --app "app:create_app()" db migrate -m "Add unique constraint and index to Connection"
+> python -m flask --app "app:create_app()" db upgrade
+(First command create migrate script accoding to db modificaiton (use the create_app) and the second command applies those changes)

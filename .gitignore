@@ -13,3 +13,6 @@ instance/
 
 # Ignore native code modifiers
 .prettierrc
+
+# Ignore uploaded files
+static/uploads/

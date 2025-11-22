@@ -1,12 +1,18 @@
 from . import auth
-from flask import render_template, request, flash, redirect, url_for
+from flask import render_template, request, flash, redirect, url_for, render_template, request
 from setup_db import add_user as adduser_glob
-from models import User
+from models import User, Profile
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager, db
-from .forms import SignupForm, LoginForm
+from .forms import SignupForm, LoginForm, EditProfileForm
 from urllib.parse import urlparse, urljoin
 from flask import current_app as app
+
+
+import os
+from werkzeug.utils import secure_filename
+from datetime import datetime, timezone
+
 
 # ------- functions --------
 def is_safe_url(target): #check the sanity of links
@@ -14,6 +20,31 @@ def is_safe_url(target): #check the sanity of links
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http','https') and ref_url.netloc == test_url.netloc
 
+
+
+
+ALLOWED_EXT = {'png','jpg','jpeg','webp'}
+
+def save_profile_picture(file_storage, user_id):
+    """Save uploaded file to UPLOAD_FOLDER; return relative url path"""
+    filename = secure_filename(file_storage.filename)
+    # make filename unique: userID + timestamp + original
+
+    name, ext = os.path.splitext(filename)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    filename = f"user{user_id}_{timestamp}{ext}"
+
+    upload_folder = app.config.get('UPLOAD_FOLDER') or os.path.join(app.static_folder, 'uploads')
+    os.makedirs(upload_folder, exist_ok=True)
+    filepath = os.path.join(upload_folder, filename)
+    file_storage.save(filepath)
+
+    # return a path suitable for <img src=>, e.g. "/static/uploads/..."
+    # if UPLOAD_FOLDER is inside static, return url relative to root
+    if upload_folder.startswith(app.static_folder):
+        rel = os.path.relpath(filepath, app.static_folder)
+        return f"/static/{rel.replace(os.path.sep, '/')}"
+    return filepath  # absolute path (not ideal for web serving)
 
 
 # CHANGED: /add_user → /signup (Best Practice: Cleaner, more intuitive URL)
@@ -120,20 +151,85 @@ def logout():
 @auth.route('/profile')
 @login_required
 def profile():
-    return render_template('auth/profile.html')
+    profile = current_user.profile
+    # display default placeholders if None
+    return render_template('auth/profile.html', profile=profile, user=current_user)
 
 
 # NEW ROUTE: Profile edit (for future implementation)
 # REASON: Separating view and edit is good practice; ready for future profile update functionality
+
 @auth.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
 def profile_edit():
-    if request.method == 'POST':
-        # TODO: Implement profile update logic here
-        # username = request.form.get('username')
-        # bio = request.form.get('bio')
-        # etc.
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('auth.profile'))
-    
-    return render_template('auth/profile_edit.html')
+    profile = current_user.profile
+    if not profile:
+        # Shouldn't happen if you create profile at signup, but safe fallback
+        profile = Profile(user_id=current_user.id)
+        db.session.add(profile)
+        db.session.commit()
+
+    form = EditProfileForm(obj=profile)
+
+    if form.validate_on_submit():
+        # Basic sanitization
+        username = form.username.data.strip() if form.username.data else current_user.username
+        department = form.department.data.strip() if form.department.data else None
+        year = form.year.data.strip() if form.year.data else None
+        bio = form.bio.data.strip() if form.bio.data else None
+        location = form.location.data.strip() if form.location.data else None
+
+        # interests: turn comma-separated into list (JSON)
+        interests_raw = form.interests.data or ""
+        interests_list = [i.strip() for i in interests_raw.split(',') if i.strip()]
+        if len(interests_list) == 0:
+            interests_val = None
+        else:
+            interests_val = interests_list
+
+        # check username uniqueness (if changed)
+        if username != current_user.username:
+            if User.query.filter(User.username == username, User.id != current_user.id).first():
+                form.username.errors.append("Username already taken.")
+                return render_template('auth/profile_edit.html', form=form)
+
+        # handle profile picture
+        if form.profile_picture.data:
+            file = form.profile_picture.data
+            # optional: validate extension again
+            ext = os.path.splitext(file.filename)[1].lower().lstrip('.')
+            if ext not in ALLOWED_EXT:
+                form.profile_picture.errors.append("Invalid image type.")
+                return render_template('auth/profile_edit.html', form=form)
+            pic_url = save_profile_picture(file, current_user.id)
+            profile.profile_picture = pic_url
+
+        # apply updates
+        current_user.username = username
+        profile.department = department
+        profile.year = year
+        profile.bio = bio
+        profile.location = location
+        profile.interests = interests_val
+        profile.updated_at = db.func.now()
+
+        try:
+            db.session.commit()
+            flash("Profile updated successfully.", "success")
+            return redirect(url_for('auth.profile'))
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.exception("Failed to update profile for user %s: %s", current_user.email, exc)
+            flash("An error occurred while saving profile.", "danger")
+            return render_template('auth/profile_edit.html', form=form)
+
+    # populate interests field for display (join with comma)
+    if request.method == 'GET':
+        if profile.interests:
+            if isinstance(profile.interests, list):
+                form.interests.data = ", ".join(profile.interests)
+            else:
+                # if stored as raw text, leave it
+                form.interests.data = profile.interests
+
+    return render_template('auth/profile_edit.html', form=form)

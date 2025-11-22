@@ -16,6 +16,7 @@ sample_users = [
     {"username": "rahul", "email": "rahul@uni.com", "password": "rahul"},
     {"username": "sneha", "email": "sneha@uni.com", "password": "sneha"},
     {"username": "kiran", "email": "kiran@uni.com", "password": "kiran"},
+    {"username": "rakesh", "email": "rakesh@uni.com", "password": "rakesh@123"},
 ]
 
 

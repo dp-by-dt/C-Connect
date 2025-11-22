@@ -31,7 +31,7 @@ class Profile(db.Model):
     profile_picture = db.Column(db.String(225), nullable=True)  # URL to profile
     department = db.Column(db.String(100), nullable=True)
     year=db.Column(db.String(20),nullable=True)
-    interests=db.Column(db.Text,nullable=True) #or db.String(500), can be comma separated values
+    interests=db.Column(db.JSON,nullable=True) #or db.String(500), can be comma separated values or db.Text
     location = db.Column(db.String(150), nullable=True)
     visibility = db.Column(db.String(50), default='public')  # public, private, connections-only
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
