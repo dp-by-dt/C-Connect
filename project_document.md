@@ -579,10 +579,12 @@ from project root
 6. Modified `auth/profile.html` to show the profile details from the table `profile`
 
 7. Added `auth/profile_edit.html` file which shows the fields for editing (uses form.hidden_tag()) (but need more editing with ui) 
-* Also the username is not loading in the field
+* Also the username is not loading in the field -- Solved by preloading all the data in the form (in `routes.py's` `profile_edit()` function) in the request.method == 'GET'
 
 8. Added `UPLOAD_FOLDER` values in the `config.py` file and added it in the `.gitignore`
 9. Since __table_args__ are already added, run the following commands:
 > python -m flask --app "app:create_app()" db migrate -m "Add unique constraint and index to Connection"
 > python -m flask --app "app:create_app()" db upgrade
 (First command create migrate script accoding to db modificaiton (use the create_app) and the second command applies those changes)
+
+10. Wired `Change Photo` button to profile/edit method

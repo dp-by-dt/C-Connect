@@ -169,7 +169,9 @@ def profile_edit():
         db.session.add(profile)
         db.session.commit()
 
-    form = EditProfileForm(obj=profile)
+    # prefilling the form with existing data from both User and Profile
+    form = EditProfileForm()
+
 
     if form.validate_on_submit():
         # Basic sanitization
@@ -225,6 +227,13 @@ def profile_edit():
 
     # populate interests field for display (join with comma)
     if request.method == 'GET':
+        form.username.data = current_user.username
+        form.department.data = profile.department
+        form.year.data = profile.year
+        form.bio.data = profile.bio
+        form.location.data = profile.location
+
+        # Interests: convert list → comma string
         if profile.interests:
             if isinstance(profile.interests, list):
                 form.interests.data = ", ".join(profile.interests)
