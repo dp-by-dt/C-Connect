@@ -496,32 +496,7 @@ This added **form validation**, **password complexity rules**, **CSRF protection
 
 
 
-### Day 10: 
-“Profile System + Login Protection + Sessions + Dashboard logic”
-
-You will:
-
-Implement real login_required handling and redirect behavior
-
-Add last login time, account metadata
-
-Add a profile table integration
-
-Add ‘Edit Profile’ form groundwork
-
-Fix caching logic for protected pages
-
-Add routing protections (anonymous access redirects)
-
-This prepares the system for:
-
-profile editing
-
-user dashboard data
-
-later features like friend requests, discovery, privacy settings
-
-
+### Day 10: Profile Editing
 
 * On signup, we need to add the empty fields for the profile fields , like:
 username & email(already added in the table named 'user')

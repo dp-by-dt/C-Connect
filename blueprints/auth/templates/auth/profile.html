@@ -15,12 +15,13 @@
                         </div>
                 #}
 
-
+                <div>
                 {% if profile.profile_picture %}
                     <img src="{{ profile.profile_picture }}" alt="Profile picture" class="img-fluid rounded" />
                 {% else %}
-                    <img src="{{ url_for('static', filename='images/avatar-placeholder.png') }}" alt="Avatar" class="img-fluid rounded" />
+                    <img src="{{ url_for('static', filename='images/avatar-placeholder.jpg') }}" alt="Avatar" class="img-fluid rounded" />
                 {% endif %}
+                </div>
 
                         <a href="{{ url_for('auth.profile_edit') }}" class="btn btn-sm btn-outline-custom mt-2">
                             <i class="bi bi-camera"></i> Change Photo

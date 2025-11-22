@@ -17,11 +17,19 @@ def password_complexity(form, field):
         raise ValidationError('Password must include at least one digit.')
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', pw):
         raise ValidationError('Password must include at least one symbol.')
+    
+
+# user name formatting 
+def username_format(form, field):
+    username = field.data or ""
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        raise ValidationError("Username can contain only letters, numbers, and underscores.")
+
 
 
 
 class SignupForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=30)])
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=30),username_format])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), password_complexity])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
@@ -39,7 +47,7 @@ class LoginForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
-    username = StringField('Username', validators=[Optional(), Length(min=2, max=30)])
+    username = StringField('Username', validators=[Optional(), Length(min=2, max=30),username_format])
     department = StringField('Department', validators=[Optional(), Length(max=120)])
     year = StringField('Year', validators=[Optional(), Length(max=20)])  # Use SelectField if you want fixed choices
     bio = TextAreaField('Bio', validators=[Optional(), Length(max=1000)])
@@ -47,6 +55,6 @@ class EditProfileForm(FlaskForm):
     location = StringField('Location', validators=[Optional(), Length(max=200)])
     profile_picture = FileField('Profile Picture', validators=[
         Optional(),
-        FileAllowed({'png', 'jpg', 'jpeg', 'webp'}, 'Images only!')
+        FileAllowed({'png', 'jpg', 'jpeg', 'webp'}, 'jpg, png or webp only!')
     ])
     submit = SubmitField('Save')
