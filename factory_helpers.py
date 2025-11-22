@@ -1,8 +1,8 @@
 # File for registering blueprints, extensions, error handlers etc. These would get initialized in app.py
 
 from flask import render_template
-from extensions import db, login_manager
-from extensions import csrf
+from extensions import db, login_manager, csrf, migrate
+
 
 
 #function to register extensions
@@ -10,6 +10,7 @@ def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    migrate.init_app(app, db)
     # Add other extensions here as needed
 
 

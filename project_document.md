@@ -497,3 +497,44 @@ This added **form validation**, **password complexity rules**, **CSRF protection
 
 
 ### Day 10: 
+“Profile System + Login Protection + Sessions + Dashboard logic”
+
+You will:
+
+Implement real login_required handling and redirect behavior
+
+Add last login time, account metadata
+
+Add a profile table integration
+
+Add ‘Edit Profile’ form groundwork
+
+Fix caching logic for protected pages
+
+Add routing protections (anonymous access redirects)
+
+This prepares the system for:
+
+profile editing
+
+user dashboard data
+
+later features like friend requests, discovery, privacy settings
+
+
+
+* On signup, we need to add the empty fields for the profile fields , like:
+username & email(already added in the table named 'user')
+bio, profile pic, dept, year, interests, location. (These would be addeed in the table named 'profile' - user identified by user_id)
+connections (in the 'connection' table - identified by user_id field)
+
+* Later whenever the user adds it, this empty locations would be filled
+* When the user tries to edit the already existing value, they shoudl be edited in the respective tables. 
+
+
+So the actual steps to take:
+1. In stepup_db when add_user triggered, we would allocate the space for these fields in respective db tables (profile and connection)
+2. When edit_profile (i don't think it is yet defined) is triggered, the respective page loads (need to create it), the fields can be edited (but all those will have sanity check). 
+Once click save button, respective fields will be saved and updated in the db (i don't know if for updating, we need to implement Migrate() first, or we can simply edit it)
+* Note: First these fields would be empty (since the user has never added/initiated it, (but internallly the fields was already allocated; if that is the best practice)) and the first time user adds these details, would be the first time we are editing it (but making the user think that they are adding it, but actually they are replacing the already allocated empty space with data!). And so on. 
+ 

@@ -4,7 +4,7 @@ from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-# from flask_migrate import Migrate
+from flask_migrate import Migrate
 
 # Initializing SQLAlchemy
 db = SQLAlchemy()
@@ -15,7 +15,7 @@ login_manager.login_view = 'auth.login'  # Redirect to 'auth.login' for @login_r
 login_manager.login_message_category = 'info'  # Flash category for login messages
 
 # # Initializing Migrate (optional, for database migrations)
-# migrate = Migrate()
+migrate = Migrate()
 
 # You can add more extensions as needed like csrf protection, mail, etc.
 
