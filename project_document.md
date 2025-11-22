@@ -538,3 +538,31 @@ So the actual steps to take:
 Once click save button, respective fields will be saved and updated in the db (i don't know if for updating, we need to implement Migrate() first, or we can simply edit it)
 * Note: First these fields would be empty (since the user has never added/initiated it, (but internallly the fields was already allocated; if that is the best practice)) and the first time user adds these details, would be the first time we are editing it (but making the user think that they are adding it, but actually they are replacing the already allocated empty space with data!). And so on. 
  
+
+------------------------------
+1. Added columns in the table (`models.py`):
+* `user` - created_at and last_login
+* `profile` - location, visibility, updated_at
+* `connection` - id, user_id, target_user_id, status, created_at
+    Also added __table_args__ segment for uniqueness
+
+
+2. Added Migrate() in the extensions.py file
+Initialised it by the following commands (conda terminal):
+
+from project root
+>> python -m flask --app "app:create_app()" db init
+>> python -m flask --app "app:create_app()" db migrate -m "Add Profile & Connection updates"
+>> python -m flask --app "app:create_app()" db upgrade
+(This creates the new columns)
+
+-------- For wiping db totally and re-initalising -------
+* Delete database.db
+* Delete migrations/
+* Run the following command:
+>> python -c "from app import create_app; app=create_app(); \
+>> from extensions import db; \
+>> with app.app_context(): db.create_all(); print('DB created')"
+(create fresh new db)
+
+
