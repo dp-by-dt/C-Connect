@@ -10,3 +10,6 @@ instance/
 
 # Ignore environment files
 .env
+
+# Ignore native code modifiers
+.prettierrc
