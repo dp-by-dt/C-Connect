@@ -684,79 +684,17 @@ Now all seems working. Needs testing.
 
 9. In the `notifications/routes.py` file added the option to mark it as read once the user opens it (not just on clicking on 'mark as read')
 
+10. Added to_ist() in the initiation in the create_app() function while defining the FlaskApp()
+This shows the ist time of the notification creation.
+*Testings also done (can do a thorough checking later)
 
-10. Some testing remaining:
+11. Notifications will only be marked as read:
+* When the user views it and clicks back
+* Or user clicks mark all as read
+(This is done by adding `mark_all_read` function in `notifications/routes.py` file and conencting it with a button in html. Also added a script `addEventListner` at the end of the html to mark the notifications as read automatically once the user goes back the page).
 
-⭐ TEST 4 — Reject request
+12. Added auto deleting old notifications (older than 24 hours)
+* notification cleaning func added to `notifications/service.py`
+* triggering the function per day is added to `factory_helpers.py`
+* registered the trigger function inside the `create_app()`
 
-Steps:
-
-B rejects A
-
-Check DB: row deleted or status updated as per your logic
-
-Notification sent to A
-
-✔ PASS if:
-
-Message shows
-
-Notification exists
-
-⭐ TEST 5 — Cancel outgoing request
-
-Steps:
-
-A sends request to B
-
-A goes to connections → cancel
-
-DB row removed
-
-No errors
-
-✔ PASS
-
-⭐ TEST 6 — Disconnect accepted connection
-
-Steps:
-
-A and B become accepted
-
-A disconnects
-
-DB: connection row deleted
-
-B receives notification
-
-✔ PASS
-
-⭐ TEST 7 — Notification list page UX
-
-Check:
-
-Works without errors
-
-Shows empty state correctly
-
-Older notifications display correctly
-
-After opening notifications, unread count goes down
-
-✔ PASS
-
-⭐ TEST 8 — Security Tests
-
-Try:
-
-Sending POST requests without CSRF
-
-Visiting accept/reject/cancel/disconnect routes while logged out
-
-Directly manipulating URLs (e.g., accept wrong id, accept someone else's request)
-
-✔ PASS if:
-
-CSRF blocks requests
-
-Unauthorized redirects to login

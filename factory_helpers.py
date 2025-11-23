@@ -3,7 +3,7 @@
 from flask import render_template
 from extensions import db, login_manager, csrf, migrate
 import pytz
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from logging.handlers import RotatingFileHandler
 import os
@@ -77,3 +77,23 @@ def configure_logging(app):
     file_handler.setLevel(logging.INFO)
 
     app.logger.addHandler(file_handler)
+
+
+
+# Auto delete old notifications
+def register_daily_cleanup(app):
+    # initialize attribute if not present
+    if not hasattr(app, "_last_notification_cleanup"):
+        app._last_notification_cleanup = None
+
+    @app.before_request
+    def daily_cleanup():
+        now = datetime.now(timezone.utc)
+        last = getattr(app, "_last_notification_cleanup", None)
+
+        # run only once/day
+        if last is None or (now - last).days >= 1:
+            from blueprints.notifications.service import cleanup_old_notifications
+            deleted = cleanup_old_notifications()
+            app.logger.info(f"Cleaned up {deleted} old notifications.")
+            app._last_notification_cleanup = now

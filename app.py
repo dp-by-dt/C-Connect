@@ -2,6 +2,7 @@ from flask import Flask, url_for, render_template, request, redirect, make_respo
 import os
 from extensions import db
 from factory_helpers import register_blueprints, register_errorhandlers, register_extensions, configure_logging
+from factory_helpers import to_ist, register_daily_cleanup
 
 
 
@@ -14,6 +15,12 @@ def create_app():
 
     #migrate.init_app(app,db) #optional for db migrations
     #csrf.init_app(app) #but later in factory_helpers file or somewhere
+
+    #------ helper functions -----
+    @app.context_processor
+    def utility_processor():
+        return dict(to_ist=to_ist)
+
 
  
     #create the database if not created(by creating the instance_path folder)
@@ -29,6 +36,8 @@ def create_app():
     register_errorhandlers(app)
     configure_logging(app)
 
+    #daily cleanup triggering for old notifications
+    register_daily_cleanup(app)
     
     return app
 
