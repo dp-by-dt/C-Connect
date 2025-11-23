@@ -679,3 +679,84 @@ model: (done for request, accept, reject, cancelled, disconnected)
 
 8. The disconnect_connections were giving error since the it was supposed to give 3 outputs. So added that. 
 Now all seems working. Needs testing.
+
+* There was a duplicate `/connections` url route in the `connectoins/routes.py`, both same content by the function name is like `connections_list` and `connections_home`. Now only using the `connections_home`. Modified that too in the `dashboard.html`
+
+9. In the `notifications/routes.py` file added the option to mark it as read once the user opens it (not just on clicking on 'mark as read')
+
+
+10. Some testing remaining:
+
+⭐ TEST 4 — Reject request
+
+Steps:
+
+B rejects A
+
+Check DB: row deleted or status updated as per your logic
+
+Notification sent to A
+
+✔ PASS if:
+
+Message shows
+
+Notification exists
+
+⭐ TEST 5 — Cancel outgoing request
+
+Steps:
+
+A sends request to B
+
+A goes to connections → cancel
+
+DB row removed
+
+No errors
+
+✔ PASS
+
+⭐ TEST 6 — Disconnect accepted connection
+
+Steps:
+
+A and B become accepted
+
+A disconnects
+
+DB: connection row deleted
+
+B receives notification
+
+✔ PASS
+
+⭐ TEST 7 — Notification list page UX
+
+Check:
+
+Works without errors
+
+Shows empty state correctly
+
+Older notifications display correctly
+
+After opening notifications, unread count goes down
+
+✔ PASS
+
+⭐ TEST 8 — Security Tests
+
+Try:
+
+Sending POST requests without CSRF
+
+Visiting accept/reject/cancel/disconnect routes while logged out
+
+Directly manipulating URLs (e.g., accept wrong id, accept someone else's request)
+
+✔ PASS if:
+
+CSRF blocks requests
+
+Unauthorized redirects to login

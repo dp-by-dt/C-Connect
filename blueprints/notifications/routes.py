@@ -4,13 +4,27 @@ from flask import render_template, redirect, url_for
 from models import Notification
 from extensions import db
 
+
 @notifications.route('/notifications_list')
 @login_required
 def notifications_list():
     notifs = Notification.query.filter_by(user_id=current_user.id) \
-                               .order_by(Notification.created_at.desc()) \
-                               .all()
+                .order_by(Notification.created_at.desc()) \
+                .all()
+    
+    # Mark unread as read when viewed
+    #only want to do this, once the user views it and goes back (later)
+    for notif in notifs:
+        if not notif.is_read:
+            notif.is_read = True
+
+    db.session.commit()
+
+
     return render_template('notifications/notif_list.html', notifs=notifs)
+
+
+
 
 @notifications.route('/mark/<int:notif_id>')
 @login_required
