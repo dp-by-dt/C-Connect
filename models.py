@@ -69,3 +69,20 @@ class Connection(db.Model):
 #optional visibility table
 ''' Later we add option for privacy options like, what option can be viewed by who (like the owner-private, or for all- public)'''
 
+
+
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    message = db.Column(db.String(255), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    # relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='notifications')
+    sender = db.relationship('User', foreign_keys=[sender_id])

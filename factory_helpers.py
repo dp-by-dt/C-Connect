@@ -32,6 +32,10 @@ def register_blueprints(app):
     from blueprints.connections import connections as connections_bp
     app.register_blueprint(connections_bp)
 
+    from blueprints.notifications import notifications
+    app.register_blueprint(notifications)
+
+
     #can add more blueprints here as needed
 
 

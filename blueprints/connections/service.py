@@ -151,11 +151,11 @@ def disconnect_connection(conn_id: int, user_id: int):
     """
     conn = Connection.query.get(conn_id)
     if not conn:
-        return False, "Connection not found."
+        return False, "Connection not found.", conn
 
     # Verify user is one of the participants
     if user_id not in (conn.user_id, conn.target_user_id):
-        return False, "Not authorized to disconnect."
+        return False, "Not authorized to disconnect.", conn
 
     # If not accepted, you probably want to allow deletion of pending too, but we restrict to accepted
     if conn.status != 'accepted':
@@ -164,16 +164,16 @@ def disconnect_connection(conn_id: int, user_id: int):
             try:
                 db.session.delete(conn)
                 db.session.commit()
-                return True, "Pending request cancelled."
+                return True, "Pending request cancelled.", conn
             except Exception:
                 db.session.rollback()
                 raise
-        return False, f"Cannot disconnect connection with status '{conn.status}'."
+        return False, f"Cannot disconnect connection with status '{conn.status}'.", conn
 
     try:
         db.session.delete(conn)
         db.session.commit()
-        return True, "Disconnected successfully."
+        return True, "Disconnected successfully.", conn
     except Exception:
         db.session.rollback()
         raise

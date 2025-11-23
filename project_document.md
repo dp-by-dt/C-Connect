@@ -566,59 +566,7 @@ from project root
 
 
 
-### Day 11: 
-
-Send connection request
-
-POST /connect/<target_id>
-
-Prevent duplicates
-
-Prevent connecting to self
-
-Prevent sending to existing connection
-
-Log event
-
-Flash message
-
-View incoming + outgoing requests
-
-/connections page
-
-list pending requests
-
-list accepted connections
-
-Accept / Reject / Cancel
-
-/connections/accept/<id>
-
-/connections/reject/<id>
-
-/connections/cancel/<id>
-
-Server-side validation
-
-exists?
-
-same campus? (not needed now, but optional)
-
-already friends?
-
-blocked users? (future)
-
-Profile view integration
-
-On user profile page: “Connect”, “Cancel”, “Accept”, “Connected” states
-
-UX improvements (optional for now)
-
-Test all flows
-
-
-
-
+### Day 11: Connections and Profile Views
 
 
 1. Added a new blueprint named `connections`, added it's route and init files and also in templates/connections added the file `list.html`
@@ -653,3 +601,81 @@ Only in the latter we need to add the `conn`, not in /profile call.
 11. Added link card in the dashboard to show the connection_list
   
 * Did the manual testing and all seems to be working. 
+
+
+
+
+### Day 12: 
+
+Day 12 = Building the Notifications System (Phase 1)
+(This is important & very powerful)
+
+It includes:
+
+in-app bell icon
+
+unread notification count
+
+notification table in DB
+
+storing events like:
+
+You received a connection request
+
+Someone accepted your request
+
+Someone rejected your request
+
+Someone disconnected
+
+showing notification dropdown
+
+marking notifications as read
+
+(optional) toast pop-ups
+
+
+
+1. Added `Notification()` model in `models.py`
+It has:
+    - id
+    - user_id
+    - sender_id
+    - message
+    - is_read
+    - created_at
+And migrate with commands:
+> flask db migrate -m "Add Notification model"
+> flask db upgrade
+
+
+2. Created the blueprint `notifications` and added the file `notifications/notif_list.html`
+Current structure:
+    blueprints/
+        notifications/
+            __init__.py
+            routes.py
+            service.py
+            templates/notifications/
+                notif_list.html
+
+3. Modified `blueprint/connections/routes.py` file to sent respective notification using the `create_nofication()` function from `blueprints/notifications/service.py` file
+
+model: (done for request, accept, reject, cancelled, disconnected)
+        create_notification(
+            user_id=other_user_id,
+            sender_id=current_user.id,
+            message=f"{current_user.username} removed you from their connections"
+        )
+
+4. Created the `notifications/routes.py` file
+* Also added the ui with the file `templates/notifications/notif_list.html`
+
+5. In `base.html` template, added the notification to the nav bar (but not properly wired to the notifications list) --- Because the `conn` was not defined in the `connections/routes.py` which is now modified and corrected
+
+6. Registered the blueprint (forgot earlier) in `factory_helpers.py`
+
+7. But now, the notif_list.html file is not loading. Notfication icon on the nav bar redirects to the home page. -- Solved by correcting the route to proper `/notifications_list` route
+
+8. The disconnect_connections were giving error since the it was supposed to give 3 outputs. So added that. 
+Now all seems working. Needs testing.
