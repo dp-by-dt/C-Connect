@@ -652,3 +652,4 @@ Only in the latter we need to add the `conn`, not in /profile call.
 
 11. Added link card in the dashboard to show the connection_list
   
+* Did the manual testing and all seems to be working. 
