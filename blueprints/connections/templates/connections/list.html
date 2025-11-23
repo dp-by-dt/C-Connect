@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h3>Incoming Requests</h3>
+  {% for r in incoming %}
+    <div class="card mb-2 p-2">
+      <strong>{{ r.user.username }}</strong> — {{ r.created_at }}
+      <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=r.id) }}">{{ csrf_token() }}<button>Accept</button></form>
+      <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=r.id) }}">{{ csrf_token() }}<button>Reject</button></form>
+    </div>
+  {% else %}
+    <p>No incoming requests</p>
+  {% endfor %}
+
+  <h3>Outgoing Requests</h3>
+  {% for r in outgoing %}
+    <div class="card mb-2 p-2">{{ r.target_user.username }} — <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=r.id) }}">{{ csrf_token() }}<button>Cancel</button></form></div>
+  {% else %}
+    <p>No outgoing requests</p>
+  {% endfor %}
+
+  <h3>Connections</h3>
+  {% for r in accepted %}
+    {% if r.user_id == current_user.id %}
+      {% set other = r.connected_user %}
+    {% else %}
+      {% set other = r.user %}
+    {% endif %}
+    <div class="card mb-2 p-2">{{ other.username }}</div>
+  {% else %}
+    <p>No connections yet</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -23,9 +23,15 @@
                 <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem;">{{ user.username }}</h3>
                 <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">{{ user.email }}</p>
                 <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}">
+                        
+                    {# the csrf_token() #}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <button class="btn btn-primary-custom btn-sm" onclick="window.cconnect.showToast('Feature coming soon!', 'info')">
                         <i class="bi bi-person-plus"></i> Connect
                     </button>
+                </form>
                 </div>
             </div>
             {% endfor %}

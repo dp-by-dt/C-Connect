@@ -7,6 +7,8 @@ from extensions import login_manager, db
 from .forms import SignupForm, LoginForm, EditProfileForm
 from urllib.parse import urlparse, urljoin
 from flask import current_app as app
+from blueprints.connections.service import is_connected, list_requests
+from models import Connection
 
 
 import os
@@ -47,6 +49,12 @@ def save_profile_picture(file_storage, user_id):
     return filepath  # absolute path (not ideal for web serving)
 
 
+#------------------------------
+
+
+
+
+#------------------------------
 # CHANGED: /add_user → /signup (Best Practice: Cleaner, more intuitive URL)
 # REASON: Standard convention is /signup for registration, easier for users to remember
 @auth.route('/signup', methods=['GET', 'POST'])
@@ -146,14 +154,17 @@ def logout():
     # REASON: After logout, show the landing page, not login page
 
 
+
+
 # NEW ROUTE: Profile page for viewing/editing user profile
 # REASON: Essential for social network; allows users to update their information
 @auth.route('/profile')
 @login_required
 def profile():
+
     profile = current_user.profile
     # display default placeholders if None
-    return render_template('auth/profile.html', profile=profile, user=current_user)
+    return render_template('auth/profile.html', profile=profile, user=current_user)#, conn=conn)
 
 
 # NEW ROUTE: Profile edit (for future implementation)

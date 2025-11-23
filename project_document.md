@@ -563,3 +563,77 @@ from project root
 (First command create migrate script accoding to db modificaiton (use the create_app) and the second command applies those changes)
 
 10. Wired `Change Photo` button to profile/edit method
+
+
+
+### Day 11: 
+
+Send connection request
+
+POST /connect/<target_id>
+
+Prevent duplicates
+
+Prevent connecting to self
+
+Prevent sending to existing connection
+
+Log event
+
+Flash message
+
+View incoming + outgoing requests
+
+/connections page
+
+list pending requests
+
+list accepted connections
+
+Accept / Reject / Cancel
+
+/connections/accept/<id>
+
+/connections/reject/<id>
+
+/connections/cancel/<id>
+
+Server-side validation
+
+exists?
+
+same campus? (not needed now, but optional)
+
+already friends?
+
+blocked users? (future)
+
+Profile view integration
+
+On user profile page: “Connect”, “Cancel”, “Accept”, “Connected” states
+
+UX improvements (optional for now)
+
+Test all flows
+
+
+
+
+
+
+1. Added a new blueprint named `connections`, added it's route and init files and also in templates/connections added the file `list.html`
+2. Added the content of these files routes.py and service.py (take care of the connection diffrent cases)
+* registerd the blueprint in `factory_helpers.py`
+3. Added list.html in connections blueprint
+* but not yet connected it to routes
+
+4. In `routes.py` added a segement `conn` defining if there is duplicate connections or connection at all, which passed to the profile page
+In `profile.html` if the profile is theirs, show edit profile
+else: according to conn value give an appropriate status. --------- !!! But this logic is wrong !!!
+
+* The /profile shows own profile while /user/<id> show other other person's profile
+Only in the latter we need to add the `conn`, not in /profile call. 
+
+
+
+  

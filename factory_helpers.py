@@ -29,6 +29,9 @@ def register_blueprints(app):
     from blueprints.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
+    from blueprints.connections import connections as connections_bp
+    app.register_blueprint(connections_bp)
+
     #can add more blueprints here as needed
 
 
