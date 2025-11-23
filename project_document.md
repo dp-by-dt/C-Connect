@@ -634,6 +634,12 @@ else: according to conn value give an appropriate status. --------- !!! But this
 * The /profile shows own profile while /user/<id> show other other person's profile
 Only in the latter we need to add the `conn`, not in /profile call. 
 
+5. Added new route `/user/<id>` in the `main/routes.py`
+* Also created a new file `main/user_profile.html` to show other user's profile
+6. Added connection_list route to `connections/routes.py` (but the rendering is blank) --- It was a silly mistake: forgot to use `block body`, now it is perfect
+* But after accepting the request, the end point is broken (but db is updated) -- This was due to not defining connections_disconnect, now updated with connections_list
 
+
+7. Minor bug fixes to show the connected user's profile (but not fully developed profile, just the name)
 
   

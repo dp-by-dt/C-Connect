@@ -49,3 +49,14 @@ def connections_cancel(conn_id):
     flash(msg, 'info' if ok else 'danger')
     return redirect(request.referrer or url_for('connections.connections_home'))
 
+
+@connections.route("/connections")
+@login_required
+def connections_list():
+    # service methods handle logic cleanly
+    incoming = list_requests(current_user.id, "incoming")
+    outgoing = list_requests(current_user.id, "outgoing")
+    accepted = list_connections(current_user.id)
+
+    return render_template("connections/list.html",
+        incoming=incoming, outgoing=outgoing, accepted=accepted)

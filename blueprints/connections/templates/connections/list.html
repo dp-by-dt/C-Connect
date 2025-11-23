@@ -1,34 +1,73 @@
 {% extends "base.html" %}
-{% block content %}
+{% block title %}Connections{% endblock %}
+{% block body %}
+
 <div class="container py-4">
-  <h3>Incoming Requests</h3>
-  {% for r in incoming %}
-    <div class="card mb-2 p-2">
-      <strong>{{ r.user.username }}</strong> — {{ r.created_at }}
-      <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=r.id) }}">{{ csrf_token() }}<button>Accept</button></form>
-      <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=r.id) }}">{{ csrf_token() }}<button>Reject</button></form>
-    </div>
-  {% else %}
-    <p>No incoming requests</p>
-  {% endfor %}
+    <h2 class="mb-4">Connections</h2>
 
-  <h3>Outgoing Requests</h3>
-  {% for r in outgoing %}
-    <div class="card mb-2 p-2">{{ r.target_user.username }} — <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=r.id) }}">{{ csrf_token() }}<button>Cancel</button></form></div>
-  {% else %}
-    <p>No outgoing requests</p>
-  {% endfor %}
+    <h4>Incoming Requests</h4>
+    {% if incoming %}
+        {% for c in incoming %}
+            <div class="card p-3 mb-2">
+                <strong>{{ c.user.username }}</strong> wants to connect.
+                
+                <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=c.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-success btn-sm">Accept</button>
+                </form>
 
-  <h3>Connections</h3>
-  {% for r in accepted %}
-    {% if r.user_id == current_user.id %}
-      {% set other = r.connected_user %}
+                <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=c.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </div>
+        {% endfor %}
     {% else %}
-      {% set other = r.user %}
+        <p class="text-muted">No incoming requests.</p>
     {% endif %}
-    <div class="card mb-2 p-2">{{ other.username }}</div>
-  {% else %}
-    <p>No connections yet</p>
-  {% endfor %}
+
+    <hr>
+
+    <h4>Outgoing Requests</h4>
+    {% if outgoing %}
+        {% for c in outgoing %}
+            <div class="card p-3 mb-2">
+                Pending → {{ c.connected_user.username }}
+
+                <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-warning btn-sm">Cancel</button>
+                </form>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">No outgoing requests.</p>
+    {% endif %}
+
+    <hr>
+
+    <h4>Your Connections</h4>
+    {% if accepted %}
+        {% for c in accepted %}
+            {% set other = c.user if c.user_id != current_user.id else c.connected_user %}
+            
+            <div class="card p-3 mb-2">
+                Connected with <strong>{{ other.username }}</strong>
+
+                <a href="{{ url_for('main.view_user_profile', user_id=other.id) }}" class="btn btn-outline-secondary btn-sm">
+                    View Profile
+                </a>
+
+                <form method="POST" action="{{ url_for('connections.connections_list', conn_id=c.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-danger btn-sm">Disconnect</button>
+                </form>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">You have no connections yet.</p>
+    {% endif %}
+
 </div>
+
 {% endblock %}

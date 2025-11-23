@@ -2,6 +2,8 @@ from . import main
 from flask import render_template
 from flask_login import login_required, current_user
 from models import User  # For user discovery feature
+from models import Connection  # For viewing other user's profile
+from flask import redirect, url_for
 
 
 # CHANGED: Render main/home.html instead of base.html (Best Practice: Proper template organization)
@@ -59,3 +61,28 @@ def messages():
 @login_required
 def settings():
     return render_template('main/settings.html')
+
+
+
+#viewing other user's profile
+@main.route("/user/<int:user_id>")
+@login_required
+def view_user_profile(user_id):
+    if user_id == current_user.id:
+        return redirect(url_for("auth.profile"))
+
+    user = User.query.get_or_404(user_id)
+    profile = user.profile
+
+    # get connection object
+    conn = Connection.query.filter(
+        ((Connection.user_id == current_user.id) & (Connection.target_user_id == user_id)) |
+        ((Connection.user_id == user_id) & (Connection.target_user_id == current_user.id))
+    ).first()
+
+    return render_template(
+        "main/user_profile.html",
+        user=user,
+        profile=profile,
+        conn=conn
+    )
