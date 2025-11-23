@@ -641,5 +641,14 @@ Only in the latter we need to add the `conn`, not in /profile call.
 
 
 7. Minor bug fixes to show the connected user's profile (but not fully developed profile, just the name)
+8. Added link in the name in `discover.html` to each user's name to view their profile. 
 
+9. Now shows the connection numbers in dashboard, as added a new `status` which determines the counts of accepted, pending and outgoing connections in the `main/routes.py` in `dashboard()`
+
+10. For disconnecting an accepted conection:
+* added disconnect_connection() in `service.py`
+* conections_disconnect() in `connections/route.py`
+* confirmation with `onsubmit` on `list.html` to give confirmation before disconnecting
+
+11. Added link card in the dashboard to show the connection_list
   

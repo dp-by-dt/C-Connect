@@ -2,7 +2,7 @@
 from . import connections  # blueprint
 from flask import request, redirect, url_for, flash, jsonify, render_template
 from flask_login import login_required, current_user
-from blueprints.connections.service import send_connection_request, accept_connection, reject_connection, cancel_request, list_requests, list_connections
+from blueprints.connections.service import send_connection_request, accept_connection, reject_connection, cancel_request, list_requests, list_connections, disconnect_connection
 
 
 
@@ -60,3 +60,13 @@ def connections_list():
 
     return render_template("connections/list.html",
         incoming=incoming, outgoing=outgoing, accepted=accepted)
+
+
+#disconnect an accepted connection
+@connections.route('/connections/disconnect/<int:conn_id>', methods=['POST'])
+@login_required
+def connections_disconnect(conn_id):
+    ok, msg = disconnect_connection(conn_id, current_user.id)
+    flash(msg, 'success' if ok else 'danger')
+    # Redirect back to connections page
+    return redirect(request.referrer or url_for('connections.connections_list'))

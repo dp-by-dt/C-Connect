@@ -140,3 +140,40 @@ def is_connected(user_a: int, user_b: int):
         ((Connection.user_id == user_b) & (Connection.target_user_id == user_a))
     ).filter_by(status='accepted').first()
     return bool(c)
+
+
+
+# service.py
+def disconnect_connection(conn_id: int, user_id: int):
+    """
+    Disconnect an accepted connection. Only participants may disconnect.
+    Returns (ok:bool, msg:str)
+    """
+    conn = Connection.query.get(conn_id)
+    if not conn:
+        return False, "Connection not found."
+
+    # Verify user is one of the participants
+    if user_id not in (conn.user_id, conn.target_user_id):
+        return False, "Not authorized to disconnect."
+
+    # If not accepted, you probably want to allow deletion of pending too, but we restrict to accepted
+    if conn.status != 'accepted':
+        # allow cancel if it's your pending request
+        if conn.status == 'pending' and conn.user_id == user_id:
+            try:
+                db.session.delete(conn)
+                db.session.commit()
+                return True, "Pending request cancelled."
+            except Exception:
+                db.session.rollback()
+                raise
+        return False, f"Cannot disconnect connection with status '{conn.status}'."
+
+    try:
+        db.session.delete(conn)
+        db.session.commit()
+        return True, "Disconnected successfully."
+    except Exception:
+        db.session.rollback()
+        raise

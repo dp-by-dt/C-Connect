@@ -4,6 +4,8 @@ from flask_login import login_required, current_user
 from models import User  # For user discovery feature
 from models import Connection  # For viewing other user's profile
 from flask import redirect, url_for
+from extensions import db
+
 
 
 # CHANGED: Render main/home.html instead of base.html (Best Practice: Proper template organization)
@@ -31,8 +33,35 @@ def contact():
 @main.route('/dashboard')
 @login_required  # Restricts access to logged-in users only
 def dashboard():
-    # No changes needed - works perfectly with new frontend
-    return render_template('main/dashboard.html', username=current_user.username)
+    user_id = current_user.id
+
+    # count accepted connections (either side)
+    accepted_count = db.session.query(Connection).filter(
+        (Connection.status == 'accepted') & (
+            (Connection.user_id == user_id) | (Connection.target_user_id == user_id)
+        )
+    ).count()
+
+    # pending incoming
+    pending_incoming = db.session.query(Connection).filter_by(
+        target_user_id=user_id, status='pending'
+    ).count()
+
+    # pending outgoing
+    pending_outgoing = db.session.query(Connection).filter_by(
+        user_id=user_id, status='pending'
+    ).count()
+
+    # optionally other stats
+    stats = {
+        "connections": accepted_count,
+        "pending_incoming": pending_incoming,
+        "pending_outgoing": pending_outgoing
+    }
+
+    return render_template('main/dashboard.html', username=current_user.username, stats=stats)
+
+
 
 
 # NEW ROUTE: User discovery page

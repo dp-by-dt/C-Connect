@@ -214,13 +214,13 @@
 
         <!-- Stats Cards -->
         <div class="row mb-4">
-            <div class="col-md-3 col-sm-6 mb-3 animate-on-scroll">
+            <a href="{{ url_for('connections.connections_list')}}" class="col-md-3 col-sm-6 mb-3 animate-on-scroll text-decoration-none">
                 <div class="stat-card glass-card">
                     <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                    <div class="stat-value">0</div>
+                    <div class="stat-value">{{ stats.connections }}</div>
                     <div class="stat-label">Connections</div>
                 </div>
-            </div>
+            </a>
             <div class="col-md-3 col-sm-6 mb-3 animate-on-scroll">
                 <div class="stat-card glass-card">
                     <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
