@@ -1,77 +1,310 @@
 {% extends "base.html" %}
+
 {% block title %}Connections{% endblock %}
+
+{% block extra_css %}
+<style>
+.connections-header {
+    padding: 2.5rem 0;
+    text-align: center;
+}
+
+.connections-title {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.connections-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+.section-card {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.badge-count {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.connection-item {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-radius: var(--border-radius-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.connection-item:hover {
+    transform: translateX(8px);
+    box-shadow: var(--shadow-md);
+    background: var(--bg-tertiary);
+}
+
+.connection-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.connection-info {
+    flex: 1;
+}
+
+.connection-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.connection-meta {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.connection-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.connection-actions form {
+    display: inline;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+.empty-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-text {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
+@media (max-width: 768px) {
+    .connections-header {
+        padding: 1.5rem 0;
+    }
+    
+    .section-card {
+        padding: 1.5rem;
+    }
+    
+    .connection-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+    
+    .connection-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .connection-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-
 <div class="container py-4">
-    <h2 class="mb-4">Connections</h2>
+    <!-- Header -->
+    <div class="connections-header animate-on-scroll">
+        <h1 class="connections-title">
+            <i class="bi bi-people-fill me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            Your Connections
+        </h1>
+        <p class="connections-subtitle">Manage your campus network</p>
+    </div>
 
-    <h4>Incoming Requests</h4>
-    {% if incoming %}
-        {% for c in incoming %}
-            <div class="card p-3 mb-2">
-                <strong>{{ c.user.username }}</strong> wants to connect.
-                
-                <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=c.id) }}" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-success btn-sm">Accept</button>
-                </form>
+    <!-- Incoming Requests -->
+    <div class="section-card glass-card animate-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-inbox"></i>
+                Incoming Requests
+                {% if incoming %}
+                <span class="badge-count">{{ incoming|length }}</span>
+                {% endif %}
+            </h2>
+        </div>
 
-                <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=c.id) }}" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-danger btn-sm">Reject</button>
-                </form>
+        {% if incoming %}
+            {% for c in incoming %}
+            <div class="connection-item">
+                <div class="connection-avatar">{{ c.user.username[0].upper() }}</div>
+                <div class="connection-info">
+                    <div class="connection-name">{{ c.user.username }}</div>
+                    <div class="connection-meta">wants to connect with you</div>
+                </div>
+                <div class="connection-actions">
+                    <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=c.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-primary-custom btn-sm">
+                            <i class="bi bi-check-lg"></i> Accept
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=c.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-outline-custom btn-sm">
+                            <i class="bi bi-x-lg"></i> Reject
+                        </button>
+                    </form>
+                </div>
             </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">No incoming requests.</p>
-    {% endif %}
-
-    <hr>
-
-    <h4>Outgoing Requests</h4>
-    {% if outgoing %}
-        {% for c in outgoing %}
-            <div class="card p-3 mb-2">
-                Pending → {{ c.connected_user.username }}
-
-                <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-warning btn-sm">Cancel</button>
-                </form>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <div class="empty-title">No incoming requests</div>
+                <div class="empty-text">You're all caught up!</div>
             </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">No outgoing requests.</p>
-    {% endif %}
+        {% endif %}
+    </div>
 
-    <hr>
+    <!-- Outgoing Requests -->
+    <div class="section-card glass-card animate-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-send"></i>
+                Outgoing Requests
+                {% if outgoing %}
+                <span class="badge-count">{{ outgoing|length }}</span>
+                {% endif %}
+            </h2>
+        </div>
 
-    <h4>Your Connections</h4>
-    {% if accepted %}
-        {% for c in accepted %}
-            {% set other = c.user if c.user_id != current_user.id else c.connected_user %}
-            
-            <div class="card p-3 mb-2">
-                Connected with <strong>{{ other.username }}</strong>
-
-                <a href="{{ url_for('main.view_user_profile', user_id=other.id) }}" class="btn btn-outline-secondary btn-sm">
-                    View Profile
+        {% if outgoing %}
+            {% for c in outgoing %}
+            <div class="connection-item">
+                <div class="connection-avatar">{{ c.connected_user.username[0].upper() }}</div>
+                <div class="connection-info">
+                    <div class="connection-name">{{ c.connected_user.username }}</div>
+                    <div class="connection-meta">Request pending</div>
+                </div>
+                <div class="connection-actions">
+                    <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-outline-custom btn-sm">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-send"></i></div>
+                <div class="empty-title">No outgoing requests</div>
+                <div class="empty-text">Find people to connect with on the Discover page</div>
+                <a href="{{ url_for('main.discover') }}" class="btn btn-primary-custom btn-sm mt-3">
+                    <i class="bi bi-compass me-2"></i>Discover People
                 </a>
-
-                <form method="POST" 
-                  action="{{ url_for('connections.connections_disconnect', conn_id=c.id) }}"
-                  onsubmit="return confirm('Are you sure you want to disconnect? This will remove the connection.');"
-                  style="display:inline;"> {# can implement a Bootstrap modal and fill it with JS here #}
-
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-danger btn-sm">Disconnect</button>
-                </form>
             </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-muted">You have no connections yet.</p>
-    {% endif %}
+        {% endif %}
+    </div>
 
+    <!-- Your Connections -->
+    <div class="section-card glass-card animate-on-scroll">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="bi bi-people"></i>
+                Your Connections
+                {% if accepted %}
+                <span class="badge-count">{{ accepted|length }}</span>
+                {% endif %}
+            </h2>
+        </div>
+
+        {% if accepted %}
+            {% for c in accepted %}
+            {% set other = c.user if c.user_id != current_user.id else c.connected_user %}
+            <div class="connection-item">
+                <div class="connection-avatar">{{ other.username[0].upper() }}</div>
+                <div class="connection-info">
+                    <div class="connection-name">{{ other.username }}</div>
+                    <div class="connection-meta">Connected</div>
+                </div>
+                <div class="connection-actions">
+                    <a href="{{ url_for('main.view_user_profile', user_id=other.id) }}" class="btn btn-outline-custom btn-sm">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <form method="POST" 
+                          action="{{ url_for('connections.connections_disconnect', conn_id=c.id) }}"
+                          onsubmit="return confirm('Are you sure you want to disconnect? This will remove the connection.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-outline-custom btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">
+                            <i class="bi bi-person-x"></i> Disconnect
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-people"></i></div>
+                <div class="empty-title">No connections yet</div>
+                <div class="empty-text">Start building your network by connecting with others</div>
+                <a href="{{ url_for('main.discover') }}" class="btn btn-primary-custom btn-sm mt-3">
+                    <i class="bi bi-compass me-2"></i>Discover People
+                </a>
+            </div>
+        {% endif %}
+    </div>
 </div>
-
 {% endblock %}

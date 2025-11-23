@@ -5,67 +5,147 @@
 {% block extra_css %}
 <style>
 .dashboard-container {
-    min-height: calc(100vh - 200px);
+    padding: 2rem 0 4rem;
 }
 
 .welcome-banner {
-    padding: 2rem;
-    background: var(--bg-glass);
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
     position: relative;
     overflow: hidden;
 }
 
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.3;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+}
+
 .welcome-title {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 700;
-    color: var(--text-primary);
+    color: white;
     margin-bottom: 0.5rem;
 }
 
 .welcome-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.125rem;
-    margin-bottom: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    margin: 0;
 }
 
 .stat-card {
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem;
     text-align: center;
     transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
 }
 
 .stat-card:hover {
     transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
 }
 
 .stat-icon {
-    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.75rem;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: white;
+    margin: 0 auto 1rem;
 }
 
 .stat-value {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .stat-label {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
 }
 
-.dashboard-card {
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+.profile-card {
+    padding: 2rem;
 }
 
-.card-header-custom {
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1.25rem;
+    box-shadow: var(--shadow-md);
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.profile-email {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.completion-bar {
+    margin-top: 1.5rem;
+}
+
+.completion-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.progress-wrapper {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.section-card {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -74,116 +154,99 @@
     border-bottom: 1px solid var(--border-color);
 }
 
-.card-title-custom {
+.section-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
-.profile-summary {
-    padding: 1rem 0;
-}
-
-.avatar-placeholder {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: white;
-    box-shadow: var(--shadow-md);
-}
-
-.profile-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    margin-top: 1rem;
-}
-
-.profile-email {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.profile-completion {
-    margin-top: 1.5rem;
-}
-
-.progress {
-    background: var(--bg-secondary);
-    border-radius: 10px;
-    height: 6px;
-}
-
-.progress-bar {
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-    border-radius: 10px;
-}
-
-.empty-state {
-    padding: 3rem 1rem;
-}
-
-.quick-actions-grid {
+.quick-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
 }
 
-.quick-action-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1.5rem;
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+.action-item {
+    padding: 1.5rem 1rem;
+    text-align: center;
     text-decoration: none;
     transition: all 0.3s ease;
+    border-radius: var(--border-radius-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
 }
 
-.quick-action-item:hover {
-    background: var(--bg-glass-hover);
+.action-item:hover {
+    background: var(--bg-tertiary);
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
 }
 
-.quick-action-icon {
-    width: 60px;
-    height: 60px;
+.action-icon {
+    width: 50px;
+    height: 50px;
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: white;
-    margin-bottom: 0.75rem;
+    margin: 0 auto 0.75rem;
 }
 
-.quick-action-label {
+.action-label {
     color: var(--text-primary);
     font-size: 0.875rem;
     font-weight: 500;
+}
+
+.empty-state {
+    padding: 3rem 2rem;
     text-align: center;
 }
 
+.empty-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+.empty-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-text {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
 @media (max-width: 768px) {
-    .welcome-title {
-        font-size: 1.5rem;
+    .dashboard-container {
+        padding: 1rem 0 3rem;
     }
     
-    .quick-actions-grid {
+    .welcome-banner {
+        padding: 1.5rem 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .profile-card {
+        padding: 1.5rem;
+    }
+    
+    .quick-actions {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -192,52 +255,62 @@
 
 {% block body %}
 <div class="dashboard-container">
-    <div class="container py-4">
+    <div class="container">
         <!-- Welcome Banner -->
-        <div class="welcome-banner glass-card mb-4 animate-on-scroll">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="welcome-title">
-                        Welcome back, <span class="text-gradient">{{ username }}</span>! 👋
-                    </h1>
-                    <p class="welcome-subtitle">
-                        Great to see you again. Here's what's happening on campus today.
-                    </p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-custom btn-sm">
-                        <i class="bi bi-person-gear"></i> Edit Profile
-                    </a>
+        <div class="welcome-banner glass-card animate-on-scroll">
+            <div class="welcome-content">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="welcome-title">
+                            Welcome back, {{ username }}! 👋
+                        </h1>
+                        <p class="welcome-subtitle">
+                            Here's what's happening in your campus network today
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-custom btn-sm" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: white;">
+                            <i class="bi bi-person-gear me-2"></i>Edit Profile
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="row mb-4">
-            <a href="{{ url_for('connections.connections_home')}}" class="col-md-3 col-sm-6 mb-3 animate-on-scroll text-decoration-none">
-                <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3 col-sm-6 animate-on-scroll">
+                <a href="{{ url_for('connections.connections_home') }}" class="stat-card glass-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
                     <div class="stat-value">{{ stats.connections }}</div>
                     <div class="stat-label">Connections</div>
-                </div>
-            </a>
-            <div class="col-md-3 col-sm-6 mb-3 animate-on-scroll">
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 animate-on-scroll">
                 <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                    <div class="stat-icon">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </div>
                     <div class="stat-value">0</div>
                     <div class="stat-label">Messages</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-3 animate-on-scroll">
+            <div class="col-lg-3 col-sm-6 animate-on-scroll">
                 <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="bi bi-calendar-event-fill"></i></div>
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
                     <div class="stat-value">0</div>
                     <div class="stat-label">Events</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-3 animate-on-scroll">
+            <div class="col-lg-3 col-sm-6 animate-on-scroll">
                 <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="bi bi-collection-fill"></i></div>
+                    <div class="stat-icon">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
                     <div class="stat-value">0</div>
                     <div class="stat-label">Groups</div>
                 </div>
@@ -247,38 +320,33 @@
         <div class="row">
             <!-- Profile Summary -->
             <div class="col-lg-4 mb-4">
-                <div class="dashboard-card glass-card animate-on-scroll">
-                    <div class="card-header-custom">
-                        <h5 class="card-title-custom">
-                            <i class="bi bi-person-circle me-2"></i>Your Profile
-                        </h5>
-                    </div>
-                    <div class="profile-summary text-center">
-                        <div class="avatar-placeholder">{{ username[0].upper() }}</div>
-                        <h4 class="profile-name">{{ username }}</h4>
+                <div class="profile-card glass-card animate-on-scroll">
+                    <div class="text-center">
+                        <div class="profile-avatar">{{ username[0].upper() }}</div>
+                        <h3 class="profile-name">{{ username }}</h3>
                         <p class="profile-email">{{ current_user.email }}</p>
-                        
-                        <div class="profile-completion">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted small">Profile Completion</span>
-                                <span class="text-primary small fw-bold">25%</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: 25%"></div>
-                            </div>
-                            <p class="text-muted small mt-2">
-                                <i class="bi bi-info-circle"></i> Complete your profile to connect better
-                            </p>
+                    </div>
+                    
+                    <div class="completion-bar">
+                        <div class="completion-label">
+                            <span style="color: var(--text-secondary);">Profile Completion</span>
+                            <span style="color: var(--primary-color); font-weight: 600;">25%</span>
                         </div>
+                        <div class="progress-wrapper">
+                            <div class="progress-fill" style="width: 25%;"></div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.75rem; margin-bottom: 0;">
+                            <i class="bi bi-info-circle me-1"></i>Complete your profile to connect better
+                        </p>
+                    </div>
 
-                        <div class="mt-3">
-                            <a href="{{ url_for('auth.profile') }}" class="btn btn-sm btn-outline-primary w-100 mb-2">
-                                <i class="bi bi-pencil"></i> Edit Profile
-                            </a>
-                            <a href="{{ url_for('main.settings') }}" class="btn btn-sm btn-outline-secondary w-100">
-                                <i class="bi bi-gear"></i> Settings
-                            </a>
-                        </div>
+                    <div style="margin-top: 1.5rem;">
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-primary-custom w-100 mb-2">
+                            <i class="bi bi-pencil me-2"></i>Edit Profile
+                        </a>
+                        <a href="{{ url_for('main.settings') }}" class="btn btn-outline-custom w-100">
+                            <i class="bi bi-gear me-2"></i>Settings
+                        </a>
                     </div>
                 </div>
             </div>
@@ -286,46 +354,60 @@
             <!-- Main Content -->
             <div class="col-lg-8">
                 <!-- Suggested Connections -->
-                <div class="dashboard-card glass-card mb-4 animate-on-scroll">
-                    <div class="card-header-custom">
-                        <h5 class="card-title-custom">
-                            <i class="bi bi-person-plus me-2"></i>People You May Know
-                        </h5>
-                        <a href="{{ url_for('main.discover') }}" class="btn btn-sm btn-link">View All</a>
+                <div class="section-card glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="bi bi-person-plus"></i>
+                            People You May Know
+                        </h2>
+                        <a href="{{ url_for('main.discover') }}" class="btn btn-sm btn-outline-custom">
+                            View All
+                        </a>
                     </div>
-                    <div class="empty-state text-center">
-                        <i class="bi bi-people" style="font-size: 3rem; color: var(--text-muted);"></i>
-                        <p class="text-muted mt-3 mb-2">No suggestions yet</p>
-                        <p class="text-muted small">Complete your profile to get personalized suggestions</p>
-                        <a href="{{ url_for('main.discover') }}" class="btn btn-primary-custom btn-sm mt-2">
-                            <i class="bi bi-compass"></i> Explore Campus
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="empty-title">No suggestions yet</h3>
+                        <p class="empty-text">Complete your profile to get personalized suggestions</p>
+                        <a href="{{ url_for('main.discover') }}" class="btn btn-primary-custom btn-sm mt-3">
+                            <i class="bi bi-compass me-2"></i>Explore Campus
                         </a>
                     </div>
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="dashboard-card glass-card animate-on-scroll">
-                    <div class="card-header-custom">
-                        <h5 class="card-title-custom">
-                            <i class="bi bi-lightning-charge me-2"></i>Quick Actions
-                        </h5>
+                <div class="section-card glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="bi bi-lightning-charge"></i>
+                            Quick Actions
+                        </h2>
                     </div>
-                    <div class="quick-actions-grid">
-                        <a href="{{ url_for('main.discover') }}" class="quick-action-item">
-                            <div class="quick-action-icon"><i class="bi bi-compass"></i></div>
-                            <div class="quick-action-label">Discover People</div>
+                    <div class="quick-actions">
+                        <a href="{{ url_for('main.discover') }}" class="action-item">
+                            <div class="action-icon">
+                                <i class="bi bi-compass"></i>
+                            </div>
+                            <div class="action-label">Discover</div>
                         </a>
-                        <a href="{{ url_for('main.messages') }}" class="quick-action-item">
-                            <div class="quick-action-icon"><i class="bi bi-chat-dots"></i></div>
-                            <div class="quick-action-label">Send Message</div>
+                        <a href="{{ url_for('main.messages') }}" class="action-item">
+                            <div class="action-icon">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div class="action-label">Messages</div>
                         </a>
-                        <a href="#" class="quick-action-item" onclick="event.preventDefault(); alert('Feature coming soon!');">
-                            <div class="quick-action-icon"><i class="bi bi-calendar-plus"></i></div>
-                            <div class="quick-action-label">Create Event</div>
+                        <a href="#" class="action-item" onclick="event.preventDefault(); window.cconnect.showToast('Feature coming soon!', 'info');">
+                            <div class="action-icon">
+                                <i class="bi bi-calendar-plus"></i>
+                            </div>
+                            <div class="action-label">Events</div>
                         </a>
-                        <a href="#" class="quick-action-item" onclick="event.preventDefault(); alert('Feature coming soon!');">
-                            <div class="quick-action-icon"><i class="bi bi-collection"></i></div>
-                            <div class="quick-action-label">Join Group</div>
+                        <a href="#" class="action-item" onclick="event.preventDefault(); window.cconnect.showToast('Feature coming soon!', 'info');">
+                            <div class="action-icon">
+                                <i class="bi bi-collection"></i>
+                            </div>
+                            <div class="action-label">Groups</div>
                         </a>
                     </div>
                 </div>
@@ -333,4 +415,27 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Animate profile completion on scroll
+    const progressFill = document.querySelector('.progress-fill');
+    const profileCard = document.querySelector('.profile-card');
+    
+    if (progressFill && profileCard) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        progressFill.style.width = '25%';
+                    }, 300);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        observer.observe(profileCard);
+    }
+});
+</script>
 {% endblock %}

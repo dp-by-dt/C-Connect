@@ -1,61 +1,339 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block title %}{{ user.username }}'s Profile{% endblock %}
 
+{% block extra_css %}
+<style>
+.profile-container {
+    padding: 2rem 0;
+}
+
+.profile-header-card {
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    opacity: 0.1;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.profile-avatar {
+    width: 130px;
+    height: 130px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    z-index: 1;
+    border: 4px solid var(--bg-primary);
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.profile-email {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.status-connected {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.status-pending {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.profile-info-card {
+    padding: 2rem;
+}
+
+.info-section {
+    margin-bottom: 2rem;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item {
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 0.75rem;
+}
+
+.info-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.interests-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.interest-badge {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.empty-info {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+}
+
+@media (max-width: 576px) {
+    .profile-header-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+    
+    .profile-name {
+        font-size: 1.75rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .action-buttons .btn,
+    .action-buttons form {
+        width: 100%;
+    }
+    
+    .action-buttons form button {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
+<div class="profile-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Profile Header -->
+                <div class="profile-header-card glass-card animate-on-scroll">
+                    <div class="profile-avatar">{{ user.username[0].upper() }}</div>
+                    <h1 class="profile-name">{{ user.username }}</h1>
+                    <p class="profile-email">{{ user.email }}</p>
 
+                    <!-- Connection Status -->
+                    {% if conn %}
+                        {% if conn.status == 'accepted' %}
+                            <div class="connection-status status-connected">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Connected
+                            </div>
+                        {% elif conn.status == 'pending' %}
+                            {% if conn.user_id == current_user.id %}
+                                <div class="connection-status status-pending">
+                                    <i class="bi bi-clock-fill"></i>
+                                    Request Pending
+                                </div>
+                            {% else %}
+                                <div class="connection-status status-pending">
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                    Awaiting Your Response
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
 
-{% if conn is none %}
-    <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-primary">Connect</button>
-    </form>
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        {% if conn is none %}
+                            <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-primary-custom">
+                                    <i class="bi bi-person-plus me-2"></i>Send Connection Request
+                                </button>
+                            </form>
 
-{% elif conn.status == 'pending' and conn.user_id == current_user.id %}
-    <button class="btn btn-secondary" disabled>Pending</button>
+                        {% elif conn.status == 'pending' and conn.user_id == current_user.id %}
+                            <button class="btn btn-outline-custom" disabled>
+                                <i class="bi bi-clock me-2"></i>Request Pending
+                            </button>
 
-{% elif conn.status == 'pending' and conn.target_user_id == current_user.id %}
-    <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=conn.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-success">Accept</button>
-    </form>
+                        {% elif conn.status == 'pending' and conn.target_user_id == current_user.id %}
+                            <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=conn.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-primary-custom">
+                                    <i class="bi bi-check-lg me-2"></i>Accept Request
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=conn.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-outline-custom">
+                                    <i class="bi bi-x-lg me-2"></i>Reject
+                                </button>
+                            </form>
 
-    <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=conn.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-danger">Reject</button>
-    </form>
+                        {% elif conn.status == 'accepted' %}
+                            <button class="btn btn-outline-custom" disabled>
+                                <i class="bi bi-check-circle me-2"></i>Connected
+                            </button>
+                        {% endif %}
 
-{% elif conn.status == 'accepted' %}
-    <button class="btn btn-outline-success" disabled>Connected</button>
-
-{% endif %}
-
-
-
-<div class="container py-4">
-    <div class="glass-card p-4 mb-4 animate-on-scroll">
-        <h1 class="page-title mb-3"><i class="bi bi-person-circle me-2"></i>{{ user.username }}'s Profile</h1>
-        <div class="row">
-            <div class="col-md-4 text-center mb-4">
-                <div style="width: 150px; height: 150px; margin: 0 auto 1rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 4rem; font-weight: 700; color: white;">
-                    {{ user.username[0].upper() }}
-                </div>
-            </div>
-            <div class="col-md-8">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                        <a href="{{ url_for('main.discover') }}" class="btn btn-outline-custom">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Discover
+                        </a>
                     </div>
-                </form>
+                </div>
+
+                <!-- Profile Information -->
+                <div class="profile-info-card glass-card animate-on-scroll mt-4">
+                    <!-- Bio Section -->
+                    {% if profile and profile.bio %}
+                    <div class="info-section">
+                        <h2 class="info-title">
+                            <i class="bi bi-chat-quote"></i>
+                            About
+                        </h2>
+                        <div class="info-item">
+                            <p style="margin: 0; line-height: 1.6; color: var(--text-primary);">
+                                {{ profile.bio }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Academic Info -->
+                    {% if profile and (profile.department or profile.year or profile.location) %}
+                    <div class="info-section">
+                        <h2 class="info-title">
+                            <i class="bi bi-mortarboard"></i>
+                            Academic Information
+                        </h2>
+                        
+                        {% if profile.department %}
+                        <div class="info-item">
+                            <div class="info-label">Department</div>
+                            <div class="info-value">{{ profile.department }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if profile.year %}
+                        <div class="info-item">
+                            <div class="info-label">Year</div>
+                            <div class="info-value">{{ profile.year }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if profile.location %}
+                        <div class="info-item">
+                            <div class="info-label">Location</div>
+                            <div class="info-value">{{ profile.location }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Interests -->
+                    {% if profile and profile.interests %}
+                    <div class="info-section">
+                        <h2 class="info-title">
+                            <i class="bi bi-stars"></i>
+                            Interests
+                        </h2>
+                        <div class="interests-list">
+                            {% for interest in profile.interests %}
+                                <span class="interest-badge">{{ interest }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Empty State if No Info -->
+                    {% if not profile or (not profile.bio and not profile.department and not profile.year and not profile.location and not profile.interests) %}
+                    <div class="empty-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This user hasn't added any profile information yet
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-
-
-
-
 {% endblock %}
-
