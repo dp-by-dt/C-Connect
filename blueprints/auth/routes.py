@@ -280,7 +280,7 @@ def profile_edit():
 
 
 # Exempt health checks
-@app.route('/ping')
+@auth.route('/ping')
 @limiter.exempt
 def ping():
     return "OK"

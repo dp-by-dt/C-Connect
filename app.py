@@ -1,7 +1,7 @@
 from flask import Flask, url_for, render_template, request, redirect, make_response
 import os
 from extensions import db
-from factory_helpers import register_blueprints, register_errorhandlers, register_extensions, configure_logging
+from factory_helpers import register_blueprints, register_errorhandlers, register_extensions, configure_logging, register_security_headers
 from factory_helpers import to_ist, register_daily_cleanup
 
 
@@ -31,8 +31,9 @@ def create_app():
 
 
     #---------- Register the Extensions and BluePrints-----------
-    register_blueprints(app)
     register_extensions(app)
+    register_security_headers(app)
+    register_blueprints(app)
     register_errorhandlers(app)
     configure_logging(app)
 

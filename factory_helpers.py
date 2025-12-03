@@ -7,6 +7,28 @@ from datetime import datetime, timezone
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from flask_limiter.util import get_remote_address
+
+
+#Secure headers to stop xss, script injection, image injection etc
+def register_security_headers(app):
+    """Add secure HTTP headers"""
+    @app.after_request
+    def set_secure_headers(response):
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "img-src 'self' data: blob: https:; "# Allow external images
+            "style-src 'self' 'unsafe-inline' https:; "# ADD https: for CDNs
+            "script-src 'self' 'unsafe-inline' https:; "# ADD https: for JS
+            "font-src 'self' https: data:; "# Google Fonts
+            "connect-src 'self';"
+            "connect-src 'self' https:;"  # ← ADD https: for CDNs/maps
+        )
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=()'
+        return response
 
 
 
@@ -20,6 +42,17 @@ def register_extensions(app):
     migrate.init_app(app, db)
     limiter.init_app(app=app)#rate limiter
     # Add other extensions here as needed
+
+
+
+    #----- Later add this shared limiter is needed
+    #---- But make sure to replace @limiter.limit("5 per minute") with @app.login_limiter	
+    # Shared login brute-force protection (10 attempts/hour per IP)
+    # login_limiter = limiter.shared_limit("10 per hour", key_func=get_remote_address)
+    
+    # # Export for blueprint use
+    # app.login_limiter = login_limiter
+
 
 
 #function to register blueprints
@@ -61,6 +94,7 @@ def to_ist(utc_dt):
 
 #logs errors in the logs/cconnect.log file
 def configure_logging(app):
+    """Configure Flask app logging to prevent config dumps"""
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
 
@@ -78,6 +112,7 @@ def configure_logging(app):
     file_handler.setLevel(logging.INFO)
 
     app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)  #prevents config dumps
 
 
 

@@ -27,6 +27,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% include 'components/flash.html' %}
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
         <div class="container-fluid px-lg-5 px-3">
@@ -202,7 +203,21 @@
             }
         }
     </script>
-    
+
+    <!-- Errors display -->
+     <script>
+        document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn && !btn.disabled) {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+            btn.disabled = true;
+            }
+        });
+        });
+    </script>
+
+            
     <!-- Page-specific JS -->
     {% block extra_js %}{% endblock %}
 </body>

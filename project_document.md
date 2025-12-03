@@ -742,5 +742,12 @@ Updates are corrections done
    - Added /ping for exempt health cheks
    - Limited connection request to same target 3 times in an day and one person can only send max 25 requests per hour (in `connections/routes.py`)
 
+4. Added Content Security Policy (CSP) as 'set_secure_headers()' in `factory_helpers.py` and registered it in `app.py`
+5. Added `templates/components/flash.html` for flash messages in signup pages
+6. Added content policy was blocking some css styles. Now corrected it.
+
+
+
+
 
 
