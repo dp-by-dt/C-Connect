@@ -2,9 +2,10 @@ from . import main
 from flask import render_template
 from flask_login import login_required, current_user
 from models import User  # For user discovery feature
-from models import Connection  # For viewing other user's profile
+from models import Connection, ProfileVisit  # For viewing other user's profile
 from flask import redirect, url_for
 from extensions import db
+from flask import abort, session
 
 
 
@@ -97,8 +98,11 @@ def settings():
 @main.route("/user/<int:user_id>")
 @login_required
 def view_user_profile(user_id):
-    if user_id == current_user.id:
+
+    #validate user_id
+    if user_id <= 0 or user_id == current_user.id:
         return redirect(url_for("auth.profile"))
+
 
     user = User.query.get_or_404(user_id)
     profile = user.profile
@@ -108,6 +112,16 @@ def view_user_profile(user_id):
         ((Connection.user_id == current_user.id) & (Connection.target_user_id == user_id)) |
         ((Connection.user_id == user_id) & (Connection.target_user_id == current_user.id))
     ).first()
+
+    #session check for no db spam
+    session_key = f"visited_{user_id}"
+    if current_user.id != user.id:
+        try:
+            v = ProfileVisit(viewer_id=current_user.id, viewed_id=user.id)
+            db.session.add(v)
+            db.session.commit()
+        except:
+            db.session.rollback()
 
     return render_template(
         "main/user_profile.html",

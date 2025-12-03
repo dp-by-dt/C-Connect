@@ -747,7 +747,27 @@ Updates are corrections done
 6. Added content policy was blocking some css styles. Now corrected it.
 
 7. `static/favicon.ico` added (for showing the symbol)
+8. Error: (✅Fixed)
+    - Once the login or signup button is clicked, it stays loading... not resets (✅corrected) - It was the problem with the script section added at the end of `base.html` file. Now that section is removed
+9. 95% opacity given to .alert in `global.css`
+
+
+10. Added ProfileVisit() model in `models.py`
+11. Added this section in `main/routes.py` file so that when any user visits another profile, it gets recorded in the new table `profile_visit`. But it spams the db (triggers even when page refreshed)
 
 
 
 
+
+
+
+
+
+
+1. Flash UI improvements (flash.html partial + global include)
+2. Loading state button (tiny UX improvement)
+3. ProfileVisit model
+4. Search route + fuzzy matching
+5. Discover suggestion algorithm
+6. Pagination (simple implementation)
+7. Caching (optional but recommended)
