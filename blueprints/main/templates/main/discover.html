@@ -209,6 +209,18 @@
             >
         </div>
     </div>
+
+
+    <!-- Pagination navigation -->
+     <div>
+        Page {{ page }} | 
+        {% if page > 1 %}
+        <a href="?page={{ page-1 }}">Previous</a>
+        {% endif %}
+        {% if has_next %}
+        <a href="?page={{ page+1 }}">Next</a>
+        {% endif %}
+     </div>
     
     <!-- Users Grid -->
     <div class="users-grid">

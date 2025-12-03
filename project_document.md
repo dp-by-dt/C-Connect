@@ -752,12 +752,20 @@ Updates are corrections done
 9. 95% opacity given to .alert in `global.css`
 
 
+
+ ---------- Modifications --------
 10. Added ProfileVisit() model in `models.py`
 11. Added this section in `main/routes.py` file so that when any user visits another profile, it gets recorded in the new table `profile_visit`. But it spams the db (triggers even when page refreshed)
 
 
-
-
+12. No refresh spamming in the profile_visit db table now. Added a time threshold (30 min) validation 
+    - Use `datetime.now(timezone.utc)` instead of `datetime.utcnow()`
+13. Initialised this automatic clearing in `create_app()` in `app.py`. Now clears profile_visits older than 7 days, this deletion check runs every hour. And logs in when it deletes.
+14. Implemented offset pagination for the discovery page in it's `routes.py`. Users' card were sorted as per their last activity timing
+15. Added next and previous page guiding buttons (primitive ui)
+16. Problems with pagination nav:
+    - page query greater than total pages was allowed (but showed blank) - like `discover?page=100` (✅fixed)
+    - Inactive users were not shown in the discover page (✅fixed- by using `case()` and `outerjoin()`)
 
 
 

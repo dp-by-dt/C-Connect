@@ -3,11 +3,14 @@
 from flask import render_template
 from extensions import db, login_manager, csrf, migrate, limiter
 import pytz
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import time
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 from flask_limiter.util import get_remote_address
+
+from models import ProfileVisit
 
 
 #Secure headers to stop xss, script injection, image injection etc
@@ -132,3 +135,26 @@ def register_daily_cleanup(app):
             deleted = cleanup_old_notifications()
             app.logger.info(f"Cleaned up {deleted} old notifications.")
             app._last_notification_cleanup = now
+
+
+# Delete old profile-view rows
+def register_profilevisit_cleanup(app):
+    last_cleanup = {'t': 0}
+
+    @app.before_request
+    def cleanup_visits():
+        now = time.time()
+        if now - last_cleanup['t'] < 3600:  # run once every hour
+            return
+
+        last_cleanup['t'] = now
+        cutoff = datetime.now(timezone.utc) - timedelta(days=7) #cleans earlier than 7 days
+
+        try:
+            deleted = ProfileVisit.query.filter(ProfileVisit.timestamp < cutoff).delete()
+            db.session.commit()
+            if deleted:
+                app.logger.info(f"ProfileVisit cleanup removed {deleted} rows")
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error("ProfileVisit cleanup failed: %s", str(e))

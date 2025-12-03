@@ -1,11 +1,16 @@
 from . import main
 from flask import render_template
 from flask_login import login_required, current_user
-from models import User  # For user discovery feature
+from models import User, Profile  # For user discovery feature
 from models import Connection, ProfileVisit  # For viewing other user's profile
 from flask import redirect, url_for
 from extensions import db
-from flask import abort, session
+from flask import abort
+from flask import request
+
+from sqlalchemy import case
+
+from datetime import datetime, timezone
 
 
 
@@ -71,9 +76,44 @@ def dashboard():
 @login_required
 def discover():
     # Fetch all users except the current user
-    # REASON: Users shouldn't see themselves in discovery
-    users = User.query.filter(User.id != current_user.id).all()
-    return render_template('main/discover.html', users=users)
+    # Quick offset pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = min(request.args.get('per_page', 12, type=int), 50)
+
+    query = User.query.outerjoin(Profile).filter(User.id != current_user.id)
+    total = query.count()
+    max_page = (total + per_page - 1) // per_page  # Calculate last page
+
+    # REDIRECT INVALID PAGES
+    if page < 1:
+        return redirect(url_for('main.discover', page=1))
+    if page > max_page and total > 0:
+        return redirect(url_for('main.discover', page=max_page))
+
+
+    # COALESCE - Active FIRST, Inactive AFTER!
+    users = (query
+             .order_by(
+                 case(
+                     (User.last_login.is_(None), 1),  # NULL = 1 (last)
+                     else_=0  # NOT NULL = 0 (first)
+                 ),
+                 User.last_login.desc(),  # Recent first
+                 User.id  # Tiebreaker
+             )
+             .offset((page-1)*per_page)
+             .limit(per_page)
+             .all())
+    
+
+    has_next = page*per_page < total
+    return render_template('main/discover.html', 
+                         users=users, 
+                         page=page, 
+                         per_page=per_page, 
+                         has_next=has_next,
+                         total=total)
+
 
 
 # NEW ROUTE: Messaging page (placeholder for now)
@@ -113,13 +153,21 @@ def view_user_profile(user_id):
         ((Connection.user_id == user_id) & (Connection.target_user_id == current_user.id))
     ).first()
 
-    #session check for no db spam
-    session_key = f"visited_{user_id}"
+
     if current_user.id != user.id:
         try:
-            v = ProfileVisit(viewer_id=current_user.id, viewed_id=user.id)
-            db.session.add(v)
-            db.session.commit()
+            # Prevent duplicate visits within last 30 minutes
+            last_visit = (
+                ProfileVisit.query
+                .filter_by(viewer_id=current_user.id, viewed_id=user.id)
+                .order_by(ProfileVisit.timestamp.desc())
+                .first()
+            )
+
+            if not last_visit or (datetime.now(timezone.utc) - last_visit.timestamp).total_seconds() > 1800: #30 minutes
+                v = ProfileVisit(viewer_id=current_user.id, viewed_id=user.id)
+                db.session.add(v)
+                db.session.commit()
         except:
             db.session.rollback()
 

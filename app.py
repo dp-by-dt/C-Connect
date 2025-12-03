@@ -2,7 +2,7 @@ from flask import Flask, url_for, render_template, request, redirect, make_respo
 import os
 from extensions import db
 from factory_helpers import register_blueprints, register_errorhandlers, register_extensions, configure_logging, register_security_headers
-from factory_helpers import to_ist, register_daily_cleanup
+from factory_helpers import to_ist, register_daily_cleanup, register_profilevisit_cleanup
 
 
 
@@ -39,6 +39,8 @@ def create_app():
 
     #daily cleanup triggering for old notifications
     register_daily_cleanup(app)
+    #cleanup old profile_visit
+    register_profilevisit_cleanup(app)
     
     return app
 
