@@ -15,6 +15,24 @@ from models import Connection
 from extensions import db
 from flask import jsonify
 
+from extensions import limiter
+from flask_limiter.util import get_remote_address
+
+
+
+#---------- Helper functions
+def get_connection_key():
+    """Returns unique key: user123:target456"""
+    return f"user:{current_user.id}:target:{request.view_args['target_id']}"
+
+def get_user_key():
+    """Returns user-only key for total limit"""
+    return f"user:{current_user.id}"
+
+
+
+
+
 
 # HOME PAGE — LIST CONNECTIONS
 @connections.route('/connections')
@@ -35,6 +53,8 @@ def connections_home():
 
 # SEND REQUEST
 @connections.route('/connections/send/<int:target_id>', methods=['POST'])
+@limiter.limit("3 per day", key_func=get_connection_key)  # Max 3/day to SAME person
+@limiter.limit("25 per hour", key_func=lambda: f"user:{current_user.id}")  # 25 total/hour per user
 @login_required
 def connections_send(target_id):
     ok, msg, conn = send_connection_request(current_user.id, target_id)

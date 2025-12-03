@@ -545,6 +545,7 @@ from project root
 * Now creating new user notes the created_time
 * Loggin in updates the last_login time in the `db`
 * timestamp storing is in ust and later show it in ist in output
+* RotatingFileHandler() enabled 
 
 4. Added `EditProfileForm` in the `auth/forms.py` file
 5. Update `auth/routes.py` file:
@@ -605,35 +606,7 @@ Only in the latter we need to add the `conn`, not in /profile call.
 
 
 
-### Day 12: 
-
-Day 12 = Building the Notifications System (Phase 1)
-(This is important & very powerful)
-
-It includes:
-
-in-app bell icon
-
-unread notification count
-
-notification table in DB
-
-storing events like:
-
-You received a connection request
-
-Someone accepted your request
-
-Someone rejected your request
-
-Someone disconnected
-
-showing notification dropdown
-
-marking notifications as read
-
-(optional) toast pop-ups
-
+### Day 12: Building Notification & UI/UX upgrade
 
 
 1. Added `Notification()` model in `models.py`
@@ -753,3 +726,21 @@ Remember that no need to resemble any of this just keep the style for your refer
 Updates are corrections done
 * patched up the end point errors in : `edit profile` & `cancel request`
 * added ajax in the global js, for updating connection number instantly
+
+
+
+
+
+
+### Day 13: Robustness
+
+------ Prelim modifications and checkups -------
+1. Added `.env` file for secrets and loads it to the `config.py` file
+2. Input sanitization for long text fields using bleach() - bio, interest
+3. Added `limiter` function in `extension.py` and initiated it in th`factory_helper.py`
+   - Added these limits to: login, profile, sending connection
+   - Added /ping for exempt health cheks
+   - Limited connection request to same target 3 times in an day and one person can only send max 25 requests per hour (in `connections/routes.py`)
+
+
+

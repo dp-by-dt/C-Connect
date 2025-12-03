@@ -9,6 +9,10 @@ from urllib.parse import urlparse, urljoin
 from flask import current_app as app
 from blueprints.connections.service import is_connected, list_requests
 from models import Connection
+import re, bleach
+
+from extensions import limiter, csrf
+from flask_limiter.util import get_remote_address
 
 
 import os
@@ -22,6 +26,22 @@ def is_safe_url(target): #check the sanity of links
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http','https') and ref_url.netloc == test_url.netloc
 
+
+
+#---- Sanity of input text
+def sanitize_text(text):
+    if not text:
+        return ""
+    # Option 1: Strip all HTML tags (strict)
+    #clean = re.sub(r'<[^<]+?>', '', text)
+    # Option 2: Allow safe HTML with bleach (recommended)
+    clean = bleach.clean(text, tags=['b', 'i', 'em', 'strong'], strip=True)
+    return clean.strip()
+
+
+# --------- return user id
+def get_user_id():
+    return request.environ.get('user_id') or get_remote_address()
 
 
 
@@ -95,6 +115,8 @@ def signup():  # CHANGED: Function name from add_user_route to signup for consis
 
 
 @auth.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # 5 login attempts/minute per IP
+@csrf.exempt  # CSRF already handles this, but explicit
 def login():
     # CHANGED: Redirect to dashboard if already logged in (Best Practice: UX improvement)
     # REASON: Logged-in users shouldn't access login page again
@@ -159,6 +181,7 @@ def logout():
 # NEW ROUTE: Profile page for viewing/editing user profile
 # REASON: Essential for social network; allows users to update their information
 @auth.route('/profile')
+@limiter.limit("20 per day", key_func=get_user_id)
 @login_required
 def profile():
 
@@ -189,11 +212,11 @@ def profile_edit():
         username = form.username.data.strip() if form.username.data else current_user.username
         department = form.department.data.strip() if form.department.data else None
         year = form.year.data.strip() if form.year.data else None
-        bio = form.bio.data.strip() if form.bio.data else None
+        bio = sanitize_text(form.bio.data) if form.bio.data else None
         location = form.location.data.strip() if form.location.data else None
 
         # interests: turn comma-separated into list (JSON)
-        interests_raw = form.interests.data or ""
+        interests_raw = sanitize_text(form.interests.data or "")
         interests_list = [i.strip() for i in interests_raw.split(',') if i.strip()]
         if len(interests_list) == 0:
             interests_val = None
@@ -253,3 +276,11 @@ def profile_edit():
                 form.interests.data = profile.interests
 
     return render_template('auth/profile_edit.html', form=form, profile=profile)
+
+
+
+# Exempt health checks
+@app.route('/ping')
+@limiter.exempt
+def ping():
+    return "OK"
