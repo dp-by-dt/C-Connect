@@ -746,7 +746,7 @@ Updates are corrections done
 5. Added `templates/components/flash.html` for flash messages in signup pages
 6. Added content policy was blocking some css styles. Now corrected it.
 
-
+7. `static/favicon.ico` added (for showing the symbol)
 
 
 

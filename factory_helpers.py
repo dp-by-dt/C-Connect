@@ -21,7 +21,6 @@ def register_security_headers(app):
             "style-src 'self' 'unsafe-inline' https:; "# ADD https: for CDNs
             "script-src 'self' 'unsafe-inline' https:; "# ADD https: for JS
             "font-src 'self' https: data:; "# Google Fonts
-            "connect-src 'self';"
             "connect-src 'self' https:;"  # ← ADD https: for CDNs/maps
         )
         response.headers['X-Content-Type-Options'] = 'nosniff'
