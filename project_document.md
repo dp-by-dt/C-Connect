@@ -698,3 +698,58 @@ This shows the ist time of the notification creation.
 * triggering the function per day is added to `factory_helpers.py`
 * registered the trigger function inside the `create_app()`
 
+
+
+
+=================== UI UPGRADE (Corrections Needed) ===============
+
+1. The slow loading (animation) should be removed. it is annoying
+2. remember me box not visible clearly
+3. In signup page:
+    usename error not showing as text
+    email validation not done(only shown after submitting)
+    password strength check is not proper and error not shown (only shown after submitting)
+4. In login page:
+    email validation check not done, and error not shown (only shown after submitting)
+    password strength not proper, no error shown
+    The placeholders like the "Username", "Email" etc. are now having a white background while in dark mode. It is quite annoying. It was to blend with the surroundings, but yet legibly visible. 
+    The view password button in the "password" section is not aligned in the middle, but a little towards bottom    
+5. Messages block in dashboard link to messages page
+6. No one's profile showing in discover (just the letter first)
+7. For connected users too, the connection section showing 'Connect' option (not adapted)
+8. After request sent, re-loads to page top, not stay there and update the card. 
+9. Profile image not showing in the nav bar circle.
+10. The text on the flash message gets overlapped with the cross symbol in the flash message (a little bit)
+11. The left to right running kind of animation in the card which says "ready to build your campus network" is a little annoying. Remove it and add such to the following "Get Started" button, but just keep it subtle (like those in the google pages)
+12. All the confirmation kind of boxes (like the logout confirmation) are now not styled. We might want to style it (now or later). 
+13. Instead of writing "Get Started Free", just write "Get Started" (remove such free from else where too)
+14. When clicking accept/reject to a connection, the page seems reloading, instead of updating the current state. That is annoying
+15. On user profile, there shoudl be an option to connect to them or disconnect them
+16. In the connections page, if a block is empyt, i.e., like Incoming requests, outgoing requests etc, then they should be collapsed with the simple button on their side, so that it don't interfere with other sections much
+
+17. Dark mode is totally messy:
+    Each time another page loads, it load in light mode for a fraction of second and then only goes to dark mode (totally annoying)
+    Some texts and options are not clear properly. Especially all the text we type on any input box (like the login, search option etc.)
+    The text on flash message is not visible in dark mode
+
+18. Errors: (✅ All Solved)
+    Edit profile: `profile` not defined (✅corrected)
+    Cancalling request: not enough values to unpack (expected 3, got 2) - but get's cancelled later (✅corrected)
+
+
+
+------------------
+TOTAL UPGRADE FOR THE UI/UX IS REQUIRED
+
+Reshape the UI/UX totally, BUT DO NOT BREAK ANYTHING IN THE BACKEND SIDE.
+Keep on the corrections for the above points too. 
+Keep in mind that, that would be a mobile first responsive application. And this is not a website or something, but an appication like the instagram or linkedIn. So keep that in mind while editing. 
+And this should be very much nuanced and creative, for college students. So we need to keep the top cutting edge style of designing. I prefer minimal and sleek kind of design. This one feels like a little bit robotic or ai like.
+I have provided below some other themes which i liked for different segments. You can take them as reference and adapt from there. 
+Remember that no need to resemble any of this just keep the style for your reference. 
+
+
+----------------
+Updates are corrections done
+* patched up the end point errors in : `edit profile` & `cancel request`
+* added ajax in the global js, for updating connection number instantly

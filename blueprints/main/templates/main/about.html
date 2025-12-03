@@ -1,42 +1,355 @@
 {% extends "base.html" %}
+
 {% block title %}About{% endblock %}
+
+{% block extra_css %}
+<style>
+.about-hero {
+    padding: 5rem 0 3rem;
+    text-align: center;
+}
+
+.about-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.about-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.mission-section {
+    padding: 4rem 0;
+    background: var(--bg-secondary);
+}
+
+.mission-card {
+    padding: 3rem 2.5rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.mission-icon {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    margin: 0 auto 2rem;
+}
+
+.mission-text {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.values-section {
+    padding: 4rem 0;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 3rem;
+}
+
+.value-card {
+    padding: 2.5rem 2rem;
+    height: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-12px);
+}
+
+.value-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin: 0 auto 1.5rem;
+}
+
+.value-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.value-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.team-section {
+    padding: 4rem 0;
+    background: var(--bg-secondary);
+}
+
+.team-intro {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    line-height: 1.6;
+}
+
+.cta-section {
+    padding: 5rem 0;
+}
+
+.cta-card {
+    padding: 4rem 3rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.cta-content {
+    position: relative;
+    z-index: 1;
+}
+
+.cta-card h2,
+.cta-card p {
+    color: white;
+}
+
+.cta-card h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.cta-card p {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin-bottom: 2rem;
+}
+
+.cta-card .btn {
+    background: white;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.cta-card .btn:hover {
+    background: var(--bg-secondary);
+    transform: translateY(-2px) scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .about-hero {
+        padding: 3rem 0 2rem;
+    }
+    
+    .mission-section,
+    .values-section,
+    .team-section {
+        padding: 3rem 0;
+    }
+    
+    .mission-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .cta-section {
+        padding: 3rem 0;
+    }
+    
+    .cta-card {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .cta-card h2 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-<div class="container py-5">
-    <div class="text-center mb-5 animate-on-scroll">
-        <h1 class="page-title">About <span class="text-gradient">C-Connect</span></h1>
-        <p class="page-subtitle">Building stronger campus communities, one connection at a time</p>
-    </div>
-    <div class="row mb-5 align-items-center">
-        <div class="col-lg-6 mb-4 mb-lg-0 animate-on-scroll">
-            <div class="glass-card p-4">
-                <div class="mb-3" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">
-                    <i class="bi bi-bullseye"></i>
-                </div>
-                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">Our Mission</h2>
-                <p style="color: var(--text-secondary); line-height: 1.8;">
-                    C-Connect was created to solve a simple problem: connecting students on campus. In a world dominated by global social media, we saw the need for a platform that brings together the people you actually interact with daily.
-                </p>
-                <p style="color: var(--text-secondary); line-height: 1.8;">
-                    We believe meaningful connections happen locally. By focusing on your campus, we help you discover study partners, find event buddies, join interest groups, and build friendships that matter.
-                </p>
-            </div>
-        </div>
-        <div class="col-lg-6 animate-on-scroll">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
-                <div class="glass-card p-3 text-center" style="grid-column: 1 / -1;">
-                    <i class="bi bi-people-fill" style="font-size: 3rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: block; margin-bottom: 1rem;"></i>
-                    <h4>Campus-First</h4>
-                </div>
-                <div class="glass-card p-3 text-center">
-                    <i class="bi bi-heart-fill" style="font-size: 2.5rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: block; margin-bottom: 1rem;"></i>
-                    <h4>Student-Built</h4>
-                </div>
-                <div class="glass-card p-3 text-center">
-                    <i class="bi bi-shield-check" style="font-size: 2.5rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: block; margin-bottom: 1rem;"></i>
-                    <h4>Privacy-Focused</h4>
-                </div>
-            </div>
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <div class="animate-on-scroll">
+            <h1 class="about-title">
+                About <span class="text-gradient">C-Connect</span>
+            </h1>
+            <p class="about-subtitle">
+                We're on a mission to transform how students connect, collaborate, and build meaningful relationships on campus.
+            </p>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Mission Section -->
+<section class="mission-section">
+    <div class="container">
+        <div class="mission-card glass-card animate-on-scroll">
+            <div class="mission-icon">
+                <i class="bi bi-bullseye"></i>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">Our Mission</h2>
+            <p class="mission-text">
+                C-Connect was created to solve a simple problem: it's hard to meet new people on a large campus. We believe that every student deserves to find their community, discover opportunities, and build connections that last beyond graduation. Our platform makes it easy to find like-minded peers, join interest groups, and stay engaged with campus life.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Values Section -->
+<section class="values-section">
+    <div class="container">
+        <div class="animate-on-scroll">
+            <h2 class="section-title">Our Values</h2>
+            <p class="section-subtitle">The principles that guide everything we do</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 class="value-title">Privacy First</h3>
+                    <p class="value-description">
+                        Your data is yours. We prioritize your privacy and security in everything we build.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-heart"></i>
+                    </div>
+                    <h3 class="value-title">Authentic Connections</h3>
+                    <p class="value-description">
+                        We foster genuine relationships, not just follower counts. Quality over quantity.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h3 class="value-title">Inclusive Community</h3>
+                    <p class="value-description">
+                        Everyone belongs here. We celebrate diversity and create spaces where all students thrive.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+                    <h3 class="value-title">Innovation</h3>
+                    <p class="value-description">
+                        We continuously improve and adapt to serve our community better.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-star"></i>
+                    </div>
+                    <h3 class="value-title">Student-Centered</h3>
+                    <p class="value-description">
+                        Built by students, for students. Your feedback shapes our roadmap.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 animate-on-scroll">
+                <div class="value-card glass-card">
+                    <div class="value-icon">
+                        <i class="bi bi-rocket"></i>
+                    </div>
+                    <h3 class="value-title">Growth</h3>
+                    <p class="value-description">
+                        We help you grow personally and professionally through meaningful connections.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="team-section">
+    <div class="container">
+        <div class="animate-on-scroll">
+            <h2 class="section-title">Made with ❤️ for Students</h2>
+            <p class="team-intro">
+                C-Connect is a passion project created by students who understand the challenges of making connections on campus. We're committed to building the best social platform for students, by students.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card glass-card animate-on-scroll">
+            <div class="cta-content">
+                <h2>Ready to Join the Community?</h2>
+                <p>Start building your campus network today</p>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-lg">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Get Started Now
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-lg">
+                        <i class="bi bi-layout-sidebar me-2"></i>Go to Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

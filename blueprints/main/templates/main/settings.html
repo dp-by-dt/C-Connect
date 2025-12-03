@@ -1,27 +1,333 @@
 {% extends "base.html" %}
+
 {% block title %}Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-container {
+    padding: 2rem 0;
+}
+
+.settings-header {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.settings-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.settings-section {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.setting-item:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.setting-description {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.danger-zone {
+    border: 2px solid var(--danger-color);
+    border-radius: var(--border-radius-md);
+}
+
+.danger-zone .section-header {
+    border-bottom-color: var(--danger-color);
+}
+
+.danger-zone .section-icon {
+    background: var(--danger-color);
+}
+
+.btn-danger-outline {
+    color: var(--danger-color);
+    border: 2px solid var(--danger-color);
+    background: transparent;
+}
+
+.btn-danger-outline:hover {
+    background: var(--danger-color);
+    color: white;
+}
+
+.coming-soon-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem 0;
+    }
+    
+    .settings-header {
+        padding: 1.5rem;
+    }
+    
+    .settings-section {
+        padding: 1.5rem;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="glass-card p-4">
-                <h2 class="mb-4"><i class="bi bi-gear me-2"></i>Settings</h2>
-                <div class="mb-4">
-                    <h5>Appearance</h5>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="darkModeToggle">
-                        <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+<div class="settings-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="settings-header glass-card animate-on-scroll">
+                    <h1 class="settings-title">
+                        <i class="bi bi-gear me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                        Settings
+                    </h1>
+                    <p class="settings-subtitle">Manage your account preferences</p>
+                </div>
+
+                <!-- Appearance Section -->
+                <div class="settings-section glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-palette"></i>
+                        </div>
+                        <h2 class="section-title">Appearance</h2>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Dark Mode</div>
+                            <div class="setting-description">Switch between light and dark theme</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                id="darkModeToggle"
+                                role="switch"
+                            >
+                        </div>
                     </div>
                 </div>
-                <p class="text-muted">More settings options coming soon!</p>
+
+                <!-- Notifications Section -->
+                <div class="settings-section glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h2 class="section-title">Notifications</h2>
+                        <span class="coming-soon-badge ms-auto">Coming Soon</span>
+                    </div>
+
+                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Connection Requests</div>
+                            <div class="setting-description">Get notified when someone wants to connect</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                checked
+                                disabled
+                            >
+                        </div>
+                    </div>
+
+                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Messages</div>
+                            <div class="setting-description">Get notified about new messages</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                checked
+                                disabled
+                            >
+                        </div>
+                    </div>
+
+                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Campus Events</div>
+                            <div class="setting-description">Stay updated about campus events</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                checked
+                                disabled
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Section -->
+                <div class="settings-section glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h2 class="section-title">Privacy</h2>
+                        <span class="coming-soon-badge ms-auto">Coming Soon</span>
+                    </div>
+
+                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Profile Visibility</div>
+                            <div class="setting-description">Control who can see your profile</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                checked
+                                disabled
+                            >
+                        </div>
+                    </div>
+
+                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
+                        <div class="setting-info">
+                            <div class="setting-label">Show Email</div>
+                            <div class="setting-description">Display your email on your profile</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                disabled
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="settings-section glass-card danger-zone animate-on-scroll">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <h2 class="section-title">Danger Zone</h2>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Delete Account</div>
+                            <div class="setting-description">Permanently delete your account and all data</div>
+                        </div>
+                        <button 
+                            class="btn btn-danger-outline btn-sm"
+                            onclick="alert('Account deletion is not yet available. Please contact support.')">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-document.getElementById('darkModeToggle').addEventListener('change', function() {
-    window.cconnect.themeManager.toggleTheme();
+document.addEventListener('DOMContentLoaded', () => {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    
+    // Set initial state
+    darkModeToggle.checked = window.cconnect.themeManager.getTheme() === 'dark';
+    
+    // Toggle theme on change
+    darkModeToggle.addEventListener('change', function() {
+        window.cconnect.themeManager.toggleTheme();
+    });
 });
-document.getElementById('darkModeToggle').checked = window.cconnect.themeManager.getTheme() === 'dark';
 </script>
 {% endblock %}

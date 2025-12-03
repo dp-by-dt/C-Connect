@@ -204,7 +204,7 @@ def profile_edit():
         if username != current_user.username:
             if User.query.filter(User.username == username, User.id != current_user.id).first():
                 form.username.errors.append("Username already taken.")
-                return render_template('auth/profile_edit.html', form=form)
+                return render_template('auth/profile_edit.html', form=form, profile=profile)
 
         # handle profile picture
         if form.profile_picture.data:
@@ -213,7 +213,7 @@ def profile_edit():
             ext = os.path.splitext(file.filename)[1].lower().lstrip('.')
             if ext not in ALLOWED_EXT:
                 form.profile_picture.errors.append("Invalid image type.")
-                return render_template('auth/profile_edit.html', form=form)
+                return render_template('auth/profile_edit.html', form=form, profile=profile)
             pic_url = save_profile_picture(file, current_user.id)
             profile.profile_picture = pic_url
 
@@ -234,7 +234,7 @@ def profile_edit():
             db.session.rollback()
             app.logger.exception("Failed to update profile for user %s: %s", current_user.email, exc)
             flash("An error occurred while saving profile.", "danger")
-            return render_template('auth/profile_edit.html', form=form)
+            return render_template('auth/profile_edit.html', form=form, profile=profile)
 
     # populate interests field for display (join with comma)
     if request.method == 'GET':
@@ -252,4 +252,4 @@ def profile_edit():
                 # if stored as raw text, leave it
                 form.interests.data = profile.interests
 
-    return render_template('auth/profile_edit.html', form=form)
+    return render_template('auth/profile_edit.html', form=form, profile=profile)

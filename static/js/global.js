@@ -1,28 +1,19 @@
 /* =====================================================
    C-CONNECT GLOBAL JAVASCRIPT
-   Theme Management & Utility Functions
+   Modern Theme Management & Utilities
    ===================================================== */
 
-// ===== THEME MANAGEMENT SYSTEM =====
+// ===== THEME MANAGEMENT =====
 class ThemeManager {
     constructor() {
         this.themeKey = 'cconnect-theme';
-        this.colorKey = 'cconnect-accent-color';
         this.init();
     }
 
     init() {
-        // Load saved theme or default to light
         const savedTheme = localStorage.getItem(this.themeKey) || 'light';
         this.setTheme(savedTheme, false);
 
-        // Load saved accent color if exists
-        const savedColor = localStorage.getItem(this.colorKey);
-        if (savedColor) {
-            this.setAccentColor(savedColor, false);
-        }
-
-        // Setup theme toggle button
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.addEventListener('click', () => this.toggleTheme());
@@ -32,19 +23,17 @@ class ThemeManager {
     setTheme(theme, save = true) {
         document.body.setAttribute('data-theme', theme);
         
-        // Update theme icon
         const icon = document.getElementById('themeIcon');
         if (icon) {
-            if (theme === 'dark') {
-                icon.className = 'bi bi-moon-stars-fill';
-            } else {
-                icon.className = 'bi bi-sun-fill';
-            }
+            icon.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
         }
 
         if (save) {
             localStorage.setItem(this.themeKey, theme);
         }
+
+        // Dispatch custom event for theme change
+        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
     }
 
     toggleTheme() {
@@ -53,51 +42,80 @@ class ThemeManager {
         this.setTheme(newTheme);
     }
 
-    setAccentColor(color, save = true) {
-        document.documentElement.style.setProperty('--primary-color', color);
-        
-        if (save) {
-            localStorage.setItem(this.colorKey, color);
-        }
-    }
-
     getTheme() {
         return document.body.getAttribute('data-theme');
     }
 }
 
-// Initialize theme manager
 const themeManager = new ThemeManager();
 
-// ===== SMOOTH SCROLLING FOR ANCHOR LINKS =====
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (href !== '#' && href !== '') {
-            e.preventDefault();
-            const target = document.querySelector(href);
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        }
-    });
-});
+// ===== SMOOTH SCROLL ANIMATIONS =====
+class ScrollAnimations {
+    constructor() {
+        this.init();
+    }
 
-// ===== AUTO-DISMISS ALERTS AFTER 5 SECONDS =====
+    init() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    this.observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        this.observeElements();
+    }
+
+    observeElements() {
+        const elements = document.querySelectorAll('.animate-on-scroll');
+        elements.forEach(el => this.observer.observe(el));
+    }
+
+    // Method to re-observe new dynamic elements
+    refresh() {
+        this.observeElements();
+    }
+}
+
+const scrollAnimations = new ScrollAnimations();
+
+// ===== NAVBAR SCROLL EFFECTS =====
+let lastScroll = 0;
+const navbar = document.querySelector('.navbar-glass');
+
+if (navbar) {
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > 50) {
+            navbar.style.boxShadow = 'var(--shadow-lg)';
+        } else {
+            navbar.style.boxShadow = 'var(--shadow-sm)';
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// ===== AUTO-DISMISS ALERTS =====
 document.addEventListener('DOMContentLoaded', () => {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
+            const bsAlert = bootstrap.Alert.getInstance(alert) || new bootstrap.Alert(alert);
             bsAlert.close();
         }, 5000);
     });
 });
 
-// ===== FORM VALIDATION ENHANCEMENT =====
+// ===== FORM VALIDATION =====
 const forms = document.querySelectorAll('.needs-validation');
 forms.forEach(form => {
     form.addEventListener('submit', event => {
@@ -109,41 +127,94 @@ forms.forEach(form => {
     }, false);
 });
 
-// ===== NAVBAR SCROLL EFFECT =====
-let lastScroll = 0;
-const navbar = document.querySelector('.navbar-glass');
+// ===== UTILITY FUNCTIONS =====
 
-if (navbar) {
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll <= 0) {
-            navbar.style.boxShadow = 'var(--shadow-sm)';
-        } else {
-            navbar.style.boxShadow = 'var(--shadow-md)';
+// Show loading state on button
+function showLoading(button) {
+    const originalHTML = button.innerHTML;
+    button.setAttribute('data-original-html', originalHTML);
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+    button.disabled = true;
+    return originalHTML;
+}
+
+// Hide loading state
+function hideLoading(button) {
+    const originalHTML = button.getAttribute('data-original-html');
+    if (originalHTML) {
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+    }
+}
+
+
+// ===== AJAX FORM ACTIONS =====
+function initializeAjaxActions() {
+    document.addEventListener('click', function(e) {
+        // Cancel connection requests
+        if (e.target.matches('.cancel-btn')) {
+            e.preventDefault();
+            const button = e.target.closest('.cancel-btn');
+            const connId = button.dataset.connId;
+            
+            const originalHTML = cconnect.showLoading(button);
+            
+            fetch(`/connections/cancel/${connId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    // Fade out and remove connection item
+                    const item = button.closest('.connection-item');
+                    item.style.transition = 'opacity 0.3s ease';
+                    item.style.opacity = '0';
+                    setTimeout(() => { item.remove(); updateOutgoingCount();} , 300);
+                    cconnect.showToast(data.message || 'Request cancelled', 'success');
+                } else {
+                    cconnect.showToast(data.message || 'Failed to cancel', 'danger');
+                    cconnect.hideLoading(button);
+                }
+            })
+            .catch(() => {
+                cconnect.showToast('Network error occurred', 'danger');
+                cconnect.hideLoading(button);
+            });
         }
-        
-        lastScroll = currentScroll;
     });
 }
 
-// ===== UTILITY FUNCTIONS =====
 
-// Show loading spinner on button
-function showLoading(button) {
-    const originalText = button.innerHTML;
-    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-    button.disabled = true;
-    return originalText;
+
+// ===== UPDATE COUNTERS in the conenctions page =====
+function updateOutgoingCount() {
+    const outgoingItems = document.querySelectorAll('.connection-item');
+    const badge = document.querySelector('.section-header .badge-count');
+    
+    if (badge) {
+        const newCount = outgoingItems.length;
+        badge.textContent = newCount;
+        
+        // Hide badge if zero
+        if (newCount === 0) {
+            badge.style.display = 'none';
+            // Show empty state if no items
+            const emptyState = document.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
+        } else {
+            badge.style.display = 'inline';
+        }
+    }
 }
 
-// Hide loading spinner on button
-function hideLoading(button, originalText) {
-    button.innerHTML = originalText;
-    button.disabled = false;
-}
 
-// Show toast notification
+
+// Toast notification system
 function showToast(message, type = 'info') {
     const toastContainer = document.querySelector('.toast-container') || createToastContainer();
     
@@ -164,11 +235,10 @@ function showToast(message, type = 'info') {
     };
     
     const toastHTML = `
-        <div class="toast align-items-center text-bg-${colors[type]} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast align-items-center text-bg-${colors[type]} border-0" role="alert" style="backdrop-filter: blur(10px);">
             <div class="d-flex">
                 <div class="toast-body">
-                    <i class="bi bi-${icons[type]} me-2"></i>
-                    ${message}
+                    <i class="bi bi-${icons[type]} me-2"></i>${message}
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
@@ -178,23 +248,22 @@ function showToast(message, type = 'info') {
     toastContainer.insertAdjacentHTML('beforeend', toastHTML);
     
     const toastElement = toastContainer.lastElementChild;
-    const toast = new bootstrap.Toast(toastElement);
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 4000 });
     toast.show();
     
-    toastElement.addEventListener('hidden.bs.toast', () => {
-        toastElement.remove();
-    });
+    toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
 }
 
 function createToastContainer() {
     const container = document.createElement('div');
     container.className = 'toast-container position-fixed top-0 end-0 p-3';
     container.style.zIndex = '1060';
+    container.style.marginTop = '80px';
     document.body.appendChild(container);
     return container;
 }
 
-// Debounce function for search/filter
+// Debounce function
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -207,7 +276,7 @@ function debounce(func, wait) {
     };
 }
 
-// ===== ANIMATED COUNTER =====
+// Animated counter
 function animateCounter(element, target, duration = 2000) {
     const start = 0;
     const increment = target / (duration / 16);
@@ -224,35 +293,128 @@ function animateCounter(element, target, duration = 2000) {
     }, 16);
 }
 
-// ===== INTERSECTION OBSERVER FOR SCROLL ANIMATIONS =====
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('animate-in');
-            observer.unobserve(entry.target);
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#' && href !== '') {
+            const target = document.querySelector(href);
+            if (target) {
+                e.preventDefault();
+                const navHeight = document.querySelector('.navbar-glass').offsetHeight;
+                const targetPosition = target.offsetTop - navHeight - 20;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
         }
     });
-}, observerOptions);
-
-// Observe elements with animation class
-document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('.animate-on-scroll');
-    animatedElements.forEach(el => observer.observe(el));
 });
 
-// Export functions for use in other scripts
+// Image lazy loading
+function lazyLoadImages() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+}
+
+// Initialize lazy loading on page load
+document.addEventListener('DOMContentLoaded', lazyLoadImages);
+
+// ===== PASSWORD VISIBILITY TOGGLE =====
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(`${inputId}-icon`);
+    
+    if (input && icon) {
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+}
+
+// ===== SEARCH FUNCTIONALITY =====
+function initializeSearch(inputId, itemsSelector) {
+    const searchInput = document.getElementById(inputId);
+    if (!searchInput) return;
+
+    const debouncedSearch = debounce((query) => {
+        const items = document.querySelectorAll(itemsSelector);
+        const lowerQuery = query.toLowerCase();
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(lowerQuery)) {
+                item.style.display = '';
+                item.classList.add('animate-on-scroll', 'animate-in');
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }, 300);
+
+    searchInput.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+    });
+}
+
+// ===== CARD HOVER EFFECTS =====
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.glass-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s ease';
+        });
+    });
+    initializeAjaxActions();
+});
+
+// ===== EXPORT GLOBAL API =====
 window.cconnect = {
     themeManager,
     showLoading,
     hideLoading,
     showToast,
     debounce,
-    animateCounter
+    animateCounter,
+    togglePassword,
+    initializeSearch,
+    scrollAnimations,
+    initializeAjaxActions,
+    updateOutgoingCount
 };
 
-console.log('C-Connect: Global JS loaded successfully!');
+// Log initialization
+console.log('✨ C-Connect: Global JavaScript initialized successfully!');
+
+// ===== PAGE LOAD PERFORMANCE =====
+window.addEventListener('load', () => {
+    document.body.classList.add('fade-in');
+    
+    // Remove loading class if exists
+    const loader = document.querySelector('.page-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 300);
+    }
+});

@@ -1,316 +1,402 @@
-{% extends "base.html" %} {% block title %}Sign Up{% endblock %} {% block body %}
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-decoration {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.1;
+    animation: float-decoration 10s ease-in-out infinite;
+}
+
+.decoration-left {
+    width: 500px;
+    height: 500px;
+    background: var(--primary-color);
+    top: -150px;
+    left: -150px;
+}
+
+.decoration-right {
+    width: 400px;
+    height: 400px;
+    background: var(--accent-color);
+    bottom: -100px;
+    right: -100px;
+    animation-delay: 3s;
+}
+
+@keyframes float-decoration {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(20px, -20px) scale(1.05);
+    }
+}
+
+.auth-card {
+    max-width: 520px;
+    width: 100%;
+    padding: 3rem 2.5rem;
+    position: relative;
+    z-index: 2;
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-logo {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+    font-weight: 700;
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+}
+
+.form-floating {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.form-floating .form-control {
+    padding: 1rem 1rem 0.5rem;
+    height: auto;
+}
+
+.form-floating label {
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+.password-strength {
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-weak {
+    width: 33%;
+    background: var(--danger-color);
+}
+
+.strength-medium {
+    width: 66%;
+    background: var(--warning-color);
+}
+
+.strength-strong {
+    width: 100%;
+    background: var(--success-color);
+}
+
+.form-text {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.form-check {
+    margin: 1.25rem 0;
+}
+
+.form-check-input {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.125rem;
+    cursor: pointer;
+}
+
+.form-check-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.auth-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.auth-link:hover {
+    color: var(--primary-hover);
+}
+
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .auth-title {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block body %}
 <div class="auth-container">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8">
-                <div class="auth-card glass-card">
-                    <div class="auth-header text-center mb-4">
-                        <div class="auth-icon mb-3">
-                            <i class="bi bi-person-plus"></i>
-                        </div>
-                        <h2 class="auth-title">Join C-Connect</h2>
-                        <p class="auth-subtitle">Create your campus network account</p>
-                    </div>
-
- 
-<form method="POST" action="{{ url_for('auth.signup') }}" class="needs-validation" novalidate id="signupForm">
-    {{ form.hidden_tag() }}
-
-    <!-- Username -->
-    <div class="mb-3">
-        {{ form.username.label(class="form-label") }}
-
-        <div class="input-group">
-            <span class="input-group-text">
-                <i class="bi bi-person me-1"></i>
-            </span>
-        
-            {{ form.username(
-                class="form-control" + (" is-invalid" if form.username.errors else ""),
-                id="username",
-                placeholder="Choose a unique username",
-                minlength="3",
-                maxlength="20",
-                pattern="[a-zA-Z0-9_]+"
-            ) }}
-        </div>
-
-        {% for err in form.username.errors %}
-        <div class="invalid-feedback d-block">{{ err }}</div>
-        {% endfor %}
-    </div>
-
-    <!-- Email -->
-    <div class="mb-3">
-        {{ form.email.label(class="form-label") }}
-
-        <div class="input-group">
-            <span class="input-group-text">
-                <i class="bi bi-envelope me-1"></i>
-            </span>
-
-            {{ form.email(
-                class="form-control" + (" is-invalid" if form.email.errors else ""),
-                id="email",
-                placeholder="your.name@campus.edu"
-            ) }}
-        </div>
-
-        {% for err in form.email.errors %}
-        <div class="invalid-feedback d-block">{{ err }}</div>
-        {% endfor %}
-    </div>
-
-    <!-- Password -->
-    <div class="mb-3">
-        {{ form.password.label(class="form-label") }}
-
-        <div class="input-group">
-            <span class="input-group-text">
-                <i class="bi bi-key me-1"></i>
-            </span>
-
-            {{ form.password(
-                class="form-control" + (" is-invalid" if form.password.errors else ""),
-                id="password",
-                placeholder="Create a strong password"
-            ) }}
-
-            <button type="button" class="password-toggle" onclick="togglePassword('password')" tabindex="-1">
-                <i class="bi bi-eye" id="password-icon"></i>
-            </button>
-        </div>
-
-        {% for err in form.password.errors %}
-        <div class="invalid-feedback d-block">{{ err }}</div>
-        {% endfor %}
-
-        <div class="form-text">At least 8 characters including a number and symbol.</div>
-    </div>
-
-    <!-- Confirm Password -->
-    <div class="mb-3">
-        {{ form.confirm_password.label(class="form-label") }}
-
-        <div class="input-group">
-            <span class="input-group-text">
-                <i class="bi bi-key me-1"></i>
-            </span>
-
-            {{ form.confirm_password(
-                class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
-                id="confirm_password",
-                placeholder="Re-enter your password"
-            ) }}
-
-            <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')" tabindex="-1">
-                <i class="bi bi-eye" id="confirm_password-icon"></i>
-            </button>
-        </div>
-
-        {% for err in form.confirm_password.errors %}
-        <div class="invalid-feedback d-block">{{ err }}</div>
-        {% endfor %}
-    </div>
-
-    <!-- Terms -->
-    <div class="mb-3">
-        <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="terms" name="terms" required />
-            <label class="form-check-label" for="terms">
-                I agree to the <a href="#" class="auth-link">Terms of Service</a> and
-                <a href="#" class="auth-link">Privacy Policy</a>
-            </label>
-            <div class="invalid-feedback">You must agree to the terms and conditions.</div>
-        </div>
-    </div>
-
-    <!-- Submit -->
-    <button type="submit" class="btn btn-primary-custom w-100 mb-3" id="signupBtn">
-        <i class="bi bi-person-check me-2"></i>Create Account
-    </button>
-
-    <div class="text-center">
-        <span class="text-muted">Already have an account?</span>
-        <a href="{{ url_for('auth.login') }}" class="auth-link ms-1">Login</a>
-    </div>
-</form>
-                 
-
-
-
-                </div>
+    <div class="auth-decoration decoration-left"></div>
+    <div class="auth-decoration decoration-right"></div>
+    
+    <div class="auth-card glass-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="bi bi-person-plus"></i>
             </div>
+            <h1 class="auth-title">Join C-Connect</h1>
+            <p class="auth-subtitle">Create your campus network account</p>
         </div>
+
+        <form method="POST" action="{{ url_for('auth.signup') }}" class="needs-validation" novalidate id="signupForm">
+            {{ form.hidden_tag() }}
+
+            <!-- Username -->
+            <div class="form-floating">
+                {{ form.username(
+                    class="form-control" + (" is-invalid" if form.username.errors else ""),
+                    id="username",
+                    placeholder="Choose a unique username",
+                    minlength="3",
+                    maxlength="20",
+                    pattern="[a-zA-Z0-9_]+",
+                    required=True
+                )}}
+                {{ form.username.label(for="username") }}
+                {% for err in form.username.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Email -->
+            <div class="form-floating">
+                {{ form.email(
+                    class="form-control" + (" is-invalid" if form.email.errors else ""),
+                    id="email",
+                    placeholder="your.name@campus.edu",
+                    required=True
+                )}}
+                {{ form.email.label(for="email") }}
+                {% for err in form.email.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Password -->
+            <div class="form-floating password-wrapper">
+                {{ form.password(
+                    class="form-control" + (" is-invalid" if form.password.errors else ""),
+                    id="password",
+                    placeholder="Create a strong password",
+                    required=True
+                )}}
+                {{ form.password.label(for="password") }}
+                <button 
+                    type="button" 
+                    class="password-toggle" 
+                    onclick="window.cconnect.togglePassword('password')"
+                    tabindex="-1"
+                    aria-label="Toggle password visibility"
+                >
+                    <i class="bi bi-eye" id="password-icon"></i>
+                </button>
+                {% for err in form.password.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+                <div class="password-strength" id="passwordStrength">
+                    <div class="password-strength-bar"></div>
+                </div>
+                <div class="form-text">At least 8 characters including a number and symbol</div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-floating password-wrapper">
+                {{ form.confirm_password(
+                    class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
+                    id="confirm_password",
+                    placeholder="Re-enter your password",
+                    required=True
+                )}}
+                {{ form.confirm_password.label(for="confirm_password") }}
+                <button 
+                    type="button" 
+                    class="password-toggle" 
+                    onclick="window.cconnect.togglePassword('confirm_password')"
+                    tabindex="-1"
+                    aria-label="Toggle password visibility"
+                >
+                    <i class="bi bi-eye" id="confirm_password-icon"></i>
+                </button>
+                {% for err in form.confirm_password.errors %}
+                <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Terms Checkbox -->
+            <div class="form-check">
+                <input 
+                    type="checkbox" 
+                    class="form-check-input" 
+                    id="terms" 
+                    name="terms" 
+                    required
+                />
+                <label class="form-check-label" for="terms">
+                    I agree to the <a href="#" class="auth-link">Terms of Service</a> and
+                    <a href="#" class="auth-link">Privacy Policy</a>
+                </label>
+                <div class="invalid-feedback">You must agree to the terms and conditions</div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary-custom w-100 mb-3" id="signupBtn">
+                <i class="bi bi-person-check me-2"></i>Create Account
+            </button>
+
+            <!-- Login Link -->
+            <div class="text-center">
+                <span style="color: var(--text-secondary); font-size: 0.9375rem;">Already have an account?</span>
+                <a href="{{ url_for('auth.login') }}" class="auth-link ms-1">Login</a>
+            </div>
+        </form>
     </div>
 </div>
 
-<style>
-    /* Reuse auth styles from login */
-    .auth-container {
-        min-height: calc(100vh - 200px);
-        display: flex;
-        align-items: center;
-        padding: 2rem 0;
-    }
-    .auth-card {
-        padding: 2.5rem;
-        animation: fadeInUp 0.6s ease;
-    }
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .auth-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto;
-        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        color: white;
-        box-shadow: var(--shadow-md);
-    }
-    .auth-title {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-    .auth-subtitle {
-        color: var(--text-secondary);
-        font-size: 1rem;
-        margin-bottom: 0;
-    }
-    .password-input-wrapper {
-        position: relative;
-    }
-    .password-toggle {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: 0.5rem;
-        transition: color 0.3s ease;
-    }
-    .password-toggle:hover {
-        color: var(--primary-color);
-    }
-    .password-strength {
-        height: 4px;
-        background: var(--border-color);
-        border-radius: 2px;
-        margin-top: 0.5rem;
-        overflow: hidden;
-        position: relative;
-    }
-    .password-strength::before {
-        content: "";
-        position: absolute;
-        height: 100%;
-        width: 0;
-        background: var(--primary-color);
-        transition: width 0.3s ease, background 0.3s ease;
-    }
-    .password-strength.weak::before {
-        width: 33%;
-        background: #ef4444;
-    }
-    .password-strength.medium::before {
-        width: 66%;
-        background: #f59e0b;
-    }
-    .password-strength.strong::before {
-        width: 100%;
-        background: #10b981;
-    }
-    .auth-link {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.3s ease;
-    }
-    .auth-link:hover {
-        color: var(--primary-hover);
-        text-decoration: underline;
-    }
-</style>
-
 <script>
-    function togglePassword(inputId) {
-        const input = document.getElementById(inputId);
-        const icon = document.getElementById(`${inputId}-icon`);
-        if (input.type === "password") {
-            input.type = "text";
-            icon.classList.remove("bi-eye");
-            icon.classList.add("bi-eye-slash");
-        } else {
-            input.type = "password";
-            icon.classList.remove("bi-eye-slash");
-            icon.classList.add("bi-eye");
-        }
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const strengthBar = document.querySelector('.password-strength-bar');
+    const signupForm = document.getElementById('signupForm');
 
+    // Password strength checker
     function checkPasswordStrength(password) {
         let strength = 0;
-        if (password.length >= 8) strength += 1;
-        if (password.length >= 12) strength += 1;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
-        if (/\d/.test(password)) strength += 1;
-        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
-        return strength;
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+        return Math.min(strength, 3);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const passwordInput = document.getElementById("password");
-        const strengthIndicator = document.getElementById("passwordStrength");
-
-        passwordInput.addEventListener("input", function () {
-            const strength = checkPasswordStrength(this.value);
-            strengthIndicator.className = "password-strength";
-            if (this.value.length === 0) {
-                strengthIndicator.className = "password-strength";
-            } else if (strength <= 2) {
-                strengthIndicator.classList.add("weak");
-            } else if (strength <= 3) {
-                strengthIndicator.classList.add("medium");
-            } else {
-                strengthIndicator.classList.add("strong");
-            }
-        });
-
-        const confirmPasswordInput = document.getElementById("confirm_password");
-        function validatePasswordMatch() {
-            if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-                confirmPasswordInput.setCustomValidity("Passwords do not match");
-            } else {
-                confirmPasswordInput.setCustomValidity("");
-            }
+    passwordInput.addEventListener('input', function() {
+        const strength = checkPasswordStrength(this.value);
+        strengthBar.className = 'password-strength-bar';
+        
+        if (this.value.length === 0) {
+            strengthBar.className = 'password-strength-bar';
+        } else if (strength === 1) {
+            strengthBar.classList.add('strength-weak');
+        } else if (strength === 2) {
+            strengthBar.classList.add('strength-medium');
+        } else {
+            strengthBar.classList.add('strength-strong');
         }
-
-        confirmPasswordInput.addEventListener("input", validatePasswordMatch);
-        passwordInput.addEventListener("input", validatePasswordMatch);
-
-        const signupForm = document.getElementById("signupForm");
-        signupForm.addEventListener("submit", function (e) {
-            if (this.checkValidity()) {
-                const signupBtn = document.getElementById("signupBtn");
-                window.cconnect.showLoading(signupBtn);
-            }
-        });
+        
+        // Validate match with confirm password
+        if (confirmPasswordInput.value) {
+            validatePasswordMatch();
+        }
     });
+
+    // Password match validation
+    function validatePasswordMatch() {
+        if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+            confirmPasswordInput.setCustomValidity('Passwords do not match');
+        } else {
+            confirmPasswordInput.setCustomValidity('');
+        }
+    }
+
+    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+
+    // Form submission
+    signupForm.addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            const signupBtn = document.getElementById('signupBtn');
+            window.cconnect.showLoading(signupBtn);
+        }
+    });
+});
 </script>
 {% endblock %}
