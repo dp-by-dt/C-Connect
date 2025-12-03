@@ -147,6 +147,73 @@ function hideLoading(button) {
     }
 }
 
+
+// ===== AJAX FORM ACTIONS =====
+function initializeAjaxActions() {
+    document.addEventListener('click', function(e) {
+        // Cancel connection requests
+        if (e.target.matches('.cancel-btn')) {
+            e.preventDefault();
+            const button = e.target.closest('.cancel-btn');
+            const connId = button.dataset.connId;
+            
+            const originalHTML = cconnect.showLoading(button);
+            
+            fetch(`/connections/cancel/${connId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    // Fade out and remove connection item
+                    const item = button.closest('.connection-item');
+                    item.style.transition = 'opacity 0.3s ease';
+                    item.style.opacity = '0';
+                    setTimeout(() => { item.remove(); updateOutgoingCount();} , 300);
+                    cconnect.showToast(data.message || 'Request cancelled', 'success');
+                } else {
+                    cconnect.showToast(data.message || 'Failed to cancel', 'danger');
+                    cconnect.hideLoading(button);
+                }
+            })
+            .catch(() => {
+                cconnect.showToast('Network error occurred', 'danger');
+                cconnect.hideLoading(button);
+            });
+        }
+    });
+}
+
+
+
+// ===== UPDATE COUNTERS in the conenctions page =====
+function updateOutgoingCount() {
+    const outgoingItems = document.querySelectorAll('.connection-item');
+    const badge = document.querySelector('.section-header .badge-count');
+    
+    if (badge) {
+        const newCount = outgoingItems.length;
+        badge.textContent = newCount;
+        
+        // Hide badge if zero
+        if (newCount === 0) {
+            badge.style.display = 'none';
+            // Show empty state if no items
+            const emptyState = document.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
+        } else {
+            badge.style.display = 'inline';
+        }
+    }
+}
+
+
+
 // Toast notification system
 function showToast(message, type = 'info') {
     const toastContainer = document.querySelector('.toast-container') || createToastContainer();
@@ -319,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.style.transition = 'all 0.3s ease';
         });
     });
+    initializeAjaxActions();
 });
 
 // ===== EXPORT GLOBAL API =====
@@ -331,7 +399,9 @@ window.cconnect = {
     animateCounter,
     togglePassword,
     initializeSearch,
-    scrollAnimations
+    scrollAnimations,
+    initializeAjaxActions,
+    updateOutgoingCount
 };
 
 // Log initialization

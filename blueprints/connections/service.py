@@ -98,15 +98,15 @@ def reject_connection(conn_id: int, receiver_id: int):
 def cancel_request(conn_id: int, sender_id: int):
     conn = Connection.query.get(conn_id)
     if not conn:
-        return False, "Request not found."
+        return False, "Request not found.", conn
     if conn.user_id != sender_id:
-        return False, "Not authorized to cancel."
+        return False, "Not authorized to cancel.", conn
     if conn.status != 'pending':
-        return False, "Only pending requests can be cancelled."
+        return False, "Only pending requests can be cancelled.", conn
     try:
         db.session.delete(conn)
         db.session.commit()
-        return True, "Request cancelled."
+        return True, "Request cancelled.", conn
     except Exception:
         db.session.rollback()
         raise

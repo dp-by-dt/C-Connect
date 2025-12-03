@@ -732,9 +732,9 @@ This shows the ist time of the notification creation.
     Some texts and options are not clear properly. Especially all the text we type on any input box (like the login, search option etc.)
     The text on flash message is not visible in dark mode
 
-18. Errors:
-    Edit profile: `profile` not defined
-    Cancalling request: not enough values to unpack (expected 3, got 2) - but get's cancelled later
+18. Errors: (✅ All Solved)
+    Edit profile: `profile` not defined (✅corrected)
+    Cancalling request: not enough values to unpack (expected 3, got 2) - but get's cancelled later (✅corrected)
 
 
 
@@ -747,3 +747,9 @@ Keep in mind that, that would be a mobile first responsive application. And this
 And this should be very much nuanced and creative, for college students. So we need to keep the top cutting edge style of designing. I prefer minimal and sleek kind of design. This one feels like a little bit robotic or ai like.
 I have provided below some other themes which i liked for different segments. You can take them as reference and adapt from there. 
 Remember that no need to resemble any of this just keep the style for your reference. 
+
+
+----------------
+Updates are corrections done
+* patched up the end point errors in : `edit profile` & `cancel request`
+* added ajax in the global js, for updating connection number instantly

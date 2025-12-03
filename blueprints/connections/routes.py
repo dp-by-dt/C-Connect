@@ -13,6 +13,7 @@ from blueprints.connections.service import (
 from blueprints.notifications.service import create_notification
 from models import Connection
 from extensions import db
+from flask import jsonify
 
 
 # HOME PAGE — LIST CONNECTIONS
@@ -90,17 +91,23 @@ def connections_reject(conn_id):
 @connections.route('/connections/cancel/<int:conn_id>', methods=['POST'])
 @login_required
 def connections_cancel(conn_id):
-    ok, msg, conn = cancel_request(conn_id, current_user.id)
-    flash(msg, 'info' if ok else 'danger')
+    try:
+        ok, msg, conn = cancel_request(conn_id, current_user.id)
+        
+        if ok and conn:
+            create_notification(
+                user_id=conn.target_user_id,
+                sender_id=current_user.id,
+                message=f"{current_user.username} cancelled their connection request"
+            )
+        
+        # Return JSON - NO REDIRECT
+        return jsonify({'ok': ok, 'message': msg})
+    
+    except Exception as e:
+        app.logger.error(f"Cancel connection error: {str(e)}")
+        return jsonify({'ok': False, 'message': 'Server error occurred'}), 500
 
-    if ok and conn:
-        create_notification(
-            user_id=conn.target_user_id,
-            sender_id=current_user.id,
-            message=f"{current_user.username} cancelled their connection request"
-        )
-
-    return redirect(request.referrer or url_for('connections.connections_home'))
 
 
 # DISCONNECT AN EXISTING CONNECTION

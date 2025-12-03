@@ -240,7 +240,7 @@
                 <div class="connection-actions">
                     <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-outline-custom btn-sm">
+                        <button class="btn btn-outline-custom btn-sm cancel-btn" data-conn-id="{{ c.id }}">
                             <i class="bi bi-x-lg"></i> Cancel
                         </button>
                     </form>
