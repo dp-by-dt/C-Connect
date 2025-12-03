@@ -768,6 +768,14 @@ Updates are corrections done
     - Inactive users were not shown in the discover page (✅fixed- by using `case()` and `outerjoin()`)
 
 
+17. Added the mechanism for `/search` a user using backend searching - For that added `main/search.html` file and it uses `search.py` instead of `routes.py`
+    *Problems* :
+    * Search algo needs to be modified
+    * No option to access this searching (except by url)
+    * `/api/search` end point is open (seems)
+    * Search result card not working (the connect button). 
+    * Shows own profile, Some users view profile on here is breaks into an opening
+
 
 
 

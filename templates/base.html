@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="C-Connect - Connect with your campus community">
     <title>{% block title %}C-Connect{% endblock %} | Campus Connect</title>
+
+
+    <!-- Fix dark mode flicker -->
+     <script>
+        (function() {
+            try {
+            const t = localStorage.getItem('theme') || 'system';
+            if(t === 'dark' || (t==='system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+                document.documentElement.classList.add('theme-dark');
+            } else {
+                document.documentElement.classList.remove('theme-dark');
+            }
+            } catch(e){/* ignore */}
+        })();
+    </script>
     
     <!-- Preconnect to CDNs -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +44,8 @@
     
     <!-- Page-specific CSS -->
     {% block extra_css %}{% endblock %}
+
+
 </head>
 <body>
     <!-- {% include 'components/flash.html' %} -->

@@ -8,7 +8,8 @@ from extensions import db
 from flask import abort
 from flask import request
 
-from sqlalchemy import case
+
+from sqlalchemy import case, or_, and_, func
 
 from datetime import datetime, timezone
 
@@ -74,7 +75,7 @@ def dashboard():
 # REASON: Core feature for social network; allows users to find and connect with others
 @main.route('/discover')
 @login_required
-def discover():
+def discover(): #uses pagination (for web pages)
     # Fetch all users except the current user
     # Quick offset pagination
     page = request.args.get('page', 1, type=int)
@@ -113,6 +114,48 @@ def discover():
                          per_page=per_page, 
                          has_next=has_next,
                          total=total)
+
+
+#Uses cursor for infinite scrolling
+@main.route('/api/discover')  # Mobile - Infinite scroll
+@login_required
+def api_discover():
+    # Cursor pagination
+    def parse_cursor(cur):
+        # example: "2025-12-03T14:33:00|123"
+        ts_str, id_str = cur.split("|")
+        ts = datetime.fromisoformat(ts_str)
+        id = int(id_str)
+        return ts, id
+
+    limit = min(int(request.args.get('limit',20)), 50)
+    cursor = request.args.get('cursor', None)
+    q = User.query.join(Profile).filter(User.id != current_user.id)
+
+    if cursor:
+        last_ts, last_id = parse_cursor(cursor)
+        # keyset: (last_login, id) descending
+        q = q.filter(
+            or_(
+                User.last_login < last_ts,
+                and_(User.last_login == last_ts, User.id < last_id)
+            )
+        )
+
+    q = q.order_by(User.last_login.desc(), User.id.desc()).limit(limit + 1)
+    items = q.all()
+    has_more = len(items) == limit + 1
+    page_items = items[:limit]
+    next_cursor = None
+    if has_more:
+        last = items[-2]  # last real item
+        next_cursor = f"{last.last_login.isoformat()}|{last.id}"
+
+    return jsonify({
+        'users': [user.to_dict() for user in page_items],
+        'next_cursor': next_cursor
+    })
+
 
 
 
