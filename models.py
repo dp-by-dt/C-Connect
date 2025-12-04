@@ -93,7 +93,7 @@ class ProfileVisit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     viewed_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=db.func.now())
+    timestamp = db.Column(db.DateTime, default=db.func.now(), server_default=db.func.now())
 
     viewer = db.relationship("User", foreign_keys=[viewer_id])
     viewed = db.relationship("User", foreign_keys=[viewed_id])

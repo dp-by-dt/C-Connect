@@ -40,8 +40,8 @@ def compute_score(target_user, candidate):
 
     # profile completeness/activity
     completeness = 0
-    if candidate.profile.headline: completeness += 0.5
-    if candidate.profile.avatar: completeness += 0.5
+    if candidate.profile.bio: completeness += 0.5
+    if candidate.profile.profile_picture: completeness += 0.5
     score += w_activity * completeness
 
     return score

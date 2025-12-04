@@ -781,6 +781,7 @@ Updates are corrections done
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
     - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
     - The ui search doesn't work across the other pages in pagination
+    - in profile_edit page, the profile pic not loading
 
 
 

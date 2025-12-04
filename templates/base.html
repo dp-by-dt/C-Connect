@@ -4,20 +4,31 @@
 
 
     <!-- Fix dark mode flicker -->
+
+
+
     <script>
-        (function() {
-            try {
-            const t = localStorage.getItem('cconnect-theme') || 'system';
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const isDark = t === 'dark' || (t === 'system' && prefersDark);
-            if (isDark) {
-                document.body.setAttribute('data-theme', 'dark');
-            } else {
-                document.body.removeAttribute('data-theme');
-            }
-            } catch(e) {/* ignore */}
-        })();
-    </script>
+    document.documentElement.classList.add("preload-mode");
+
+    (function() {
+        const t = localStorage.getItem("theme") || "system";
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const dark = (t === "dark") || (t === "system" && prefersDark);
+
+        if (dark) {
+            document.documentElement.classList.add("theme-dark");
+        } else {
+            document.documentElement.classList.remove("theme-dark");
+        }
+
+        // show after theme applied
+        window.addEventListener("DOMContentLoaded", () => {
+            document.documentElement.classList.remove("preload-mode");
+        });
+    })();
+</script>
+
+
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

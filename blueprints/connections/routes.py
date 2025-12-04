@@ -148,3 +148,63 @@ def connections_disconnect(conn_id):
         )
 
     return redirect(request.referrer or url_for('connections.connections_home'))
+
+
+
+# -----------------------------------------------------------
+# UNIFIED AJAX CONNECTION ACTION ENDPOINT (for search/discover)
+# -----------------------------------------------------------
+@connections.route("/connections/api/action", methods=["POST"])
+@login_required
+def connections_api_action():
+    data = request.get_json()
+    action = data.get("action")
+    target_id = data.get("target_id")
+    conn_id = data.get("conn_id")
+
+    # 1) SEND REQUEST
+    if action == "send":
+        ok, msg, conn = send_connection_request(current_user.id, target_id)
+        return jsonify({
+            "ok": ok,
+            "message": msg,
+            "status": conn.status if conn else None
+        })
+
+    # 2) ACCEPT REQUEST
+    if action == "accept":
+        ok, msg, conn = accept_connection(conn_id, current_user.id)
+        return jsonify({
+            "ok": ok,
+            "message": msg,
+            "status": "accepted" if ok else None
+        })
+
+    # 3) REJECT REQUEST
+    if action == "reject":
+        ok, msg, conn = reject_connection(conn_id, current_user.id)
+        return jsonify({
+            "ok": ok,
+            "message": msg,
+            "status": "rejected" if ok else None
+        })
+
+    # 4) CANCEL REQUEST
+    if action == "cancel":
+        ok, msg, conn = cancel_request(conn_id, current_user.id)
+        return jsonify({
+            "ok": ok,
+            "message": msg,
+            "status": "cancelled" if ok else None
+        })
+
+    # 5) DISCONNECT
+    if action == "disconnect":
+        ok, msg, conn = disconnect_connection(conn_id, current_user.id)
+        return jsonify({
+            "ok": ok,
+            "message": msg,
+            "status": "disconnected" if ok else None
+        })
+
+    return jsonify({"ok": False, "message": "Invalid action"}), 400

@@ -43,6 +43,7 @@ def api_search():
     if not q: #no query, return empty
         return jsonify({'total':0,'results':[]})
     
+    
     page = int(request.args.get('page', 1))
     per_page = min(int(request.args.get('per_page', 12)), 50)
 
