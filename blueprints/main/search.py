@@ -5,17 +5,17 @@ from sqlalchemy import or_, func, and_
 from app import db
 from . import main
 
+from flask_login import login_required, current_user
+
 
 
 def fuzzy_query(q):
-    # simple fuzzy: lower and ILIKE with % separators
-    q = q.strip()
-    pattern = f"%{q}%"
+    pattern = f"%{q.lower()}%"
     return or_(
-        func.lower(User.username).ilike(func.lower(pattern)),
-        func.lower(Profile.bio).ilike(func.lower(pattern)),
-        func.lower(User.email).ilike(func.lower(pattern)),
-        func.lower(Profile.department).ilike(func.lower(pattern))
+        func.lower(User.username).like(pattern),
+        func.lower(Profile.bio).like(pattern),
+        func.lower(Profile.department).like(pattern),
+        func.lower(Profile.year).like(pattern)
     )
 
 @main.route('/search')
@@ -37,13 +37,21 @@ def search_page():
 
 
 @main.route('/api/search')
+@login_required
 def api_search():
     q = request.args.get('q', '').strip()
-    if not q:
+    if not q: #no query, return empty
         return jsonify({'total':0,'results':[]})
+    
     page = int(request.args.get('page', 1))
     per_page = min(int(request.args.get('per_page', 12)), 50)
-    base = db.session.query(User).join(Profile).filter(fuzzy_query(q))
+
+    base = (
+        db.session.query(User)
+        .join(Profile)
+        .filter(fuzzy_query(q))
+        .filter(User.id != current_user.id)#Do not show current user ---- Might break if user not logged in
+    )
     total = base.count()
     users = base.order_by(User.last_login.desc()).limit(per_page).offset((page-1)*per_page).all()
     out = []

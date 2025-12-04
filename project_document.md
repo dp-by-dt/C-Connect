@@ -775,8 +775,12 @@ Updates are corrections done
     * `/api/search` end point is open (seems)
     * Search result card not working (the connect button). 
     * Shows own profile, Some users view profile on here is breaks into an opening
+18. Added search section in the nav (primitive UI)
 
-
++ Need modifications:
+    - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
+    - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
+    - The ui search doesn't work across the other pages in pagination
 
 
 

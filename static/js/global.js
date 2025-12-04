@@ -11,7 +11,7 @@ class ThemeManager {
     }
 
     init() {
-        const savedTheme = localStorage.getItem(this.themeKey) || 'light';
+        const savedTheme = localStorage.getItem(this.themeKey) || 'system';
         this.setTheme(savedTheme, false);
 
         const themeToggle = document.getElementById('themeToggle');
