@@ -1,0 +1,23 @@
+{% if connection_status == 'accepted' %}
+<button class="btn btn-success btn-sm" disabled>
+    <i class="bi bi-check2-circle"></i> Connected
+</button>
+
+{% elif connection_status == 'pending' and incoming_request %}
+<button class="btn btn-primary-custom btn-sm action-accept" data-conn-id="{{ connection_id }}">
+    <i class="bi bi-check2"></i> Accept
+</button>
+<button class="btn btn-outline-danger btn-sm action-reject" data-conn-id="{{ connection_id }}">
+    <i class="bi bi-x"></i> Reject
+</button>
+
+{% elif connection_status == 'pending' %}
+<button class="btn btn-outline-warning btn-sm action-cancel" data-conn-id="{{ connection_id }}">
+    <i class="bi bi-x-circle"></i> Cancel
+</button>
+
+{% else %}
+<button class="btn btn-primary-custom btn-sm action-connect" data-user-id="{{ user.id }}">
+    <i class="bi bi-person-plus"></i> Connect
+</button>
+{% endif %}

@@ -1,6 +1,6 @@
 # app/main/routes.py (add near other routes)
 from flask import Blueprint, request, jsonify, render_template, current_app, url_for
-from models import User, Profile
+from models import User, Profile, Connection
 from sqlalchemy import or_, func, and_
 from app import db
 from . import main
@@ -32,7 +32,9 @@ def search_page():
         total = 0
         items = []
     # Template will request via AJAX too; we return initial render
-    return render_template('main/search.html', query=query, results=items, total=total, page=page, per_page=per_page)
+    return render_template('main/search.html', 
+                           query=query, results=items, total=total, page=page, per_page=per_page,
+                           )
 
 
 
@@ -55,6 +57,24 @@ def api_search():
     )
     total = base.count()
     users = base.order_by(User.last_login.desc()).limit(per_page).offset((page-1)*per_page).all()
+
+
+    conn = Connection.query.filter(
+        (
+            (Connection.user_id == current_user.id) &
+            (Connection.target_user_id == u.id)
+        ) |
+        (
+            (Connection.user_id == u.id) &
+            (Connection.target_user_id == current_user.id)
+        )
+    ).first()
+
+    connection_status = conn.status if conn else None
+    incoming_request = (conn and conn.target_user_id == current_user.id and conn.status == 'pending')
+    connection_id = conn.id if conn else None
+
+
     out = []
     for u in users:
         out.append({
@@ -65,4 +85,10 @@ def api_search():
             'avatar_url': url_for('static', filename='uploads/avatars/' + (u.profile.profile_picture or 'default.png')),
             'mutuals': u.mutual_count if hasattr(u,'mutual_count') else 0
         })
-    return jsonify({'total': total, 'results': out, 'page': page, 'per_page': per_page})
+    return jsonify({'total': total, 
+                    'results': out, 'page': page, 
+                    'per_page': per_page,
+                    'connection_status': connection_status,
+                    'incoming_request': incoming_request,
+                    'connection_id': connection_id,
+                    })

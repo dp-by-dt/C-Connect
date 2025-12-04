@@ -4,6 +4,17 @@
 
 {% block extra_css %}
 <style>
+.btn-connected {
+    background: linear-gradient(135deg, rgb(94, 211, 94), rgb(9, 118, 9));
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+.btn-pending {
+    background: linear-gradient(135deg, rgb(193, 211, 94), rgb(105, 118, 9));
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
 .discover-header {
     padding: 2.5rem 0;
     text-align: center;
@@ -225,34 +236,50 @@
     <!-- Users Grid -->
     <div class="users-grid">
         {% if users %}
-            {% for user in users %}
-            <div class="user-card glass-card animate-on-scroll" data-user-card>
+            {% for item in users %}
+            {% set user = item.user %}
+            {% set conn_status = item.conn_status %}
+            <div class="user-card glass-card animate-on-scroll" data-user-card 
+            onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'" style="cursor: pointer;">  <!-- Might give error, but workds somehow -->
                 <!-- Avatar -->
                 <div class="user-avatar">{{ user.username[0].upper() }}</div>
                 
                 <!-- User Info -->
                 <h3 class="user-name">
-                    <a href="{{ url_for('main.view_user_profile', user_id=user.id) }}">
                         {{ user.username }}
-                    </a>
                 </h3>
                 <p class="user-email">{{ user.email }}</p>
                 
                 <!-- Actions -->
-                <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="user-actions" style="justify-content: center;">
+
                     <div class="user-actions">
-                        <a 
-                            href="{{ url_for('main.view_user_profile', user_id=user.id) }}" 
-                            class="btn btn-outline-custom btn-sm"
-                        >
-                            <i class="bi bi-eye"></i> View
-                        </a>
-                        <button class="btn btn-primary-custom btn-sm connect-btn" data-user-id="{{ user.id }}">
+
+                        {% if conn_status=='connected' %}
+                        <button class="btn btn-connected btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bi bi-check-circle"></i> Connected
+                        </button>
+
+                        {% elif conn_status=='pending' %}
+                            <button class="btn btn-pending btn-sm" data-user-id="{{ user.id }}">
+                            <i class="bi bi-clock"></i> Pending
+                        </button>
+
+                        {% else %}
+
+                    <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}" 
+                          style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary-custom btn-sm connect-btn" data-user-id="{{ user.id }}">
                             <i class="bi bi-person-plus"></i> Connect
                         </button>
+                    </form>
+
+                        {% endif %}
                     </div>
-                </form>
+
+
+                </div>
             </div>
             {% endfor %}
         {% else %}

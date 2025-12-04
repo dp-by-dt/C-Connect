@@ -1,0 +1,30 @@
+<div class="user-card glass-card" data-user-id="{{ user.id }}">
+    
+    <!-- Avatar -->
+    <div class="user-avatar">
+        {{ user.username[0].upper() }}
+    </div>
+
+    <!-- Name -->
+    <h3 class="user-name">
+        <a href="{{ url_for('main.view_user_profile', user_id=user.id) }}">
+            {{ user.username }}
+        </a>
+    </h3>
+
+    <!-- Email -->
+    <p class="user-email">{{ user.email }}</p>
+
+    <!-- Actions -->
+    <div class="user-actions">
+
+        <!-- View -->
+        <a href="{{ url_for('main.view_user_profile', user_id=user.id) }}" 
+           class="btn btn-outline-custom btn-sm">
+            <i class="bi bi-eye"></i> View
+        </a>
+
+        <!-- Connect / Pending / Cancel / Accept -->
+        {% include 'components/user_card_action_btn.html' with context %}
+    </div>
+</div>

@@ -777,11 +777,17 @@ Updates are corrections done
     * Shows own profile, Some users view profile on here is breaks into an opening
 18. Added search section in the nav (primitive UI)
 
+
+19. Made the cards in discover clickable
+    Made their buttons dynamic (but ui primitive styles)
+
 + Need modifications:
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
     - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
     - The ui search doesn't work across the other pages in pagination
     - in profile_edit page, the profile pic not loading
+
+
 
 
 

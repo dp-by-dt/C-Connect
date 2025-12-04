@@ -1,5 +1,5 @@
 from . import main
-from flask import render_template
+from flask import render_template, jsonify
 from flask_login import login_required, current_user
 from models import User, Profile  # For user discovery feature
 from models import Connection, ProfileVisit  # For viewing other user's profile
@@ -12,6 +12,28 @@ from flask import request
 from sqlalchemy import case, or_, and_, func
 
 from datetime import datetime, timezone
+
+
+
+#------------ Helper functions ---------
+def get_connection_status(viewer_id, target_id):
+    """For each of the user with other users
+    Returns: 'connected', 'pending', 'rejected', or None"""
+
+    conn = Connection.query.filter(
+        ((Connection.user_id == viewer_id) & (Connection.target_user_id == target_id)) |
+        ((Connection.user_id == target_id) & (Connection.target_user_id == viewer_id))
+    ).first()
+    
+    if conn:
+        if conn.status == 'accepted':
+            return 'connected'
+        elif conn.status == 'pending':
+            return 'pending'
+        elif conn.status == 'rejected':
+            return 'rejected'
+    return None
+
 
 
 
@@ -107,9 +129,20 @@ def discover(): #uses pagination (for web pages)
              .all())
     
 
+    #return user's connection status
+    users_data = []
+    for user in users:
+        # DYNAMIC STATUS CHECK
+        conn_status = get_connection_status(current_user.id, user.id)
+        users_data.append({
+            'user': user,
+            'conn_status': conn_status
+        })
+    
+
     has_next = page*per_page < total
     return render_template('main/discover.html', 
-                         users=users, 
+                         users=users_data, 
                          page=page, 
                          per_page=per_page, 
                          has_next=has_next,
