@@ -1,30 +1,105 @@
-<div class="user-card glass-card" data-user-id="{{ user.id }}">
-    
-    <!-- Avatar -->
-    <div class="user-avatar">
-        {{ user.username[0].upper() }}
+<style>
+
+    .user-avatar {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1.25rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.user-card:hover .user-avatar {
+    transform: scale(1.05);
+}
+
+
+.profile-avatar-large {
+    width: 140px;
+    height: 140px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    z-index: 1;
+    border: 4px solid var(--bg-primary);
+}
+
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+</style>
+
+
+    {% set user = item.user %}
+    {% set conn_status = item.conn_status %}
+
+
+    <!-- For clickable cards -->
+<div class="user-card glass-card animate-on-scroll" data-user-card onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'" style="cursor: pointer;"> <!-- Might show error, but workds somehow -->
+
+
+
+    <!-- AVATAR -->
+    <div class="user-avatar profile-avatar-large">
+        {% if user.profile and user.profile.profile_picture %}
+            <img src="{{ user.profile.profile_picture }}"
+                 alt="{{ user.username }}"
+                 class="profile-img">
+        {% else %}
+            {{ user.username[0].upper() }}
+        {% endif %}
     </div>
 
-    <!-- Name -->
+    <!-- USERNAME -->
     <h3 class="user-name">
-        <a href="{{ url_for('main.view_user_profile', user_id=user.id) }}">
-            {{ user.username }}
-        </a>
+        {{ user.username }}
     </h3>
 
-    <!-- Email -->
+    <!-- EMAIL / DEPARTMENT -->
     <p class="user-email">{{ user.email }}</p>
 
-    <!-- Actions -->
-    <div class="user-actions">
+    <!-- ACTIONS -->
+    <div class="user-actions" style="justify-content:center;">
+        
+        {% if conn_status == 'connected' %}
+            <button class="btn btn-connected btn-sm" disabled>
+                <i class="bi bi-check-circle"></i> Connected
+            </button>
 
-        <!-- View -->
-        <a href="{{ url_for('main.view_user_profile', user_id=user.id) }}" 
-           class="btn btn-outline-custom btn-sm">
-            <i class="bi bi-eye"></i> View
-        </a>
+        {% elif conn_status == 'pending' %}
+            <button class="btn btn-pending btn-sm" disabled>
+                <i class="bi bi-clock"></i> Pending
+            </button>
 
-        <!-- Connect / Pending / Cancel / Accept -->
-        {% include 'components/user_card_action_btn.html' with context %}
+        {% else %}
+            <form method="POST"
+                  action="{{ url_for('connections.connections_send', target_id=user.id) }}"
+                  style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary-custom btn-sm connect-btn">
+                    <i class="bi bi-person-plus"></i> Connect
+                </button>
+            </form>
+        {% endif %}
+
     </div>
 </div>

@@ -200,16 +200,8 @@
         </div>
     </div>
 
-    <!-- Results Info -->
-    <div class="results-header">
-        <div class="results-count">
-            {% if query %}
-                {{ total }} result{{ 's' if total != 1 }} found
-            {% else %}
-                Enter a search term to discover users
-            {% endif %}
-        </div>
-    </div>
+<div id="resultsContainer" class="users-grid"></div>
+
 
     <!-- Users Grid -->
     <div id="resultsContainer" class="users-grid">

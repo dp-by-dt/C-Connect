@@ -63,10 +63,9 @@ def save_profile_picture(file_storage, user_id):
 
     # return a path suitable for <img src=>, e.g. "/static/uploads/..."
     # if UPLOAD_FOLDER is inside static, return url relative to root
-    if upload_folder.startswith(app.static_folder):
-        rel = os.path.relpath(filepath, app.static_folder)
-        return f"/static/{rel.replace(os.path.sep, '/')}"
-    return filepath  # absolute path (not ideal for web serving)
+    rel = os.path.relpath(filepath, app.static_folder)
+    return f"/static/{rel.replace(os.sep, '/')}"
+    #return filepath  # absolute path (not ideal for web serving --- And gave error in image url loading)
 
 
 #------------------------------

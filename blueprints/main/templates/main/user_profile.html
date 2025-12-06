@@ -194,7 +194,19 @@
             <div class="col-lg-8">
                 <!-- Profile Header -->
                 <div class="profile-header-card glass-card animate-on-scroll">
-                    <div class="profile-avatar">{{ user.username[0].upper() }}</div>
+
+
+                        <div class="profile-avatar user-avatar profile-avatar-large">
+
+            <img src="{{ user.profile.profile_picture }}"
+                 alt="{{ user.username[0].upper() }}"
+                 class="profile-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <span class="avatar-fallback" style="display: none;">
+        {{ user.username[0].upper() }}
+    </span> 
+
+    </div>
                     <h1 class="profile-name">{{ user.username }}</h1>
                     <p class="profile-email">{{ user.email }}</p>
 

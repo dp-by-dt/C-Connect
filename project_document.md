@@ -781,11 +781,16 @@ Updates are corrections done
 19. Made the cards in discover clickable
     Made their buttons dynamic (but ui primitive styles)
 
+20. Tried to make the profile pic viewable in the cards. But couldn't (✅working now)
+21. Made a common section for user_cards in the templates/ folder in the root
+22. Now test the ajax searching feature on the /search page (later replace /discover page with this code)
+
 + Need modifications:
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
     - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
     - The ui search doesn't work across the other pages in pagination
     - in profile_edit page, the profile pic not loading
+    - User image loading in the pages discover, profile_edit, view_profiles (✅Fixed: by removing the usage of absolute path while saving the profile pic, from edit profile)
 
 
 

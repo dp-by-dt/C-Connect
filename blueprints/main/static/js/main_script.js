@@ -241,6 +241,100 @@ document.addEventListener('click', function(e) {
     }
 });
 
+
+// ========= Search page
+document.addEventListener('DOMContentLoaded', () => {
+
+    const input = document.getElementById("searchInput");
+    const results = document.getElementById("resultsContainer");
+
+    let timer = null;
+
+    input.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const q = input.value.trim();
+            if (q.length === 0) {
+                results.innerHTML = "";
+                return;
+            }
+            performSearch(q);
+        }, 300);
+    });
+
+    function performSearch(q) {
+        results.innerHTML = `<div class="loading">Searching...</div>`;
+
+        fetch(`/api/search?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+
+                results.innerHTML = "";
+
+                if (!data.results || data.results.length === 0) {
+                    results.innerHTML = `
+                        <div class="empty-state glass-card p-5">
+                            <div class="empty-icon"><i class="bi bi-search"></i></div>
+                            <p>No matching users found.</p>
+                        </div>`;
+                    return;
+                }
+
+                data.results.forEach(item => {
+                    const card = buildUserCard(item);
+                    results.appendChild(card);
+                });
+            });
+    }
+
+    // CLONE OF THE DISCOVER CARD TEMPLATE
+    function buildUserCard(u) {
+        const div = document.createElement("div");
+        div.className = "user-card glass-card";
+
+        div.innerHTML = `
+            <div class="user-avatar">
+                ${u.profile_picture
+                  ? `<img src="${u.avatar_url}" class="profile-img">`
+                  : u.name[0].toUpperCase()
+                }
+            </div>
+
+            <h3 class="user-name">${u.name}</h3>
+            <p class="user-email">${u.department || ""}</p>
+
+            <div class="user-actions" style="justify-content: center;">
+                ${renderConnectionButton(u)}
+            </div>
+        `;
+
+        return div;
+    }
+
+    // Connection logic
+    function renderConnectionButton(u) {
+        if (u.connection_status === "connected") {
+            return `<button class="btn btn-connected btn-sm" disabled>
+                        <i class="bi bi-check-circle"></i> Connected
+                    </button>`;
+        }
+        if (u.connection_status === "pending") {
+            return `<button class="btn btn-pending btn-sm" disabled>
+                        <i class="bi bi-clock"></i> Pending
+                    </button>`;
+        }
+        return `<button class="btn btn-primary-custom btn-sm action-connect"
+                        data-user-id="${u.id}">
+                    <i class="bi bi-person-plus"></i> Connect
+                </button>`;
+    }
+});
+
+
+
+
+
+
 // ===== LOAD MORE FUNCTIONALITY =====
 const loadMoreBtn = document.getElementById('loadMoreBtn');
 if (loadMoreBtn) {
