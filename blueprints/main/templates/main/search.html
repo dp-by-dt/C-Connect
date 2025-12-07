@@ -205,7 +205,11 @@
 
 <div id="resultsContainer" class="users-grid">
 <!-- here load the search results: By default load the last active users too (like in discover)-->
-
+            {% for item in users %}
+            {% with user=item.user, conn_status=item.conn_status %}
+                {% include "components/user_card.html" %}
+            {% endwith %}
+            {% endfor %}
 
 
 
@@ -216,7 +220,7 @@
 
 <!-- Connecting to the js -->
  {% block extra_js %}
-<script src="{{ url_for('static', filename='js/main_script.js') }}"></script>
+<script src="{{ url_for('main.static', filename='js/main_script.js') }}"></script>
 
 
 <script>

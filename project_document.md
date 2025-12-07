@@ -788,7 +788,12 @@ Updates are corrections done
 23. Building on /search page (towards /discover page)
     - Modified `search.html` page to return the search results and imporved the logic in `search.py`
     - Logic improved in `renderConnectionButton()` in `main_script.js`
-    - 
+
+
+24. Api search works, but result not loading. (✅Fixed: it was because the opacity was set to 0 for scorlling, but never got full opacity. Now i made the opacity of these cards to 1 globally and removed the fade-in on scroll. It was annoying)
+    Need to patch up api/search when search result has the current user
+
+
 
 + Need modifications:
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)

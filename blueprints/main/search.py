@@ -47,7 +47,7 @@ def api_search():
     per_page = min(int(request.args.get('per_page', 12)), 50)
 
     if q:
-        base = db.session.query(User).join(Profile).filter(fuzzy_query(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
+        base = db.session.query(User).outerjoin(Profile).filter(fuzzy_query(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
     else:
         # no query → return recent active users (same logic as discover)
         base = db.session.query(User).outerjoin(Profile).filter(User.id != current_user.id)
@@ -89,7 +89,9 @@ def api_search():
 
 
         # render HTML snippet using the component (pass user & status)
-        html_snippet = render_template('components/user_card.html', user=u, conn_status=status)
+        html_snippet = render_template('components/user_card.html',
+                                     user=u, conn_status=status,
+                                     **request.args.to_dict())  # Pass query params
 
 
         results.append({

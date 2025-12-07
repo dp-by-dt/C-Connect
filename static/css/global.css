@@ -436,7 +436,7 @@ h6 { font-size: 1rem; }
 
 /* ===== ANIMATIONS ===== */
 .animate-on-scroll {
-    opacity: 0;
+    opacity: 1; /* turn to zero if want scroll fade-in animation*/
     transform: translateY(30px);
     transition: all 0.6s ease;
 }
