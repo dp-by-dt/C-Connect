@@ -785,6 +785,11 @@ Updates are corrections done
 21. Made a common section for user_cards in the templates/ folder in the root
 22. Now test the ajax searching feature on the /search page (later replace /discover page with this code)
 
+23. Building on /search page (towards /discover page)
+    - Modified `search.html` page to return the search results and imporved the logic in `search.py`
+    - Logic improved in `renderConnectionButton()` in `main_script.js`
+    - 
+
 + Need modifications:
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
     - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
@@ -803,3 +808,9 @@ Updates are corrections done
 5. Discover suggestion algorithm
 6. Pagination (simple implementation)
 7. Caching (optional but recommended)
+
+
+
+-------
+Later features 
+1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)

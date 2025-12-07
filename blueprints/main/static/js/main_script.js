@@ -248,6 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById("searchInput");
     const results = document.getElementById("resultsContainer");
 
+    // Exit if this is NOT search page
+    if (!input || !results) return;
+
     let timer = null;
 
     input.addEventListener("input", () => {
@@ -323,11 +326,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="bi bi-clock"></i> Pending
                     </button>`;
         }
+        if (u.connection_status === "incoming") {
+            return `<button class="btn btn-primary-custom btn-sm">
+                        <i class="bi bi-person-check"></i> Accept
+                    </button>`;
+        }
         return `<button class="btn btn-primary-custom btn-sm action-connect"
                         data-user-id="${u.id}">
                     <i class="bi bi-person-plus"></i> Connect
                 </button>`;
     }
+
 });
 
 

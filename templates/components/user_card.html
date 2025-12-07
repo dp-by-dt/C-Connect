@@ -49,37 +49,29 @@
 </style>
 
 
-    {% set user = item.user %}
-    {% set conn_status = item.conn_status %}
-
 
     <!-- For clickable cards -->
+
 <div class="user-card glass-card animate-on-scroll" data-user-card onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'" style="cursor: pointer;"> <!-- Might show error, but workds somehow -->
-
-
-
+    
     <!-- AVATAR -->
     <div class="user-avatar profile-avatar-large">
         {% if user.profile and user.profile.profile_picture %}
             <img src="{{ user.profile.profile_picture }}"
-                 alt="{{ user.username }}"
-                 class="profile-img">
+                 alt="{{ user.username }}" class="profile-img">
         {% else %}
             {{ user.username[0].upper() }}
         {% endif %}
     </div>
 
     <!-- USERNAME -->
-    <h3 class="user-name">
-        {{ user.username }}
-    </h3>
+    <h3 class="user-name">{{ user.username }}</h3>
 
     <!-- EMAIL / DEPARTMENT -->
     <p class="user-email">{{ user.email }}</p>
 
     <!-- ACTIONS -->
     <div class="user-actions" style="justify-content:center;">
-        
         {% if conn_status == 'connected' %}
             <button class="btn btn-connected btn-sm" disabled>
                 <i class="bi bi-check-circle"></i> Connected
@@ -91,15 +83,12 @@
             </button>
 
         {% else %}
-            <form method="POST"
-                  action="{{ url_for('connections.connections_send', target_id=user.id) }}"
-                  style="display:inline;">
+            <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}" style="display:inline;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-primary-custom btn-sm connect-btn">
                     <i class="bi bi-person-plus"></i> Connect
                 </button>
             </form>
         {% endif %}
-
     </div>
 </div>

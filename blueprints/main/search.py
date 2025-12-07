@@ -42,53 +42,74 @@ def search_page():
 @login_required
 def api_search():
     q = request.args.get('q', '').strip()
-    if not q: #no query, return empty
-        return jsonify({'total':0,'results':[]})
-    
-    
+
     page = int(request.args.get('page', 1))
     per_page = min(int(request.args.get('per_page', 12)), 50)
 
-    base = (
-        db.session.query(User)
-        .join(Profile)
-        .filter(fuzzy_query(q))
-        .filter(User.id != current_user.id)#Do not show current user ---- Might break if user not logged in
-    )
+    if q:
+        base = db.session.query(User).join(Profile).filter(fuzzy_query(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
+    else:
+        # no query → return recent active users (same logic as discover)
+        base = db.session.query(User).outerjoin(Profile).filter(User.id != current_user.id)
+        # order by last_login desc (recent first)
+        base = base.order_by(User.last_login.desc())
+
+
+
     total = base.count()
-    users = base.order_by(User.last_login.desc()).limit(per_page).offset((page-1)*per_page).all()
+    users = (base
+             .order_by(User.last_login.desc())
+             .limit(per_page)
+             .offset((page-1)*per_page)
+             .all())
 
 
-    conn = Connection.query.filter(
-        (
-            (Connection.user_id == current_user.id) &
-            (Connection.target_user_id == u.id)
-        ) |
-        (
-            (Connection.user_id == u.id) &
-            (Connection.target_user_id == current_user.id)
-        )
-    ).first()
-
-    connection_status = conn.status if conn else None
-    incoming_request = (conn and conn.target_user_id == current_user.id and conn.status == 'pending')
-    connection_id = conn.id if conn else None
-
-
-    out = []
+    results = []
     for u in users:
-        out.append({
+
+        # Determine connection relationship with current_user and u
+        conn = Connection.query.filter(
+            ((Connection.user_id == current_user.id) &
+             (Connection.target_user_id == u.id)) |
+            ((Connection.user_id == u.id) &
+             (Connection.target_user_id == current_user.id))
+        ).first()
+
+        if conn:
+            if conn.status in ("accepted", "connected"):
+                status = "connected"
+            elif conn.status == "pending":
+                # If current user RECEIVED the request
+                if conn.target_user_id == current_user.id:
+                    status = "incoming"
+                else:
+                    status = "pending"
+        else:
+            status = "none"
+
+
+        # render HTML snippet using the component (pass user & status)
+        html_snippet = render_template('components/user_card.html', user=u, conn_status=status)
+
+
+        results.append({
             'id': u.id,
             'name': u.username,
-            'bio': u.profile.bio or '',
-            'department': u.profile.department or '',
-            'avatar_url': url_for('static', filename='uploads/avatars/' + (u.profile.profile_picture or 'default.png')),
-            'mutuals': u.mutual_count if hasattr(u,'mutual_count') else 0
+            #'bio': u.profile.bio,
+            'department': (u.profile.department if u.profile else None),
+            'avatar_url': url_for('static',
+               filename='uploads/' + (u.profile.profile_picture or 'default.png')) if u.profile else url_for('static',filename='images/avatar-placeholder.jpg'),
+            'connection_status': status,
+            #'mutuals': u.mutual_count if hasattr(u,'mutual_count') else 0,
+            'html':html_snippet
         })
-    return jsonify({'total': total, 
-                    'results': out, 'page': page, 
-                    'per_page': per_page,
-                    'connection_status': connection_status,
-                    'incoming_request': incoming_request,
-                    'connection_id': connection_id,
-                    })
+
+    return jsonify({
+        'total': total,
+        'page': page,
+        'per_page': per_page,
+        'results': results
+    })
+
+
+

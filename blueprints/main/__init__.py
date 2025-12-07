@@ -1,6 +1,5 @@
 from flask import Blueprint
 
-main = Blueprint('main', __name__, template_folder='templates')
+main = Blueprint('main', __name__, template_folder='templates', static_folder='static')
 
-from . import routes #general routes
-from . import search #search routes
+from . import routes, search #general routes & ajax search routes

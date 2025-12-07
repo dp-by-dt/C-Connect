@@ -238,9 +238,11 @@
     <div class="users-grid">
         {% if users %}
 
-{% for item in users %}
-    {% include "components/user_card.html" %}
-{% endfor %}
+            {% for item in users %}
+            {% with user=item.user, conn_status=item.conn_status %}
+                {% include "components/user_card.html" %}
+            {% endwith %}
+            {% endfor %}
 
 
         {% else %}
