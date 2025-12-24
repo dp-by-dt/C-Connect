@@ -788,19 +788,16 @@ Updates are corrections done
 23. Building on /search page (towards /discover page)
     - Modified `search.html` page to return the search results and imporved the logic in `search.py`
     - Logic improved in `renderConnectionButton()` in `main_script.js`
-
-
-24. Api search works, but result not loading. (✅Fixed: it was because the opacity was set to 0 for scorlling, but never got full opacity. Now i made the opacity of these cards to 1 globally and removed the fade-in on scroll. It was annoying)
-    Need to patch up api/search when search result has the current user
-
-
+    - The cards were not visible (but clickable)... So fixed by putting `animate-on-scroll:opacity` to 90%
+    - 
 
 + Need modifications:
     - When page loads in dark theme there happens a white theme flicker (maybe style loading delay)
     - In the flash messages, the close button overlaps with the text (allocate different divs or sections)
-    - The ui search doesn't work across the other pages in pagination
-    - in profile_edit page, the profile pic not loading
+    - The ui search doesn't work across the other pages in pagination in discover
+    - in profile_edit page, the profile pic not loading (⚠️Seems fixed: Try after correcting the pic urls on the db)
     - User image loading in the pages discover, profile_edit, view_profiles (✅Fixed: by removing the usage of absolute path while saving the profile pic, from edit profile)
+    - The /search feature is not working properly on one or two letters searched
 
 
 

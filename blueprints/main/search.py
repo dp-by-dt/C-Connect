@@ -1,31 +1,48 @@
 # app/main/routes.py (add near other routes)
 from flask import Blueprint, request, jsonify, render_template, current_app, url_for
 from models import User, Profile, Connection
-from sqlalchemy import or_, func, and_
+from sqlalchemy import or_, func, and_, String, cast
 from app import db
 from . import main
+
 
 from flask_login import login_required, current_user
 
 
 
-def fuzzy_query(q):
-    pattern = f"%{q.lower()}%"
+
+def search_filter(q):
+    q = q.lower().strip()
+    
+    # BULLETPROOF username search
+    username_match = func.lower(func.coalesce(func.trim(User.username), '')).like(f"%{q}%")
+    
+    #bio_text = func.lower(func.coalesce(cast(Profile.bio, String), ""))
+    dept_text = func.lower(func.coalesce(cast(Profile.department, String), ""))
+    year_text = func.lower(func.coalesce(cast(Profile.year, String), ""))
+    
+    if len(q) < 3:
+        return username_match
     return or_(
-        func.lower(User.username).like(pattern),
-        func.lower(Profile.bio).like(pattern),
-        func.lower(Profile.department).like(pattern),
-        func.lower(Profile.year).like(pattern)
+        username_match,
+        #bio_text.like(f"%{q}%"),
+        #dept_text.like(f"%{q}%"),
+        #year_text.like(f"%{q}%"),
+        #right now only trying to search on the username, other will be added as a filter
     )
 
+
+
+
 @main.route('/search')
+@login_required
 def search_page():
     # Renders search page template (with client-side fetch)
     query = request.args.get('q', '')
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 12))
     if query:
-        base = db.session.query(User).join(Profile).filter(fuzzy_query(query))
+        base = db.session.query(User).outerjoin(Profile).filter(search_filter(query))
         total = base.count()
         items = base.order_by(User.last_login.desc()).limit(per_page).offset((page-1)*per_page).all()
     else:
@@ -47,7 +64,7 @@ def api_search():
     per_page = min(int(request.args.get('per_page', 12)), 50)
 
     if q:
-        base = db.session.query(User).outerjoin(Profile).filter(fuzzy_query(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
+        base = db.session.query(User).outerjoin(Profile).filter(search_filter(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
     else:
         # no query → return recent active users (same logic as discover)
         base = db.session.query(User).outerjoin(Profile).filter(User.id != current_user.id)
@@ -63,8 +80,10 @@ def api_search():
              .offset((page-1)*per_page)
              .all())
 
-
+    
     results = []
+    status = "none"
+
     for u in users:
 
         # Determine connection relationship with current_user and u
@@ -84,14 +103,11 @@ def api_search():
                     status = "incoming"
                 else:
                     status = "pending"
-        else:
-            status = "none"
+
 
 
         # render HTML snippet using the component (pass user & status)
-        html_snippet = render_template('components/user_card.html',
-                                     user=u, conn_status=status,
-                                     **request.args.to_dict())  # Pass query params
+        html_snippet = render_template('components/user_card.html', user=u, conn_status=status)
 
 
         results.append({
@@ -115,3 +131,14 @@ def api_search():
 
 
 
+
+
+@main.route('/debug/search')
+def debug_search():
+    q = request.args.get('q', 'r').lower()
+    users = db.session.query(User.username, Profile.department).outerjoin(Profile).filter(
+        func.lower(func.coalesce(func.trim(User.username), '')).like(f"%{q}%")
+    ).limit(10).all()
+    
+    # FIXED: users is list of tuples (username, department)
+    return jsonify([{'username': row[0], 'dept': row[1]} for row in users])

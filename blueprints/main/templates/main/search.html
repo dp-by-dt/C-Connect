@@ -205,11 +205,7 @@
 
 <div id="resultsContainer" class="users-grid">
 <!-- here load the search results: By default load the last active users too (like in discover)-->
-            {% for item in users %}
-            {% with user=item.user, conn_status=item.conn_status %}
-                {% include "components/user_card.html" %}
-            {% endwith %}
-            {% endfor %}
+
 
 
 
@@ -220,7 +216,7 @@
 
 <!-- Connecting to the js -->
  {% block extra_js %}
-<script src="{{ url_for('main.static', filename='js/main_script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main_script.js') }}"></script>
 
 
 <script>
@@ -237,6 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
             if (!resp.ok) throw new Error('Network error');
+
+            const contentType = resp.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML error page (not JSON)');
+            }
+
             const data = await resp.json();
             if (!data.results || data.results.length === 0) {
                 resultsContainer.innerHTML = `<div class="empty-state glass-card p-5"><div class="empty-icon"><i class="bi bi-search"></i></div><h2>No users found</h2></div>`;
@@ -249,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.cconnect.reinitAnimations();
             }
         } catch (err) {
-            resultsContainer.innerHTML = `<div class="loading">Search failed. Try again.</div>`;
+            resultsContainer.innerHTML = `<div class="loading">Search failed. Try longer terms or Refresh.</div>`;
             console.error(err);
         }
     }

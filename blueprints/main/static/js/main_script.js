@@ -341,32 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// =========== Re-init after AJAX for scroll animaton and opacity working
-// Incorporate this later if you want scroll animation, but require some setup
-
-// In your search.html JS fetchAndRender() → AFTER injecting HTML
-resultsContainer.innerHTML = data.results.map(r => r.html).join('');
-
-// ✅ FIX: Re-trigger animations for AJAX-loaded cards
-reinitScrollAnimations();
-
-function reinitScrollAnimations() {
-    const cards = document.querySelectorAll('.animate-on-scroll');
-    cards.forEach(card => {
-        // Reset animation state
-        card.classList.remove('animate-in');
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(50px)';
-        
-        // Force observer to see them (micro-delay)
-        requestAnimationFrame(() => {
-            observer.observe(card);  // existing observer
-        });
-    });
-}
-
-
-
 
 
 
