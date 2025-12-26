@@ -827,6 +827,150 @@ So from here, the loading of different files can be done as below:
 * Deleted the section of searching and dashboard from the `main_script.js` file (because it was clashing with the current search mechanism)
 + replaced the route `discover` with `search`
 
+
+
+
+
+
+--------------------------------      SECOND WEEK (KIND OF) COMPLETED -----------------------------------
+
+
+
+
+## Week 3
+Now instead of days we are going for features
+
+### Feature 1: Posting 
+
+
+* FOLDER STRUCTURE
+🖥️ d:\C-Connect
+📂 C-Connect
+├── 📂 blueprints/
+│   ├── 📂 auth/
+│   │   ├── 📂 static/
+│   │   │   ├── 📂 css/
+│   │   │   │   └── 📄 auth_style.css
+│   │   │   └── 📂 js/
+│   │   │       └── 📄 auth_script.js
+│   │   ├── 📂 templates/
+│   │   │   └── 📂 auth/
+│   │   │       ├── 📄 login.html
+│   │   │       ├── 📄 profile.html
+│   │   │       ├── 📄 profile_edit.html
+│   │   │       └── 📄 signup.html
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 forms.py
+│   │   └── 📄 routes.py
+│   ├── 📂 connections/
+│   │   ├── 📂 templates/
+│   │   │   └── 📂 connections/
+│   │   │       └── 📄 list.html
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 routes.py
+│   │   └── 📄 service.py
+│   ├── 📂 main/
+│   │   ├── 📂 static/
+│   │   │   ├── 📂 css/
+│   │   │   │   └── 📄 main_style.css
+│   │   │   └── 📂 js/
+│   │   │       └── 📄 main_script.js
+│   │   ├── 📂 templates/
+│   │   │   └── 📂 main/
+│   │   │       ├── 📄 about.html
+│   │   │       ├── 📄 contact.html
+│   │   │       ├── 📄 dashboard.html
+│   │   │       ├── 📄 discover.html
+│   │   │       ├── 📄 home.html
+│   │   │       ├── 📄 messages.html
+│   │   │       ├── 📄 search.html
+│   │   │       ├── 📄 settings.html
+│   │   │       └── 📄 user_profile.html
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 routes.py
+│   │   └── 📄 search.py
+│   ├── 📂 notifications/
+│   │   ├── 📂 templates/
+│   │   │   └── 📂 notifications/
+│   │   │       └── 📄 notif_list.html
+│   │   ├── 📄 __init__.py
+│   │   ├── 📄 routes.py
+│   │   └── 📄 service.py
+│   └── 📂 posts/
+│       ├── 📂 templates/
+│       │   └── 📂 posts/
+│       │       └── 📄 feed.html
+│       ├── 📄 __init__.py
+│       └── 📄 routes.py
+├── 📂 logs/
+│   └── 📄 cconnect.log
+├── 📂 migrations/
+├── 📂 services/
+│   └── 📄 recommend.py
+├── 📂 static/
+│   ├── 📂 css/
+│   │   └── 📄 global.css
+│   ├── 📂 images/
+│   │   └── 📄 avatar-placeholder.jpg
+│   ├── 📂 js/
+│   │   └── 📄 global.js
+│   └── 📄 favicon.ico
+├── 📂 templates/
+│   └── 📂 components/
+│       ├── 📄 flash.html
+│       ├── 📄 user_card.html
+│       └── 📄 user_card_action_btn.html
+│   └── 📄 base.html
+├── 📂 testing_old/
+│   ├── 📄 db_testing.sql
+│   └── 📄 logic_testing.ipynb
+├── 📂 tests/
+│   ├── 📄 __init__.py
+│   ├── 📄 conftest.py
+│   ├── 📄 routes.py
+│   ├── 📄 test_db.py
+│   └── 📄 test_search_and_conn.py
+├── 📄 .gitignore
+├── 📄 app.py
+├── 📄 config.py
+├── 📄 css_cheatsheet.md
+├── 📄 extensions.py
+├── 📄 factory_helpers.py
+├── 📄 models.py
+├── 📄 project_document.md
+├── 📄 removed.py
+├── 📄 requirements.txt
+├── 📄 seed.py
+└── 📄 setup_db.py
+
+
++ Added `Post` and `PostLike` classes in the `models.py` file
+    (db migration pending)
++ New blueprint named `posts` is created
++ Created __init__.py file for the new `posts` blueprint
+    blueprint registered as `posts_bp`
+    (url_prefix added for this one)
++ Added entry point to `/feed` in the dashboard
++ Added csrf token for `feed.html` file
+
+
+- like count doesn't update
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -----------------
 Later modifications
 1. add 400.html and 500.html error pages

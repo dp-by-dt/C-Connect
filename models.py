@@ -101,3 +101,32 @@ class ProfileVisit(db.Model):
     __table_args__ = (
         db.Index('idx_viewed_id', 'viewed_id'),
     )
+
+
+
+
+#for posting feeds 
+class Post(db.Model):
+    __tablename__ = "posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now(), index=True)
+
+    user = db.relationship("User", backref="posts", lazy=True)
+
+
+
+class PostLike(db.Model):
+    __tablename__ = "post_likes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    __table_args__ = (
+        db.UniqueConstraint("post_id", "user_id", name="unique_post_like"),
+    )

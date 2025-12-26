@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="posts-header animate-on-scroll">
+        <h1 class="posts-title">
+            <i class="bi bi-rss me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            Campus Feed
+        </h1>
+        <p class="posts-subtitle">Posts count: {{ posts|length }}</p>
+    </div>
+
+    <!-- Create Post Form -->
+    <div class="section-card glass-card mb-4">
+        <form method="POST" action="{{ url_for('posts.create_post') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- ADD THIS -->
+            <textarea name="content" rows="3" class="form-control mb-3" placeholder="What's happening?" required></textarea>
+            <button type="submit" class="btn btn-primary-custom">Post</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <!-- Posts List -->
+    {% for post in posts %}
+    <div class="section-card glass-card mb-3 animate-on-scroll">
+        <div class="post-header">
+            <strong>{{ post.user.username }}</strong>  <!-- Changed from post.user.name -->
+            <small class="text-muted">{{ post.created_at.strftime("%d %b %H:%M") }}</small>
+        </div>
+        <p class="post-content">{{ post.content }}</p>
+        
+        <!-- Like Form -->
+        <form method="POST" action="{{ url_for('posts.toggle_like', post_id=post.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- ADD THIS -->
+            <button type="submit" class="btn btn-sm btn-outline-custom">
+                {% if post.id in liked_post_ids %}
+                    ❤️ Unlike
+                {% else %}
+                    🤍 Like
+                {% endif %}
+            </button>
+            <span class="ms-2">{{ post.post_likes|length }} likes</span>
+        </form>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('posts.feed', page=pagination.prev_num) }}" class="page-link">Prev</a>
+        {% endif %}
+        {% if pagination.has_next %}
+            <a href="{{ url_for('posts.feed', page=pagination.next_num) }}" class="page-link">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

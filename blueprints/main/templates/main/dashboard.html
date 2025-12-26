@@ -307,13 +307,13 @@
                 </div>
             </div>
             <div class="col-lg-3 col-sm-6 animate-on-scroll">
-                <div class="stat-card glass-card">
+                <a href="{{ url_for('posts.feed') }}" class="stat-card glass-card">
                     <div class="stat-icon">
                         <i class="bi bi-collection-fill"></i>
                     </div>
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Groups</div>
-                </div>
+                    <div class="stat-value">{{ posts|length }}</div>
+                    <div class="stat-label">Posts</div>
+                </a>
             </div>
         </div>
 

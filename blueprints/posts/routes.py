@@ -1,0 +1,72 @@
+from . import posts_bp
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from extensions import db
+from models import Post
+from models import PostLike
+
+
+
+@posts_bp.route("/create", methods=["POST"])
+@login_required
+def create_post():
+    content = request.form.get("content", "").strip()
+
+    if not content:
+        flash("Post cannot be empty", "error")
+        return redirect(request.referrer or url_for("posts.feed"))
+
+    post = Post(
+        user_id=current_user.id,
+        content=content
+    )
+
+    db.session.add(post)
+    db.session.commit()
+
+    return redirect(url_for("posts.feed"))
+
+
+
+@posts_bp.route("/feed")
+@login_required
+def feed():
+    page = request.args.get("page", 1, type=int)
+
+    pagination = (
+        Post.query
+        .order_by(Post.created_at.desc())
+        .paginate(page=page, per_page=10, error_out=False)
+    )
+
+    posts = pagination.items
+
+    liked_post_ids = {
+        like.post_id
+        for like in PostLike.query.filter_by(user_id=current_user.id).all()
+    }
+
+    return render_template(
+        "posts/feed.html",
+        posts=posts,
+        pagination=pagination,
+        liked_post_ids=liked_post_ids
+    )
+
+
+
+@posts_bp.route("/<int:post_id>/like", methods=["POST"])
+@login_required
+def toggle_like(post_id):
+    like = PostLike.query.filter_by(
+        post_id=post_id,
+        user_id=current_user.id
+    ).first()
+
+    if like:
+        db.session.delete(like)
+    else:
+        db.session.add(PostLike(post_id=post_id, user_id=current_user.id))
+
+    db.session.commit()
+    return redirect(request.referrer or url_for("posts.feed"))
