@@ -829,7 +829,8 @@ So from here, the loading of different files can be done as below:
 -----------------
 Later modifications
 1. add 400.html and 500.html error pages
-
+2. Add `No result` in the `/search` page
+3. Make the hover size of the `/search` page cards more subtle
 7. Caching (optional but recommended)
 
 

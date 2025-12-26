@@ -160,6 +160,7 @@
     .users-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
+        margin-top: 2rem;
     }
     
     .results-header {
@@ -204,10 +205,16 @@
     </div>
 
 <div id="resultsContainer" class="users-grid">
-<!-- here load the search results: By default load the last active users too (like in discover)-->
+        <!-- ADD THIS EMPTY STATE FIRST -->
+    <div id="emptyState" class="empty-state text-center py-5" style="display: none; grid-column: 1 / -1;">
+        <div class="empty-icon mb-3">
+            <i class="bi bi-search fs-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted mb-2">No results found</h4>
+        <p class="text-muted mb-0">Try different keywords or clear the search</p>
+    </div>
 
-
-
+    <!-- here load the search results: By default load the last active users too (like in discover)-->
 
 </div>
 
@@ -235,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentOffset = 0;
     let loading = false;
     let hasMore = true;
-    const LIMIT = 4 ;
+    const LIMIT = 20 ;
 
     // small helper: debounce
     function debounce(fn, delay){ 
@@ -250,14 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadMore(reset = false) {
         if (loading || !hasMore) return;
 
-        loading = true;  // ← ADD LINE 1
-        spinner.style.display = "block";  // ← Move AFTER loading=true
+        loading = true;  
+        spinner.style.display = "block";  
 
         
         if (reset) {
             currentOffset = 0;
             hasMore = true;
-            resultsContainer.innerHTML = "";
+            resultsContainer.innerHTML = "";  // Clears everything including emptyState
         }
 
 
@@ -274,6 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await resp.json();
 
         if (data.results.length > 0) {
+            // Hide empty state when we have results
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.style.display = 'none';
+
+
             data.results.forEach(item => {
                 resultsContainer.insertAdjacentHTML("beforeend", item.html);
             });
@@ -282,7 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
             hasMore = data.has_more;
         } else {
             hasMore = false;
+            // Show empty state when NO results
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.style.display = 'block';
         }
+
+        
 
         spinner.style.display = "none";
         loading = false;
