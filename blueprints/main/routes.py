@@ -1,7 +1,7 @@
 from . import main
 from flask import render_template, jsonify
 from flask_login import login_required, current_user
-from models import User, Profile  # For user discovery feature
+from models import User, Profile, Post  # For user discovery feature
 from models import Connection, ProfileVisit  # For viewing other user's profile
 from flask import redirect, url_for
 from extensions import db
@@ -135,6 +135,16 @@ def view_user_profile(user_id):
     ).first()
 
 
+    #for showing the posts by the user
+    posts = (
+        Post.query
+        .filter_by(user_id=user.id)
+        .order_by(Post.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+
     if current_user.id != user.id:
         try:
             # Prevent duplicate visits within last 30 minutes
@@ -156,5 +166,6 @@ def view_user_profile(user_id):
         "main/user_profile.html",
         user=user,
         profile=profile,
-        conn=conn
+        conn=conn,
+        posts=posts
     )

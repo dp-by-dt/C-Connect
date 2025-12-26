@@ -954,7 +954,9 @@ Now instead of days we are going for features
 + Added csrf token for `feed.html` file
 + addd `url_prefix` for the posts
 
-
++ Profile shows on other's respective profile page (plus like count and time)
+    adding a return value of post from db in the `user_profile` route
+    returning that back to the `user_profile.html` and displaying
 
 
 - like count doesn't update (✅fixed by adding the relation to the models.py)
@@ -980,6 +982,11 @@ Later modifications
 1. add 400.html and 500.html error pages
 2. Add `No result` in the `/search` page
 3. Make the hover size of the `/search` page cards more subtle
+4. Posts:
+    - Photo/video posting
+    - AJAX usage (updates likes without reloading)
+
+6. Refractoring models into seperate files (optional, but cleaner)
 7. Caching (optional but recommended)
 
 
