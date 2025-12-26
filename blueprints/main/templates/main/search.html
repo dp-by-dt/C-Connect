@@ -211,6 +211,12 @@
 
 </div>
 
+<div id="loadingSpinner" class="loading" style="display:none;">
+    Loading…
+</div>
+
+
+
 {% endblock %}
 
 
@@ -223,47 +229,83 @@
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('searchInput');
     const resultsContainer = document.getElementById('resultsContainer');
+    const spinner = document.getElementById("loadingSpinner");
+
+    let currentQuery = "";
+    let currentOffset = 0;
+    let loading = false;
+    let hasMore = true;
+    const LIMIT = 4 ;
 
     // small helper: debounce
-    function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); }; }
-
-    async function fetchAndRender(q) {
-        // if q is empty, API will return recent users
-        resultsContainer.innerHTML = `<div class="loading">Loading...</div>`;
-        try {
-            const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-            if (!resp.ok) throw new Error('Network error');
-
-            const contentType = resp.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Server returned HTML error page (not JSON)');
-            }
-
-            const data = await resp.json();
-            if (!data.results || data.results.length === 0) {
-                resultsContainer.innerHTML = `<div class="empty-state glass-card p-5"><div class="empty-icon"><i class="bi bi-search"></i></div><h2>No users found</h2></div>`;
-                return;
-            }
-            // inject the server-rendered HTML snippets
-            resultsContainer.innerHTML = data.results.map(r => r.html).join('');
-            // optionally, re-run animate-on-scroll observer if you use it
-            if (window.cconnect && typeof window.cconnect.reinitAnimations === 'function') {
-                window.cconnect.reinitAnimations();
-            }
-        } catch (err) {
-            resultsContainer.innerHTML = `<div class="loading">Search failed. Try longer terms or Refresh.</div>`;
-            console.error(err);
-        }
+    function debounce(fn, delay){ 
+        let t; 
+        return (...args)=>{ 
+            clearTimeout(t); 
+            t = setTimeout(()=>fn(...args), delay); 
+        }; 
     }
 
-    // initial load: show recent users (no query)
-    fetchAndRender('');
 
-    // wire input with debounce
-    input.addEventListener('input', debounce((e) => {
-        const q = e.target.value.trim();
-        fetchAndRender(q);
-    }, 250));
+    async function loadMore(reset = false) {
+        if (loading || !hasMore) return;
+
+        loading = true;  // ← ADD LINE 1
+        spinner.style.display = "block";  // ← Move AFTER loading=true
+
+        
+        if (reset) {
+            currentOffset = 0;
+            hasMore = true;
+            resultsContainer.innerHTML = "";
+        }
+
+
+        const query = currentQuery || document.getElementById('searchInput').value.trim();
+        const url = `/api/search?q=${encodeURIComponent(currentQuery)}&offset=${currentOffset}&limit=${LIMIT}`;
+        const resp = await fetch(url);
+
+        if (!resp.ok) {
+            spinner.style.display = "none";
+            loading = false;
+            return;
+        }
+
+        const data = await resp.json();
+
+        if (data.results.length > 0) {
+            data.results.forEach(item => {
+                resultsContainer.insertAdjacentHTML("beforeend", item.html);
+            });
+
+            currentOffset += data.results.length;
+            hasMore = data.has_more;
+        } else {
+            hasMore = false;
+        }
+
+        spinner.style.display = "none";
+        loading = false;
+    }
+
+    // Initial load
+    loadMore(true);
+
+    // Search input
+    input.addEventListener("input", debounce(e => {
+        currentQuery = e.target.value.trim();
+        loadMore(true);
+    }, 300));
+
+    // Infinite scroll
+    window.addEventListener("scroll", debounce(() => {
+        if ((window.innerHeight + window.scrollY >= document.body.offsetHeight - 800)) {
+        loadMore(false);
+           }
+    }, 150));
+
+
+
 });
 </script>
 

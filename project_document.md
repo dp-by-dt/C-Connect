@@ -800,7 +800,18 @@ Updates are corrections done
     - The /search feature is not working properly on one or two letters searched
 
 
-
+=========‼️Problem that troubled for 3 days!:===========
+⚠️The infinite scroll was not ending and trying unwanted loading and causing console error
+    
+✅Later found it was db table inconsistency
+- The first users in the `User` table was not in the `Profile` table
+- After deleting them using `flask shell` on the vs code cmd, the problem persist
+- Later also found that the problem was with interests column in the `Profile` table
+    There were some `str` interests and some `JSON`
+    This was breaking as JSONdata error
+✅ Solved it by repalcing the `str` value with proper `JSON` values
+    Now the cards in the `/search` page loads without any glitch or console error
+=========================================================
 
 
 1. Flash UI improvements (flash.html partial + global include)

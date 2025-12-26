@@ -28,6 +28,6 @@ csrf = CSRFProtect()
 #rate limiter
 limiter = Limiter(
     key_func=get_remote_address, #rate limit by ip
-    default_limits=["100 per hour"], #app wide default
+    default_limits=["200 per hour"], #app wide default
     storage_uri="memory://" #use redis for production: "redis://localhost:6379"
 )

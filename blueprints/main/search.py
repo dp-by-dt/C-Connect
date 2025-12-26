@@ -1,9 +1,11 @@
 # app/main/routes.py (add near other routes)
 from flask import Blueprint, request, jsonify, render_template, current_app, url_for
 from models import User, Profile, Connection
-from sqlalchemy import or_, func, and_, String, cast
+from sqlalchemy import or_, func, and_, String, cast, distinct
 from app import db
 from . import main
+from sqlalchemy.orm import joinedload
+
 
 
 from flask_login import login_required, current_user
@@ -32,26 +34,12 @@ def search_filter(q):
     )
 
 
-
-
 @main.route('/search')
 @login_required
 def search_page():
-    # Renders search page template (with client-side fetch)
     query = request.args.get('q', '')
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 12))
-    if query:
-        base = db.session.query(User).outerjoin(Profile).filter(search_filter(query))
-        total = base.count()
-        items = base.order_by(User.last_login.desc()).limit(per_page).offset((page-1)*per_page).all()
-    else:
-        total = 0
-        items = []
-    # Template will request via AJAX too; we return initial render
-    return render_template('main/search.html', 
-                           query=query, results=items, total=total, page=page, per_page=per_page,
-                           )
+    return render_template('main/search.html', query=query)
+
 
 
 
@@ -59,34 +47,37 @@ def search_page():
 @login_required
 def api_search():
     q = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = min(int(request.args.get('limit', 20)), 50)
 
-    page = int(request.args.get('page', 1))
-    per_page = min(int(request.args.get('per_page', 12)), 50)
+    base = (
+        db.session.query(User)
+        .options(joinedload(User.profile))
+        .filter(User.id != current_user.id)
+    )
 
     if q:
-        base = db.session.query(User).outerjoin(Profile).filter(search_filter(q)).filter(User.id != current_user.id) #Do not show current user ---- Might break if user not logged in
-    else:
-        # no query → return recent active users (same logic as discover)
-        base = db.session.query(User).outerjoin(Profile).filter(User.id != current_user.id)
-        # order by last_login desc (recent first)
-        base = base.order_by(User.last_login.desc())
+        base = base.filter(search_filter(q))
 
+    base = base.order_by(
+        User.last_login.desc().nullslast(),
+        User.id.desc()
+    )
 
+    users = base.offset(offset).limit(limit).all()
 
-    total = base.count()
-    users = (base
-             .order_by(User.last_login.desc())
-             .limit(per_page)
-             .offset((page-1)*per_page)
-             .all())
+    # END CONDITION — CRITICAL
+    if not users:
+        return jsonify({
+            "results": [],
+            "has_more": False
+        })
 
-    
     results = []
-    status = "none"
 
     for u in users:
+        status = "none"
 
-        # Determine connection relationship with current_user and u
         conn = Connection.query.filter(
             ((Connection.user_id == current_user.id) &
              (Connection.target_user_id == u.id)) |
@@ -98,38 +89,20 @@ def api_search():
             if conn.status in ("accepted", "connected"):
                 status = "connected"
             elif conn.status == "pending":
-                # If current user RECEIVED the request
-                if conn.target_user_id == current_user.id:
-                    status = "incoming"
-                else:
-                    status = "pending"
+                status = "pending"
 
+        html = render_template(
+            "components/user_card.html",
+            user=u,
+            conn_status=status
+        )
 
-
-        # render HTML snippet using the component (pass user & status)
-        html_snippet = render_template('components/user_card.html', user=u, conn_status=status)
-
-
-        results.append({
-            'id': u.id,
-            'name': u.username,
-            #'bio': u.profile.bio,
-            'department': (u.profile.department if u.profile else None),
-            'avatar_url': url_for('static',
-               filename='uploads/' + (u.profile.profile_picture or 'default.png')) if u.profile else url_for('static',filename='images/avatar-placeholder.jpg'),
-            'connection_status': status,
-            #'mutuals': u.mutual_count if hasattr(u,'mutual_count') else 0,
-            'html':html_snippet
-        })
+        results.append({"html": html})
 
     return jsonify({
-        'total': total,
-        'page': page,
-        'per_page': per_page,
-        'results': results
+        "results": results,
+        "has_more": len(results) == limit
     })
-
-
 
 
 
