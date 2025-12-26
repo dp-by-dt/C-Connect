@@ -2,8 +2,8 @@ from . import posts_bp
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from extensions import db
-from models import Post
-from models import PostLike
+from models import Post, PostLike
+from models import Notification
 
 
 
@@ -58,6 +58,8 @@ def feed():
 @posts_bp.route("/<int:post_id>/like", methods=["POST"])
 @login_required
 def toggle_like(post_id):
+    post = Post.query.get_or_404(post_id)
+
     like = PostLike.query.filter_by(
         post_id=post_id,
         user_id=current_user.id
@@ -68,5 +70,32 @@ def toggle_like(post_id):
     else:
         db.session.add(PostLike(post_id=post_id, user_id=current_user.id))
 
+        # create notification for like
+        if post.user_id != current_user.id:
+            notif = Notification(
+                user_id=post.user_id,
+                sender_id=current_user.id,
+                message=f"{current_user.username} liked your post"
+            )
+            db.session.add(notif)
+
     db.session.commit()
+    return redirect(request.referrer or url_for("posts.feed"))
+
+
+
+#for deleting the own posts
+@posts_bp.route("/<int:post_id>/delete", methods=["POST"])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+
+    if post.user_id != current_user.id:
+        flash("Unauthorized action", "error")
+        return redirect(url_for("posts.feed"))
+
+    db.session.delete(post)
+    db.session.commit()
+
+    flash("Post deleted", "success")
     return redirect(request.referrer or url_for("posts.feed"))

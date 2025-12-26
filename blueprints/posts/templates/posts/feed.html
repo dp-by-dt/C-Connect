@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 
+
+{% block extra_css %}
+<style>
+.delete-btn {
+    transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container py-4">
     <div class="posts-header animate-on-scroll">
@@ -42,6 +58,18 @@
             </button>
             <span class="ms-2">{{ post.likes|length }} likes</span>
         </form>
+
+        <!-- For deleting the own posts -->
+        {% if post.user_id == current_user.id %}
+        <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}" class="d-inline ms-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger delete-btn" 
+                    onclick="return confirm('Are you sure you want to delete this post?')">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        </form>
+        {% endif %}
+
     </div>
     {% endfor %}
 

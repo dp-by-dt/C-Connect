@@ -958,6 +958,12 @@ Now instead of days we are going for features
     adding a return value of post from db in the `user_profile` route
     returning that back to the `user_profile.html` and displaying
 
++ Notification of likes for the posts 
+    - Added to the `toggle_like` in the `routes.py` file, if liked, sends a nofication and adds to the db
++ Own post deletion added
+    - A button to delete own posts (asks confirmation) and deletes and give flash message
+    - Does by the route `delete_post()`
+
 
 - like count doesn't update (✅fixed by adding the relation to the models.py)
 - The time is not in ist (✅set to ist using `to_ist()` function )
