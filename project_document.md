@@ -825,6 +825,7 @@ So from here, the loading of different files can be done as below:
 ✅ This was handled by using the if condition to check if the user exists before fetching their detials
 
 * Deleted the section of searching and dashboard from the `main_script.js` file (because it was clashing with the current search mechanism)
++ replaced the route `discover` with `search`
 
 -----------------
 Later modifications
