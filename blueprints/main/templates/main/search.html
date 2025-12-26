@@ -222,7 +222,7 @@
 
 <!-- Connecting to the js -->
  {% block extra_js %}
-<script src="{{ url_for('static', filename='js/main_script.js') }}"></script>
+<script src="{{ url_for('main.static', filename='js/main_script.js') }}"></script>
 
 
 <script>
@@ -291,11 +291,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial load
     loadMore(true);
 
+    //helper function to reset the result
+    function resetAndLoad(query) {
+        currentQuery = query;
+        currentOffset = 0;
+        hasMore = true;
+        loading = false;
+        resultsContainer.innerHTML = "";
+        loadMore();
+    }
+
     // Search input
     input.addEventListener("input", debounce(e => {
-        currentQuery = e.target.value.trim();
-        loadMore(true);
+        const q = e.target.value.trim();
+        resetAndLoad(q);
     }, 300));
+
+        
+
 
     // Infinite scroll
     window.addEventListener("scroll", debounce(() => {

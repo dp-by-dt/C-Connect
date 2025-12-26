@@ -3,7 +3,13 @@ from extensions import login_manager
 from flask_login import current_user
 from flask import request
 
-auth = Blueprint('auth', __name__, template_folder='templates')
+auth = Blueprint(
+            'auth', 
+            __name__, 
+            template_folder='templates',
+            static_folder='static',
+            static_url_path='/auth/static'
+        )
 
 
 

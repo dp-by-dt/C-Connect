@@ -187,9 +187,11 @@
         {% if incoming %}
             {% for c in incoming %}
             <div class="connection-item">
-                <div class="connection-avatar">{{ c.user.username[0].upper() }}</div>
+                <div class="connection-avatar">
+                    {{ c.user.username[0].upper() if c.connected_user else 'U' }}
+                </div>
                 <div class="connection-info">
-                    <div class="connection-name">{{ c.user.username }}</div>
+                    <div class="connection-name">{{ c.user.username if c.connected_user else 'UNKNOWN'}}</div>
                     <div class="connection-meta">wants to connect with you</div>
                 </div>
                 <div class="connection-actions">
@@ -232,9 +234,9 @@
         {% if outgoing %}
             {% for c in outgoing %}
             <div class="connection-item">
-                <div class="connection-avatar">{{ c.connected_user.username[0].upper() }}</div>
+                <div class="connection-avatar">{{ c.connected_user.username[0].upper() if c.connected_user else 'U'}}</div>
                 <div class="connection-info">
-                    <div class="connection-name">{{ c.connected_user.username }}</div>
+                    <div class="connection-name">{{ c.connected_user.username if c.connected_user else 'UNKNOWN'}}</div>
                     <div class="connection-meta">Request pending</div>
                 </div>
                 <div class="connection-actions">

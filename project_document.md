@@ -814,16 +814,27 @@ Updates are corrections done
 =========================================================
 
 
-1. Flash UI improvements (flash.html partial + global include)
-2. Loading state button (tiny UX improvement)
-3. ProfileVisit model
-4. Search route + fuzzy matching
-5. Discover suggestion algorithm
-6. Pagination (simple implementation)
+* Further more, the `main_script.js` in the `main` blueprint was not loading. ✅fixed it by adding `static_url_path='/main/static'` in the `__init__.py` file of it
+* The same is added for the other blueprints too. (HAVEN'T ADDED FOR OTHER FILES EXCEPT `AUTH`)
+So from here, the loading of different files can be done as below:
++ For root global.js: <script src="{{ url_for('static', filename='js/global.js') }}"></script>
++ For blueprint's auth_script.js: <script src="{{ url_for('auth.static', filename='js/auth_script.js') }}"></script>
+
+
+* when the db was cleaned to correct the inconsistency, some of the already conneected users were deleted. This caused error in the `/connections` page
+✅ This was handled by using the if condition to check if the user exists before fetching their detials
+
+* Deleted the section of searching and dashboard from the `main_script.js` file (because it was clashing with the current search mechanism)
+
+-----------------
+Later modifications
+1. add 400.html and 500.html error pages
+
 7. Caching (optional but recommended)
 
 
 
 -------
 Later features 
+1. forget password
 1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)

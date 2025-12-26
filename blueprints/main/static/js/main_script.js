@@ -147,197 +147,105 @@ if (messageTextarea) {
     });
 }
 
-// ===== DISCOVER PAGE FUNCTIONALITY =====
+// // ===== DISCOVER PAGE FUNCTIONALITY =====
 
-// Search with debounce
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-    searchInput.addEventListener('input', window.cconnect.debounce(function() {
-        const query = this.value.toLowerCase().trim();
-        filterUsers(query);
-    }, 300));
-}
+// =================Seems don't need this, as i am planning to replace discover with the search page
 
-function filterUsers(query) {
-    const userCards = document.querySelectorAll('.user-card');
-    let visibleCount = 0;
+// // Search with debounce
+// const searchInput = document.getElementById('searchInput');
+// if (searchInput) {
+//     searchInput.addEventListener('input', window.cconnect.debounce(function() {
+//         const query = this.value.toLowerCase().trim();
+//         filterUsers(query);
+//     }, 300));
+// }
+
+// function filterUsers(query) {
+//     const userCards = document.querySelectorAll('.user-card');
+//     let visibleCount = 0;
     
-    userCards.forEach(card => {
-        const userName = card.querySelector('.user-name')?.textContent.toLowerCase() || '';
-        const userEmail = card.querySelector('.user-email')?.textContent.toLowerCase() || '';
+//     userCards.forEach(card => {
+//         const userName = card.querySelector('.user-name')?.textContent.toLowerCase() || '';
+//         const userEmail = card.querySelector('.user-email')?.textContent.toLowerCase() || '';
         
-        if (userName.includes(query) || userEmail.includes(query)) {
-            card.style.display = '';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-        }
-    });
+//         if (userName.includes(query) || userEmail.includes(query)) {
+//             card.style.display = '';
+//             visibleCount++;
+//         } else {
+//             card.style.display = 'none';
+//         }
+//     });
     
-    // Show/hide empty state
-    const emptyState = document.getElementById('emptyState');
-    if (emptyState) {
-        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
-}
+//     // Show/hide empty state
+//     const emptyState = document.getElementById('emptyState');
+//     if (emptyState) {
+//         emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+//     }
+// }
 
-// Filter chips functionality
-const filterChips = document.querySelectorAll('.filter-chip');
-filterChips.forEach(chip => {
-    chip.addEventListener('click', function() {
-        // Remove active from all chips
-        filterChips.forEach(c => c.classList.remove('active'));
-        // Add active to clicked chip
-        this.classList.add('active');
+// // Filter chips functionality
+// const filterChips = document.querySelectorAll('.filter-chip');
+// filterChips.forEach(chip => {
+//     chip.addEventListener('click', function() {
+//         // Remove active from all chips
+//         filterChips.forEach(c => c.classList.remove('active'));
+//         // Add active to clicked chip
+//         this.classList.add('active');
         
-        const filter = this.getAttribute('data-filter');
-        applyFilter(filter);
-    });
-});
+//         const filter = this.getAttribute('data-filter');
+//         applyFilter(filter);
+//     });
+// });
 
-function applyFilter(filterType) {
-    // In a real app, this would make an API call
-    console.log('Applying filter:', filterType);
+// function applyFilter(filterType) {
+//     // In a real app, this would make an API call
+//     console.log('Applying filter:', filterType);
     
-    // Show toast notification
-    const filterNames = {
-        'all': 'Showing all users',
-        'year': 'Showing users from your year',
-        'department': 'Showing users from your department',
-        'interests': 'Showing users with similar interests'
-    };
+//     // Show toast notification
+//     const filterNames = {
+//         'all': 'Showing all users',
+//         'year': 'Showing users from your year',
+//         'department': 'Showing users from your department',
+//         'interests': 'Showing users with similar interests'
+//     };
     
-    if (window.cconnect && window.cconnect.showToast) {
-        window.cconnect.showToast(filterNames[filterType] || 'Filter applied', 'info');
-    }
-}
+//     if (window.cconnect && window.cconnect.showToast) {
+//         window.cconnect.showToast(filterNames[filterType] || 'Filter applied', 'info');
+//     }
+// }
 
-// Connect button handler
-document.addEventListener('click', function(e) {
-    const connectBtn = e.target.closest('.btn-connect');
-    if (connectBtn) {
-        e.preventDefault();
-        const userCard = connectBtn.closest('.user-card');
-        const userName = userCard.querySelector('.user-name')?.textContent || 'User';
+// // Connect button handler
+// document.addEventListener('click', function(e) {
+//     const connectBtn = e.target.closest('.btn-connect');
+//     if (connectBtn) {
+//         e.preventDefault();
+//         const userCard = connectBtn.closest('.user-card');
+//         const userName = userCard.querySelector('.user-name')?.textContent || 'User';
         
-        // Change button state
-        connectBtn.innerHTML = '<i class="bi bi-check-circle"></i> Connected';
-        connectBtn.disabled = true;
-        connectBtn.style.opacity = '0.6';
+//         // Change button state
+//         connectBtn.innerHTML = '<i class="bi bi-check-circle"></i> Connected';
+//         connectBtn.disabled = true;
+//         connectBtn.style.opacity = '0.6';
         
-        // Show success toast
-        if (window.cconnect && window.cconnect.showToast) {
-            window.cconnect.showToast(`Connected with ${userName}!`, 'success');
-        }
-    }
+//         // Show success toast
+//         if (window.cconnect && window.cconnect.showToast) {
+//             window.cconnect.showToast(`Connected with ${userName}!`, 'success');
+//         }
+//     }
     
-    // Message button handler
-    const messageBtn = e.target.closest('.btn-message');
-    if (messageBtn) {
-        e.preventDefault();
-        if (window.cconnect && window.cconnect.showToast) {
-            window.cconnect.showToast('Messaging feature coming soon!', 'info');
-        }
-    }
-});
+//     // Message button handler
+//     const messageBtn = e.target.closest('.btn-message');
+//     if (messageBtn) {
+//         e.preventDefault();
+//         if (window.cconnect && window.cconnect.showToast) {
+//             window.cconnect.showToast('Messaging feature coming soon!', 'info');
+//         }
+//     }
+// });
 
 
 // ========= Search page
-document.addEventListener('DOMContentLoaded', () => {
-
-    const input = document.getElementById("searchInput");
-    const results = document.getElementById("resultsContainer");
-
-    // Exit if this is NOT search page
-    if (!input || !results) return;
-
-    let timer = null;
-
-    input.addEventListener("input", () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            const q = input.value.trim();
-            if (q.length === 0) {
-                results.innerHTML = "";
-                return;
-            }
-            performSearch(q);
-        }, 300);
-    });
-
-    function performSearch(q) {
-        results.innerHTML = `<div class="loading">Searching...</div>`;
-
-        fetch(`/api/search?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(data => {
-
-                results.innerHTML = "";
-
-                if (!data.results || data.results.length === 0) {
-                    results.innerHTML = `
-                        <div class="empty-state glass-card p-5">
-                            <div class="empty-icon"><i class="bi bi-search"></i></div>
-                            <p>No matching users found.</p>
-                        </div>`;
-                    return;
-                }
-
-                data.results.forEach(item => {
-                    const card = buildUserCard(item);
-                    results.appendChild(card);
-                });
-            });
-    }
-
-    // CLONE OF THE DISCOVER CARD TEMPLATE
-    function buildUserCard(u) {
-        const div = document.createElement("div");
-        div.className = "user-card glass-card";
-
-        div.innerHTML = `
-            <div class="user-avatar">
-                ${u.profile_picture
-                  ? `<img src="${u.avatar_url}" class="profile-img">`
-                  : u.name[0].toUpperCase()
-                }
-            </div>
-
-            <h3 class="user-name">${u.name}</h3>
-            <p class="user-email">${u.department || ""}</p>
-
-            <div class="user-actions" style="justify-content: center;">
-                ${renderConnectionButton(u)}
-            </div>
-        `;
-
-        return div;
-    }
-
-    // Connection logic
-    function renderConnectionButton(u) {
-        if (u.connection_status === "connected") {
-            return `<button class="btn btn-connected btn-sm" disabled>
-                        <i class="bi bi-check-circle"></i> Connected
-                    </button>`;
-        }
-        if (u.connection_status === "pending") {
-            return `<button class="btn btn-pending btn-sm" disabled>
-                        <i class="bi bi-clock"></i> Pending
-                    </button>`;
-        }
-        if (u.connection_status === "incoming") {
-            return `<button class="btn btn-primary-custom btn-sm">
-                        <i class="bi bi-person-check"></i> Accept
-                    </button>`;
-        }
-        return `<button class="btn btn-primary-custom btn-sm action-connect"
-                        data-user-id="${u.id}">
-                    <i class="bi bi-person-plus"></i> Connect
-                </button>`;
-    }
-
-});
+//Deleted this as this was clashing with the current search implementation and don't need it here (already doing inside the search.html file)
 
 
 
