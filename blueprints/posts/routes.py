@@ -28,7 +28,7 @@ def create_post():
 
 
 
-@posts_bp.route("/feed")
+@posts_bp.route("/posts/feed")
 @login_required
 def feed():
     page = request.args.get("page", 1, type=int)

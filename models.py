@@ -117,6 +117,13 @@ class Post(db.Model):
 
     user = db.relationship("User", backref="posts", lazy=True)
 
+    likes = db.relationship(
+        "PostLike",
+        backref="post",
+        cascade="all, delete-orphan",
+        lazy="select"
+    )
+
 
 
 class PostLike(db.Model):

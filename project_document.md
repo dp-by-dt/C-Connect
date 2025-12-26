@@ -952,9 +952,13 @@ Now instead of days we are going for features
     (url_prefix added for this one)
 + Added entry point to `/feed` in the dashboard
 + Added csrf token for `feed.html` file
++ addd `url_prefix` for the posts
 
 
-- like count doesn't update
+
+
+- like count doesn't update (✅fixed by adding the relation to the models.py)
+- The time is not in ist (✅set to ist using `to_ist()` function )
 
 
 
