@@ -840,3 +840,8 @@ Later modifications
 Later features 
 1. forget password
 1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)
+3. Stories
+4. Games
+5. Polls
+6. Campus events
+7. Anonymous confessions
