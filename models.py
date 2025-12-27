@@ -78,6 +78,9 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
+    type = db.Column(db.String(30), nullable=False, default='general')
+    ref_id = db.Column(db.Integer, nullable=True, index=True)  # ID of post/connection/etc
+
     message = db.Column(db.String(255), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
 

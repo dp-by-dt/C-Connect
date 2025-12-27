@@ -964,6 +964,22 @@ Now instead of days we are going for features
     - A button to delete own posts (asks confirmation) and deletes and give flash message
     - Does by the route `delete_post()`
 
++ Added the section for `type` and `ref_id` columns for the notification table
+    eg: type = 'connection_request' or 'post_like'
+        ref_id = connection.id or post_likes.id
+For this, deleted the notification table from the db
+    # Run this on cmd to open sqlite:
+    sqlite3 instance/database.db
+    DROP TABLE notification;
+    .quit
+
+    flask db stamp head
+    flask db migrate -m "add notifications type ref_id"
+    flask db upgrade
+
+The above two columns helps pin point the notification and delete that only
+
+
 
 - like count doesn't update (✅fixed by adding the relation to the models.py)
 - The time is not in ist (✅set to ist using `to_ist()` function )

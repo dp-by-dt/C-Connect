@@ -67,6 +67,15 @@ def toggle_like(post_id):
 
     if like:
         db.session.delete(like)
+
+        #remove existing like notification (if any)
+        Notification.query.filter_by(
+            user_id=post.user_id,
+            sender_id=current_user.id,
+            type="post_like",   
+            ref_id=post.id
+        ).delete()
+
     else:
         db.session.add(PostLike(post_id=post_id, user_id=current_user.id))
 
@@ -75,7 +84,9 @@ def toggle_like(post_id):
             notif = Notification(
                 user_id=post.user_id,
                 sender_id=current_user.id,
-                message=f"{current_user.username} liked your post"
+                message=f"{current_user.username} liked your post",
+                type='post_like',
+                ref_id=post.id
             )
             db.session.add(notif)
 
