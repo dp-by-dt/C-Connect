@@ -140,3 +140,21 @@ class PostLike(db.Model):
     __table_args__ = (
         db.UniqueConstraint("post_id", "user_id", name="unique_post_like"),
     )
+
+
+
+
+
+# For messaging (one to one)
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    content = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=db.func.now(), index=True)
+    expires_at = db.Column(db.DateTime, index=True)
+
+    is_saved = db.Column(db.Boolean, default=False)

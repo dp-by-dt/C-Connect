@@ -991,8 +991,27 @@ The above two columns helps pin point the notification and delete that only
 
 
 
+### Feature 2: Messaging
 
 
++ Added `Message` class in the `model.py` for one-to-one chatting
++ New `messages` blueprint added
+    - Added helper function `cleanup_expired_messages` for clearing expired messages
+    - __init__.py file added
+    - added routes `inbox` and `chat`
+
+
+
+
+
+
+
+
+❌Prblems/Bugs-------------------
+1. Some projects with `/search` page cards' connection status ==== Need thorough testing
+    when the user sends a request A to B, and when B looks on the card, the option is just showing Connect, not to accept (in the search page). Like that two connections (A to B, and B to A exist at same time: race condition)
+2. Test rate limits
+3. Do test for deleted users (connection with deleted user, notfications etc)
 
 
 
@@ -1008,7 +1027,7 @@ Later modifications
 4. Posts:
     - Photo/video posting
     - AJAX usage (updates likes without reloading)
-
+5. Delete accoutn feature
 6. Refractoring models into seperate files (optional, but cleaner)
 7. Caching (optional but recommended)
 

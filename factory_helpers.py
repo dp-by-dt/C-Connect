@@ -10,7 +10,7 @@ from logging.handlers import RotatingFileHandler
 import os
 from flask_limiter.util import get_remote_address
 
-from models import ProfileVisit
+from models import ProfileVisit, Message
 
 
 #Secure headers to stop xss, script injection, image injection etc
@@ -164,3 +164,16 @@ def register_profilevisit_cleanup(app):
         except Exception as e:
             db.session.rollback()
             app.logger.error("ProfileVisit cleanup failed: %s", str(e))
+
+
+
+# delete old messages (one-to-one chat) : default set as 24 hours
+def cleanup_expired_messages(): #message cleanup helper function
+    Message.query.filter(
+        Message.expires_at < datetime.now(timezone.utc),
+        Message.is_saved == False
+    ).delete()
+    db.session.commit()
+
+
+
