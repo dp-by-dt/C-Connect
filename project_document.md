@@ -1019,10 +1019,11 @@ The above two columns helps pin point the notification and delete that only
 6. message saving option not added yet  ⚠️
 7. message manual deletion method is not added yet. ⚠️
 8. later we might want to add an option to mention an older message (but right now might not need) ⚠️
-9. A chat option should be added to the profile of the connected users.
+9. A chat option should be added to the profile of the connected users. ✅ added the message button in `user_profile` if user is connected
 10. Notification for message
 11. unread messages
-
+12. if connected, show message button in search cards ✅
+13. message loading limit and inifinte scrolling (but offset wise) ⚠️
 
 
 ❌Prblems/Bugs-------------------

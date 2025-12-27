@@ -61,7 +61,7 @@ def inbox():
     for msg in messages:
         other_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
         if other_id in connected_user_ids and other_id not in seen_users:
-            chat_previews[other_id] = msg  # ✅ CORRECT last message
+            chat_previews[other_id] = msg  #  CORRECT last message
             seen_users.add(other_id)
 
     # SORT + PREVIEWS - most recent first
@@ -110,7 +110,7 @@ def chat(user_id):
                 sender_id=current_user.id,
                 receiver_id=user_id,
                 content=content,
-                expires_at=datetime.utcnow() + timedelta(hours=24)
+                expires_at=datetime.now(timezone.utc) + timedelta(hours=24)
             )
             db.session.add(msg)
             db.session.commit()

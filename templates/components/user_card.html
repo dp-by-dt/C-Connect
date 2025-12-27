@@ -73,9 +73,12 @@
     <!-- ACTIONS -->
     <div class="user-actions" style="justify-content:center;">
         {% if conn_status == 'connected' %}
-            <button class="btn btn-connected btn-sm" disabled>
-                <i class="bi bi-check-circle"></i> Connected
-            </button>
+            <form method="POST" action="{{ url_for('messages.chat', user_id=user.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary-custom btn-sm connect-btn">
+                    <i class="bi bi-send"></i> Message
+                </button>
+            </form>
 
         {% elif conn_status == 'incoming' %}
             <button class="btn btn-pending btn-sm" disabled>

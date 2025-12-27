@@ -293,7 +293,12 @@
                             <button class="btn btn-outline-custom" disabled>
                                 <i class="bi bi-check-circle me-2"></i>Connected
                             </button>
+
+                            <a href="{{ url_for('messages.chat', user_id=user.id) }}" class="btn btn-outline-custom">
+                                <i class="bi bi-arrow-left me-2"></i>Message
+                            </a>
                         {% endif %}
+
 
                         <a href="{{ url_for('main.search_page') }}" class="btn btn-outline-custom">
                             <i class="bi bi-arrow-left me-2"></i>Back to Discover
