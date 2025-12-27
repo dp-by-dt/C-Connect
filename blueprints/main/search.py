@@ -89,7 +89,12 @@ def api_search():
             if conn.status in ("accepted", "connected"):
                 status = "connected"
             elif conn.status == "pending":
-                status = "pending"
+                if conn.user_id == current_user.id:
+                    status = "requested"    # You sent the request
+                elif conn.target_user_id == current_user.id:
+                    status = "incoming"     # They sent you a request
+            else:
+                status = "unknown"
 
         html = render_template(
             "components/user_card.html",

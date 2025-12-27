@@ -979,11 +979,12 @@ For this, deleted the notification table from the db
 
 The above two columns helps pin point the notification and delete that only
 
++ modified the `/search` page to load the cards with correct connection status (requested, incoming or connected)
 
 
 - like count doesn't update (✅fixed by adding the relation to the models.py)
 - The time is not in ist (✅set to ist using `to_ist()` function )
-
+- The page was going blank once i go back to `/search` page after visiting a profile (✅fixed by correcting `beforeunload` JS function)
 
 
 

@@ -77,9 +77,14 @@
                 <i class="bi bi-check-circle"></i> Connected
             </button>
 
-        {% elif conn_status == 'pending' %}
+        {% elif conn_status == 'incoming' %}
             <button class="btn btn-pending btn-sm" disabled>
-                <i class="bi bi-clock"></i> Pending
+                <i class="bi bi-clock"></i> Incoming request
+            </button>
+
+        {% elif conn_status == 'requested' %}
+            <button class="btn btn-pending btn-sm" disabled>
+                <i class="bi bi-clock"></i> Requested
             </button>
 
         {% else %}

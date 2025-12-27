@@ -267,9 +267,18 @@ if (loadMoreBtn) {
 }
 
 // ===== PAGE TRANSITION EFFECTS =====
+
 window.addEventListener('beforeunload', function() {
     document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.3s ease';
 });
+
+// Reset on page load
+window.addEventListener('pageshow', function() {
+    document.body.style.opacity = '1';
+    document.body.style.transition = '';
+});
+
 
 // ===== KEYBOARD SHORTCUTS =====
 document.addEventListener('keydown', function(e) {
