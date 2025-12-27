@@ -980,11 +980,15 @@ For this, deleted the notification table from the db
 The above two columns helps pin point the notification and delete that only
 
 
++ Own posts are shows in their profile bottom
+
 
 - like count doesn't update (✅fixed by adding the relation to the models.py)
 - The time is not in ist (✅set to ist using `to_ist()` function )
 
-
+❌ Post section - Errors/Bugs
+- The post url is like /post/post/feed
+- Delete button not shown in own post (in the `/profile`)
 
 
 
