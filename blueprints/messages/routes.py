@@ -17,20 +17,59 @@ from blueprints.connections.service import is_connected
 def inbox():
     cleanup_expired_messages()
 
-    # users you have chatted with
+    # 1. Get CONNECTED users
+    connections = Connection.query.filter(
+        Connection.user_id == current_user.id,
+        Connection.status.in_(['accepted', 'connected'])
+    ).all()
+
+    incoming_connections = Connection.query.filter(
+        Connection.target_user_id == current_user.id,
+        Connection.status.in_(['accepted', 'connected'])
+    ).all()
+
+    connected_user_ids = set()
+    for conn in connections + incoming_connections:
+        other_id = conn.target_user_id if conn.user_id == current_user.id else conn.user_id
+        connected_user_ids.add(other_id)
+
+    connected_users = User.query.filter(User.id.in_(connected_user_ids)).all()
+
+
+
+    # 2. Get INCOMING REQUESTS (pending)
+    incoming_requests = Connection.query.filter(
+        Connection.target_user_id == current_user.id,
+        Connection.status == 'pending'
+    ).all()
+
+    incoming_users = User.query.filter(
+        User.id.in_([req.user_id for req in incoming_requests])
+    ).all()
+
+
+
+    # 3. Message previews
+    chat_previews = {}
     messages = Message.query.filter(
         (Message.sender_id == current_user.id) |
         (Message.receiver_id == current_user.id)
-    ).order_by(Message.created_at.desc()).all()
+    ).order_by(Message.created_at.desc()).limit(50).all()
 
-    chat_users = {}
     for msg in messages:
         other_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
-        chat_users[other_id] = msg
+        if other_id in connected_user_ids:
+            chat_previews[other_id] = msg
 
-    users = User.query.filter(User.id.in_(chat_users.keys())).all()
 
-    return render_template("messages/inbox.html", users=users)
+
+    return render_template("messages/inbox.html", 
+                         connected_users=connected_users, 
+                         incoming_requests=incoming_requests,
+                         incoming_users=incoming_users,
+                         chat_previews=chat_previews)
+
+
 
 
 

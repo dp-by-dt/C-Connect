@@ -1,24 +1,120 @@
 {% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .messages-header { text-align: center; margin-bottom: 2rem; }
+.messages-title { font-size: 2.5rem; font-weight: 700; }
+.messages-subtitle { color: var(--text-secondary); }
+.messages-list { max-height: 70vh; overflow-y: auto; border-radius: var(--border-radius-lg); }
+
+.user-avatar {
+    width: 50px; height: 50px; 
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: white; font-size: 1.25rem;
+}
+
+.message-item { 
+    text-decoration: none; color: inherit; transition: background 0.2s ease; 
+}
+.message-item:hover { background: var(--bg-secondary); }
+.user-name { color: var(--text-primary); }
+
+</style>
+{% endblock %}
+
+
 {% block body %}
+<div class="container py-4">
+    <div class="messages-header animate-on-scroll">
+        <h1 class="messages-title">
+            <i class="bi bi-chat-dots me-2"></i>
+            Messages
+        </h1>
+    </div>
 
-<h2>Messages</h2>
+    
 
-{% if users %}
-  <ul class="list-group">
-    {% for user in users %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ user.username }}</strong>
+
+    <!-- CONNECTED USERS -->
+    {% if connected_users %}
+    <div class="section-card glass-card mb-4">
+        <h3 class="section-title mb-3">
+            <i class="bi bi-people"></i> Conversations ({{ connected_users|length }})
+        </h3>
+        <div class="messages-list">
+            {% for user in connected_users %}
+            <a href="{{ url_for('messages.chat', user_id=user.id) }}" 
+               class="message-item d-flex align-items-center p-3 border-bottom">
+                <div class="user-avatar me-3">{{ user.username[0]|upper }}</div>
+                <div class="flex-grow-1">
+                    <div class="user-name fw-bold">{{ user.username }}</div>
+                    {% if chat_previews[user.id] %}
+                    <div class="message-preview text-muted small">
+                        {{ chat_previews[user.id].content[:50] }}...
+                    </div>
+                    {% else %}
+                    <div class="message-preview text-muted small">Start a new conversation</div>
+                    {% endif %}
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+            {% endfor %}
         </div>
-        <a href="{{ url_for('messages.chat', user_id=user.id) }}"
-           class="btn btn-sm btn-outline-primary">
-          Open Chat
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>No conversations yet.</p>
-{% endif %}
+    </div>
+    {% endif %}
 
+    <!-- INCOMING REQUESTS -->
+    {% if incoming_users %}
+    <div class="section-card glass-card mb-4">
+        <h3 class="section-title mb-3">
+            <i class="bi bi-arrow-right-circle"></i> New Connection Requests
+        </h3>
+        <div class="messages-list">
+            {% for user in incoming_users %}
+            {% set request = incoming_requests|selectattr('user_id', 'equalto', user.id)|first %}
+            <div class="message-item d-flex align-items-center p-3 border-bottom">
+                <div class="user-avatar me-3">{{ user.username[0]|upper }}</div>
+                <div class="flex-grow-1">
+                    <div class="user-name fw-bold">{{ user.username }}</div>
+                    <div class="request-text text-muted small">wants to connect with you</div>
+                </div>
+                <div class="d-flex gap-2">
+
+                    <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=request.id) }}?next={{ url_for('messages.inbox') }}"
+                        class="btn btn-sm btn-success">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-primary-custom btn-sm">
+                            <i class="bi bi-check-lg"></i> Accept & Chat
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=request.id) }}"
+                        class="btn btn-sm btn-outline-danger">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-outline-custom btn-sm">
+                            <i class="bi bi-x-lg"></i> Reject
+                        </button>
+                    </form>
+
+
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EMPTY STATE -->
+    {% if not connected_users and not incoming_users %}
+    <div class="empty-state text-center py-5">
+        <i class="bi bi-chat-dots fs-1 text-muted mb-3"></i>
+        <h4 class="text-muted mb-2">No messages yet</h4>
+        <p class="text-muted mb-4">Connect with people to start chatting</p>
+        <a href="{{ url_for('main.search_page') }}" class="btn btn-primary-custom">
+            <i class="bi bi-compass me-2"></i>Find People
+        </a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -1002,7 +1002,10 @@ The above two columns helps pin point the notification and delete that only
     - registered the blueprint in `factory_helpers`
     - Added entry point
 
-
++ The messages page loads connected users
+    filter with accepted/connected/pending
++ It also shows incoming requests and option to connect and chat or reject (need test with db)
+    uses csrf token
 
 
 
