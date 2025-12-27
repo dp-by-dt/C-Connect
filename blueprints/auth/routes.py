@@ -1,7 +1,7 @@
 from . import auth
 from flask import render_template, request, flash, redirect, url_for, render_template, request
 from setup_db import add_user as adduser_glob
-from models import User, Profile, Post
+from models import User, Profile
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager, db
 from .forms import SignupForm, LoginForm, EditProfileForm
@@ -184,24 +184,9 @@ def logout():
 @login_required
 def profile():
 
-    user = current_user
-    profile = user.profile
-
-    posts = (
-        Post.query
-        .filter_by(user_id=user.id)
-        .order_by(Post.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    profile = current_user.profile
     # display default placeholders if None
-    return render_template(
-        'auth/profile.html', 
-        profile=profile, 
-        user=user,
-        conn=None,
-        posts=posts
-    )#, conn=conn)
+    return render_template('auth/profile.html', profile=profile, user=current_user)#, conn=conn)
 
 
 # NEW ROUTE: Profile edit (for future implementation)
