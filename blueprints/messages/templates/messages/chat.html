@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h3>Chat</h3>
+
+<div style="border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; margin-bottom:10px;">
+  {% if messages %}
+    {% for msg in messages %}
+      <div style="margin-bottom:6px;">
+        {% if msg.sender_id == current_user.id %}
+          <strong>You:</strong>
+        {% else %}
+          <strong>Them:</strong>
+        {% endif %}
+        {{ msg.content }}
+        <small class="text-muted">
+          ({{ msg.created_at.strftime("%H:%M") }})
+        </small>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No messages yet.</p>
+  {% endif %}
+</div>
+
+<form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="input-group">
+    <input type="text" name="content" class="form-control"
+           placeholder="Type a message..." required>
+    <button type="submit" class="btn btn-primary">Send</button>
+  </div>
+</form>
+
+<p class="text-muted mt-2">
+  Messages auto-delete after 24 hours unless saved.
+</p>
+
+{% endblock %}

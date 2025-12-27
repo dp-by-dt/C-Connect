@@ -998,8 +998,9 @@ The above two columns helps pin point the notification and delete that only
 + New `messages` blueprint added
     - Added helper function `cleanup_expired_messages` for clearing expired messages
     - __init__.py file added
-    - added routes `inbox` and `chat`
-
+    - added routes `inbox` and `chat` and their html files
+    - registered the blueprint in `factory_helpers`
+    - Added entry point
 
 
 

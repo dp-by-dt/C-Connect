@@ -74,6 +74,10 @@ def register_blueprints(app):
     from blueprints.posts import posts_bp
     app.register_blueprint(posts_bp)
 
+    from blueprints.messages import messages
+    app.register_blueprint(messages)
+
+
 
 
     #can add more blueprints here as needed

@@ -97,13 +97,13 @@ def dashboard():
 
 
 
-# NEW ROUTE: Messaging page (placeholder for now)
+# Added this as a new blueprint -------------------------- DELETE HERE
 # REASON: Core feature for social network; will be implemented later
-@main.route('/messages')
-@login_required
-def messages():
-    # TODO: Implement messaging system with database models
-    return render_template('main/messages.html')
+# @main.route('/messages')
+# @login_required
+# def messages():
+#     # TODO: Implement messaging system with database models
+#     return render_template('main/messages.html')
 
 
 # NEW ROUTE: Settings page
