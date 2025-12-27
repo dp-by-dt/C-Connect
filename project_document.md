@@ -1011,13 +1011,17 @@ The above two columns helps pin point the notification and delete that only
 1. if did chatting, then disconnected and then connected, the old chats load ✅keeping it
 2. in the conversations section the recent users are not being shown on the top, the last conversation is not shown, but the first only.
     ✅fixed by adding a sorted list of recent messages in `routes.py` `inbox`  section
-3. the time of the last chat showing on the inbox card would be nice 
-4. inside the chat, it says you and them. But if it is on the two sides, like in any chat app, it won't be any more confusion (if implementing that is tough for now, we could put it you and their name too). Alos on top of the chat section the name of the person you are chatting showing would be nice (if it links to their profile, much better). 
-5. The recent chat doesnt' get scrolled down automatically. it seems out of visible. Like the user have to scroll all the way down to see the recent chat. 
-6. message saving option not added yet 
-7. message manual deletion method is not added yet. 
-8 later we might want to add an option to mention an older message (but right now might not need that, right?) 
+3. the time of the last chat showing on the inbox card would be nice ⚠️
+4. inside the chat, it says you and them. ✅put a `target_user.username` in `chat`
+    But if it is on the two sides, like in any chat app, it won't be any more confusion ⚠️
+    Alos on top of the chat section the name of the person you are chatting showing would be nice (if it links to their profile, much better) ✅simple with `'main.view_user_profile', user_id=target_user.id` in `url_for`
+5. The recent chat doesnt' get scrolled down automatically. it seems out of visible. Like the user have to scroll all the way down to see the recent chat. ✅simple JS with `scrollTop`
+6. message saving option not added yet  ⚠️
+7. message manual deletion method is not added yet. ⚠️
+8. later we might want to add an option to mention an older message (but right now might not need) ⚠️
 9. A chat option should be added to the profile of the connected users.
+10. Notification for message
+11. unread messages
 
 
 

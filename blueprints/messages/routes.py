@@ -6,6 +6,7 @@ from flask import redirect, url_for
 from extensions import db
 from factory_helpers import cleanup_expired_messages
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import desc
 
 from blueprints.connections.service import is_connected
 
@@ -50,9 +51,6 @@ def inbox():
 
 
     # 3. ULTRA SIMPLE - Get last message per user, sort properly
-    from sqlalchemy import desc
-    from datetime import datetime
-
     chat_previews = {}
     messages = Message.query.filter(
         (Message.sender_id == current_user.id) |
@@ -97,6 +95,8 @@ def inbox():
 @login_required
 def chat(user_id):
     cleanup_expired_messages()
+    
+    target_user = User.query.get_or_404(user_id)
 
     # permission check
     if not is_connected(current_user.id, user_id):
@@ -121,4 +121,9 @@ def chat(user_id):
         ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
     ).order_by(Message.created_at.asc()).all()
 
-    return render_template("messages/chat.html", messages=messages)
+
+    return render_template(
+                "messages/chat.html", 
+                messages=messages,
+                target_user=target_user
+            )
