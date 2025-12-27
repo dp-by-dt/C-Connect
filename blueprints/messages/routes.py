@@ -49,26 +49,45 @@ def inbox():
 
 
 
-    # 3. Message previews
+    # 3. ULTRA SIMPLE - Get last message per user, sort properly
+    from sqlalchemy import desc
+    from datetime import datetime
+
     chat_previews = {}
     messages = Message.query.filter(
         (Message.sender_id == current_user.id) |
         (Message.receiver_id == current_user.id)
-    ).order_by(Message.created_at.desc()).limit(50).all()
+    ).order_by(desc(Message.created_at)).all()
 
+    seen_users = set()
     for msg in messages:
         other_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
-        if other_id in connected_user_ids:
-            chat_previews[other_id] = msg
+        if other_id in connected_user_ids and other_id not in seen_users:
+            chat_previews[other_id] = msg  # ✅ CORRECT last message
+            seen_users.add(other_id)
 
+    # SORT + PREVIEWS - most recent first
+    connected_users_sorted = []
+    for user_id in sorted(chat_previews.keys(), 
+                        key=lambda x: chat_previews[x].created_at, reverse=True):
+        user = User.query.get(user_id)
+        if user:
+            connected_users_sorted.append(user)
+
+    # Add users with no chats at bottom (no preview)
+    for user in connected_users:
+        if user.id not in chat_previews:
+            connected_users_sorted.append(user)
+
+    connected_users = connected_users_sorted  
 
 
     return render_template("messages/inbox.html", 
-                         connected_users=connected_users, 
-                         incoming_requests=incoming_requests,
-                         incoming_users=incoming_users,
-                         chat_previews=chat_previews)
-
+                        connected_users=connected_users, 
+                        incoming_requests=incoming_requests,
+                        incoming_users=incoming_users,
+                        chat_previews=chat_previews
+                    )  
 
 
 

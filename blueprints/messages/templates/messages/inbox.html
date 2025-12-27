@@ -52,7 +52,7 @@
                     <div class="user-name fw-bold">{{ user.username }}</div>
                     {% if chat_previews[user.id] %}
                     <div class="message-preview text-muted small">
-                        {{ chat_previews[user.id].content[:50] }}...
+                        {{ chat_previews[user.id].content[:60] }}...
                     </div>
                     {% else %}
                     <div class="message-preview text-muted small">Start a new conversation</div>
