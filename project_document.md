@@ -1008,7 +1008,7 @@ The above two columns helps pin point the notification and delete that only
     uses csrf token
 
 
-1. if did chatting, then disconnected and then connected, the old chats load ✅keeping it
+1. if did chatting, then disconnected and then connected, the old chats load ✅keeping it, but can't chat again till connected again
 2. in the conversations section the recent users are not being shown on the top, the last conversation is not shown, but the first only.
     ✅fixed by adding a sorted list of recent messages in `routes.py` `inbox`  section
 3. the time of the last chat showing on the inbox card would be nice ⚠️
@@ -1020,10 +1020,13 @@ The above two columns helps pin point the notification and delete that only
 7. message manual deletion method is not added yet. ⚠️
 8. later we might want to add an option to mention an older message (but right now might not need) ⚠️
 9. A chat option should be added to the profile of the connected users. ✅ added the message button in `user_profile` if user is connected
-10. Notification for message
+10. Notification for message ----------- Need to loook on this
 11. unread messages
 12. if connected, show message button in search cards ✅
 13. message loading limit and inifinte scrolling (but offset wise) ⚠️
+14. ✅ message length protection added
+    for limiting len 1000, in the `chat` route
+    But it clears input after giving flash message ⚠️
 
 
 ❌Prblems/Bugs-------------------
@@ -1061,3 +1064,31 @@ Later features
 5. Polls
 6. Campus events
 7. Anonymous confessions
+8. Campus news?
+9. Daily emotion board 
+10. share emotions or thoughts to campus
+    “How bad was today’s exam?” (😄 😐 😭)
+    “Energy level today?” (1–5)
+    “Did today’s lecture make sense?” (Yes / No)
+    “Attendance today?” (Present / Proxy / Absent 😏)
+11. Microchallenges (click pic of todays' sun rise/find hidden qr near canteen/solve the riddle before6)
+12. Campus mysteries:
+**What it is:**
+    Anonymous posts about events, sightings, or curiosities
+    No naming people directly (rules)
+    Moderated lightly
+**Examples:**
+    “Why was block C closed today?”
+    “Who was the celebrity on campus?”
+    “What happened during the fest rehearsal?”
+**Why this is powerful**
+    Curiosity spreads faster than likes
+    People open app just to see what’s new
+    Offline → online bridge
+    (⚠️ This needs rules, but could be huge.)
+13. Connection drive (connect with new 5 people)
+14. Who knows you:
+    “Someone thinks you’re really good at explaining topics.”
+    “Someone admires your confidence.”
+    “Someone wants to collaborate with you.”
+15. Some thing of newyear resolution

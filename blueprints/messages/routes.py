@@ -1,7 +1,7 @@
 from . import messages
 from flask import render_template, jsonify, flash, request
 from flask_login import login_required, current_user
-from models import User, Message, Connection
+from models import User, Message, Connection, Notification
 from flask import redirect, url_for
 from extensions import db
 from factory_helpers import cleanup_expired_messages
@@ -98,13 +98,20 @@ def chat(user_id):
     
     target_user = User.query.get_or_404(user_id)
 
-    # permission check
-    if not is_connected(current_user.id, user_id):
-        flash("You can only message connected users", "error")
-        return redirect(url_for("messages.inbox"))
-
     if request.method == "POST":
+        
+        # permission check for messaging
+        if request.method == "POST":
+            if not is_connected(current_user.id, user_id):
+                flash("You can no longer send messages to this user.", "warning")
+                return redirect(url_for("messages.chat", user_id=user_id))
+
+
         content = request.form.get("content", "").strip()
+        if len(content) > 1000: #if the user chat is too lengthy
+            flash("Message too long (max 1000 characters).", "error")
+            return redirect(url_for("messages.chat", user_id=user_id))
+
         if content:
             msg = Message(
                 sender_id=current_user.id,
@@ -114,7 +121,19 @@ def chat(user_id):
             )
             db.session.add(msg)
             db.session.commit()
+
+            #send notificaiton to the other user
+            if current_user.id != user_id:
+                notif = Notification(
+                    user_id=user_id,
+                    sender_id=current_user.id,
+                    message=f"New message from {current_user.username}",
+                    type='message'
+                )
+                db.session.add(notif)
+
         return redirect(url_for("messages.chat", user_id=user_id))
+    
 
     messages = Message.query.filter(
         ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
