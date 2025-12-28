@@ -76,7 +76,7 @@ def update_daily_state(question):
 
     state = VibeDailyState.query.get(today)
     if not state:
-        state = VibeDailyState(date=today)
+        state = VibeDailyState(date=today, question_id=question.id)
 
     state.total_responses = len(responses)
     state.dominant_choice = dominant_choice

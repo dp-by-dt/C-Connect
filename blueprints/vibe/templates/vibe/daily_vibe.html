@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
+
+{% block extra_css %}
+<style>
+.ghost-tape:hover {
+    animation-play-state: paused;
+}
+
+
+</style>
+{% endblock %}
+
+
 {% block body %}
 <div class="container mt-4">
 
@@ -62,7 +74,9 @@
         <div class="border rounded p-2 mt-4"
              style="white-space: nowrap; overflow: hidden;">
 
-            <div style="display: inline-block; animation: scroll-left 30s linear infinite;">
+            <div class="ghost-tape"
+     style="display: inline-block; animation: scroll-left 30s linear infinite;">
+
                 {% for item in ghost_tape %}
                     <span class="me-4">
                         "{{ item.anonymous_text }}"

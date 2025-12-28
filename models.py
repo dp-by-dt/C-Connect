@@ -246,6 +246,13 @@ class VibeDailyState(db.Model): #daily theme color (also for calender view)
 
     date = db.Column(db.Date, primary_key=True)
 
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("vibe_questions.id"),
+        nullable=False
+    )
+
+
     total_responses = db.Column(db.Integer, default=0)
     dominant_choice = db.Column(db.Integer)
     accent_color = db.Column(db.String(7))  # e.g. "#FF4500"

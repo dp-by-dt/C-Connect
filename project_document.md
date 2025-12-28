@@ -1042,7 +1042,7 @@ The above two columns helps pin point the notification and delete that only
     - VanishReport (so no duplicate vanish request from same user)
     - VibeDailyState (keeps the largest vibe of per day)
 + migrated the db properly
-    `flask db migrate`
+    `flask db migrate` (-m "message")
     `flask db upgrade`
 + Added `enforce_daily_vibe` as `@app.before_request` in the `app.py`
     This force redirects the logged in user if the question is not answered
