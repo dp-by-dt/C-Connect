@@ -77,6 +77,8 @@ def register_blueprints(app):
     from blueprints.messages import messages
     app.register_blueprint(messages)
 
+    from blueprints.vibe import vibe_bp
+    app.register_blueprint(vibe_bp)
 
 
 

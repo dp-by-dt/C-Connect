@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+
+    <!-- ================= INPUT MODE ================= -->
+    {% if mode == "input" %}
+    <div class="card p-4">
+        <h3 class="mb-3 text-center">🟣 Daily Vibe</h3>
+
+        <p class="fs-5 text-center fw-bold">
+            {{ question.question_text }}
+        </p>
+
+        <form method="POST" action="{{ url_for('vibe.respond_vibe') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="d-grid gap-2 mt-4">
+                {% for opt in options %}
+                <button type="submit"
+                        name="choice"
+                        value="{{ loop.index0 }}"
+                        class="btn btn-outline-primary btn-lg">
+                    {{ opt }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4">
+                <label class="form-label text-muted">
+                    Optional anonymous thought (max 80 chars)
+                </label>
+                <input type="text"
+                       name="anonymous_text"
+                       maxlength="80"
+                       class="form-control"
+                       placeholder="One line...">
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+
+    <!-- ================= RESULT MODE ================= -->
+    {% if mode == "result" %}
+    <div class="card p-4">
+
+        <h3 class="mb-2 text-center">🟣 Today’s Vibe</h3>
+
+        <p class="fs-5 text-center fw-bold">
+            {{ question.question_text }}
+        </p>
+
+        {% if state %}
+        <p class="text-center text-muted">
+            Total responses: {{ state.total_responses }}
+        </p>
+        {% endif %}
+
+        <!-- Ghost Tape -->
+        {% if ghost_tape %}
+        <div class="border rounded p-2 mt-4"
+             style="white-space: nowrap; overflow: hidden;">
+
+            <div style="display: inline-block; animation: scroll-left 30s linear infinite;">
+                {% for item in ghost_tape %}
+                    <span class="me-4">
+                        "{{ item.anonymous_text }}"
+                        <form method="POST"
+                              action="{{ url_for('vibe.vanish_response', response_id=item.id) }}"
+                              style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-link text-danger p-0 ms-1"
+                                    title="Vanish this line">
+                                ✖
+                            </button>
+                        </form>
+                    </span>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% else %}
+        <p class="text-center text-muted mt-4">
+            No anonymous thoughts yet today.
+        </p>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Ghost tape animation -->
+<style>
+@keyframes scroll-left {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(-100%); }
+}
+</style>
+{% endblock %}

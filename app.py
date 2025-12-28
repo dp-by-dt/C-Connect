@@ -3,6 +3,9 @@ import os
 from extensions import db
 from factory_helpers import register_blueprints, register_errorhandlers, register_extensions, configure_logging, register_security_headers
 from factory_helpers import to_ist, register_daily_cleanup, register_profilevisit_cleanup
+from flask_login import current_user
+from datetime import date
+from models import VibeQuestion, VibeResponse
 
 
 
@@ -20,6 +23,37 @@ def create_app():
     @app.context_processor
     def utility_processor():
         return dict(to_ist=to_ist)
+    
+
+    # --------- Before request (for vibe question ) --------
+    # to block user to access the app before answering the question 
+    @app.before_request
+    def enforce_daily_vibe():
+        if not current_user.is_authenticated:
+            return
+
+        allowed_endpoints = {
+            "vibe.daily_vibe",
+            "vibe.respond_vibe",
+            "auth.logout",
+            "static"
+        }
+
+        if request.endpoint in allowed_endpoints:
+            return
+
+        question = VibeQuestion.query.filter_by(active_date=date.today()).first()
+        if not question:
+            return
+
+        voted = VibeResponse.query.filter_by(
+            question_id=question.id,
+            user_id=current_user.id
+        ).first()
+
+        if not voted:
+            return redirect(url_for("vibe.daily_vibe"))
+
 
 
  
@@ -43,6 +77,10 @@ def create_app():
     register_profilevisit_cleanup(app)
     
     return app
+
+
+
+
 
 
 #-------------------main start ----------

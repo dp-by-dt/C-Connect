@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
+from datetime import datetime, timezone
 
 
 # Creating the db structure
@@ -158,3 +159,99 @@ class Message(db.Model):
     expires_at = db.Column(db.DateTime, index=True)
 
     is_saved = db.Column(db.Boolean, default=False)
+
+
+
+# ================ college vibe modules ===================
+class VibeQuestion(db.Model):
+    __tablename__ = "vibe_questions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    question_text = db.Column(db.String(120), nullable=False)
+
+    # JSON string: ["Easy", "Meh", "Hard"]
+    options_json = db.Column(db.Text, nullable=False)
+
+    active_date = db.Column(db.Date, nullable=False, unique=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+
+class VibeResponse(db.Model):
+    __tablename__ = "vibe_responses"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("vibe_questions.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    # Index of the selected option (0-based)
+    choice_index = db.Column(db.Integer, nullable=False)
+
+    anonymous_text = db.Column(db.String(80))
+    vanish_count = db.Column(db.Integer, default=0)
+    is_hidden = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("question_id", "user_id", name="uq_vibe_vote_once"),
+        db.Index("ix_vibe_question_created", "question_id", "created_at"),
+    )
+
+
+
+class VibeReport(db.Model): #for no reports by the same user
+    __tablename__ = "vibe_reports"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    response_id = db.Column(
+        db.Integer,
+        db.ForeignKey("vibe_responses.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("response_id", "user_id", name="uq_vanish_once"),
+    )
+
+
+
+class VibeDailyState(db.Model): #daily theme color (also for calender view)
+    __tablename__ = "vibe_daily_state"
+
+    date = db.Column(db.Date, primary_key=True)
+
+    total_responses = db.Column(db.Integer, default=0)
+    dominant_choice = db.Column(db.Integer)
+    accent_color = db.Column(db.String(7))  # e.g. "#FF4500"
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )

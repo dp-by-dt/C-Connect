@@ -1029,6 +1029,27 @@ The above two columns helps pin point the notification and delete that only
     But it clears input after giving flash message ⚠️
 
 
+
+
+
+
+### Feature 3: College Daily Vibe
+
+
++ Modules added in `model.py` and created the `vibe` blueprint
+    - VibeQuestion (each question and options)
+    - VibeResponse (vote for each question, also total vanish count)
+    - VanishReport (so no duplicate vanish request from same user)
+    - VibeDailyState (keeps the largest vibe of per day)
++ migrated the db properly
+    `flask db migrate`
+    `flask db upgrade`
++ Added `enforce_daily_vibe` as `@app.before_request` in the `app.py`
+    This force redirects the logged in user if the question is not answered
+
+
+
+
 ❌Prblems/Bugs-------------------
 1. Some projects with `/search` page cards' connection status ==== Need thorough testing
     when the user sends a request A to B, and when B looks on the card, the option is just showing Connect, not to accept (in the search page). Like that two connections (A to B, and B to A exist at same time: race condition)
@@ -1036,6 +1057,18 @@ The above two columns helps pin point the notification and delete that only
 3. Do test for deleted users (connection with deleted user, notfications etc)
 
 
+⚠️ Unsolved for later -----------------------------
+1. the time of the last chat showing on the inbox card would be nice ⚠️
+2. Chat if it is on the two sides, like in any chat app, it won't be any more confusion ⚠️
+3. message saving option not added yet  ⚠️
+4. message manual deletion method is not added yet. ⚠️
+5. later we might want to add an option to mention an older message (but right now might not need) ⚠️
+6. Notification for message ----------- Need to loook on this
+7. unread messages
+8. message loading limit and inifinte scrolling (but offset wise) ⚠️
+9. ✅ message length protection added
+    for limiting len 1000, in the `chat` route
+    But it clears input after giving flash message ⚠️
 
 
 
