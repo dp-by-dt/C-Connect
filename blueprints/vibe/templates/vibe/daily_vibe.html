@@ -100,6 +100,24 @@
         </p>
         {% endif %}
 
+
+        {% if user_response and not user_response.anonymous_text %}
+        <div class="mt-4">
+            <form method="POST" action="{{ url_for('vibe.add_anonymous_text') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text"
+                    name="anonymous_text"
+                    maxlength="80"
+                    class="form-control"
+                    placeholder="Add a thought (once)">
+                <button class="btn btn-sm btn-outline-primary mt-2">
+                    Submit
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+
     </div>
     {% endif %}
 

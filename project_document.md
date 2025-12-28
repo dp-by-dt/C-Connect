@@ -1047,6 +1047,7 @@ The above two columns helps pin point the notification and delete that only
 + Added `enforce_daily_vibe` as `@app.before_request` in the `app.py`
     This force redirects the logged in user if the question is not answered
 
++ Added `/add-text` route for making the users able to fill the anonymous response if they couldn't do the first time
 
 
 

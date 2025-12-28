@@ -5885,3 +5885,6 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2025-12-28 20:37:09,678 [INFO] app: Cleaned up 5 old notifications.
 2025-12-28 22:10:26,983 [INFO] app: Cleaned up 3 old notifications.
 2025-12-28 22:15:32,427 [INFO] app: Cleaned up 0 old notifications.
+2025-12-28 22:52:44,055 [INFO] app: Cleaned up 0 old notifications.
+2025-12-28 22:54:32,774 [INFO] app: Cleaned up 0 old notifications.
+2025-12-29 00:26:47,313 [INFO] app: Cleaned up 4 old notifications.

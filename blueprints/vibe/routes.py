@@ -216,4 +216,31 @@ def vanish_response(response_id):
     return redirect(url_for("vibe.daily_vibe"))
 
 
+#add vibe anonymous text if didn;t added first
+@vibe_bp.route("/add-text", methods=["POST"])
+@login_required
+def add_anonymous_text():
+    question = get_or_create_today_question()
 
+    response = VibeResponse.query.filter_by(
+        question_id=question.id,
+        user_id=current_user.id
+    ).first()
+
+    # Safety checks
+    if not response:
+        return redirect(url_for("vibe.daily_vibe"))
+
+    if response.anonymous_text:
+        return redirect(url_for("vibe.daily_vibe"))
+
+    text = request.form.get("anonymous_text", "").strip()
+
+    if not text or len(text) > 80:
+        flash("Text must be 1–80 characters.", "error")
+        return redirect(url_for("vibe.daily_vibe"))
+
+    response.anonymous_text = text
+    db.session.commit()
+
+    return redirect(url_for("vibe.daily_vibe"))
