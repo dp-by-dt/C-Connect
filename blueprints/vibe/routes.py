@@ -134,7 +134,8 @@ def daily_vibe():
         question=question,
         options=options,
         state=state,
-        ghost_tape=ghost_tape
+        ghost_tape=ghost_tape,
+        user_response=user_response
     )
 
 

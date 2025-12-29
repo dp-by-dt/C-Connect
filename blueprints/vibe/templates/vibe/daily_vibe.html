@@ -101,6 +101,16 @@
         {% endif %}
 
 
+        <!-- For helping the theming accroding to the vibe mode -->
+        {% if state %}
+            <p class="text-center fw-semibold mt-2"
+            style="color: var(--vibe-accent);">
+                Campus is feeling: {{ options[state.dominant_choice] }}
+            </p>
+        {% endif %}
+
+
+
         {% if user_response and not user_response.anonymous_text %}
         <div class="mt-4">
             <form method="POST" action="{{ url_for('vibe.add_anonymous_text') }}">

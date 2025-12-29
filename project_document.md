@@ -1049,6 +1049,13 @@ The above two columns helps pin point the notification and delete that only
 
 + Added `/add-text` route for making the users able to fill the anonymous response if they couldn't do the first time
 
++ Injected the theme color according to vibe answering
+    - Added style in the `head` of `base.html` file 
+    - `inject_vibe_color()` added in the `app.py` file
+    - Dominant mode text hint is given in the `daily_vibe.html` page in the accent color
+    
+⚠️‼️Include question_id in the vibe_reports  
+    Or delete the expired entries in the tables
 
 
 ❌Prblems/Bugs-------------------

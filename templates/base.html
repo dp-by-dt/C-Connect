@@ -32,6 +32,17 @@
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
 
+<!-- Inject color theme according to vibe mode  -->
+    {% if g.vibe_color %}
+    <style>
+    :root {
+        --vibe-accent: {{ g.vibe_color }};
+    }
+    </style>
+    {% endif %}
+
+
+
 
 
     <meta charset="UTF-8">

@@ -5,7 +5,9 @@ from factory_helpers import register_blueprints, register_errorhandlers, registe
 from factory_helpers import to_ist, register_daily_cleanup, register_profilevisit_cleanup
 from flask_login import current_user
 from datetime import date
-from models import VibeQuestion, VibeResponse
+from models import VibeQuestion, VibeResponse, VibeDailyState
+from flask import g
+
 
 
 
@@ -53,6 +55,16 @@ def create_app():
 
         if not voted:
             return redirect(url_for("vibe.daily_vibe"))
+        
+
+    # color injection for the theme according to the vibe
+    @app.before_request
+    def inject_vibe_color():
+        g.vibe_color = None
+
+        state = VibeDailyState.query.get(date.today())
+        if state:
+            g.vibe_color = state.accent_color
 
 
 
