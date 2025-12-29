@@ -2,33 +2,36 @@
 <html lang="en">
 <head>
     <!-- ==================== THEME INITIALIZATION (ANTI-FLICKER) ==================== -->
-    <!-- Prevents dark mode flicker on page load -->
-    <script>
-        document.documentElement.classList.add("preload-mode");
+<script>
+    (function() {
+        // Prevent any transitions during load
+        const css = document.createElement('style');
+        css.textContent = '* { transition: none !important; }';
+        document.head.appendChild(css);
+        
+        const t = localStorage.getItem("cconnect-theme") || "light";
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const dark = (t === "dark") || (t === "system" && prefersDark);
 
-        (function() {
-            const t = localStorage.getItem("theme") || "system";
-            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            const dark = (t === "dark") || (t === "system" && prefersDark);
+        if (dark) {
+            document.documentElement.classList.add("theme-dark");
+        } else {
+            document.documentElement.classList.remove("theme-dark");
+        }
 
-            if (dark) {
-                document.documentElement.classList.add("theme-dark");
-            } else {
-                document.documentElement.classList.remove("theme-dark");
-            }
-
-            // Show content after theme is applied
-            window.addEventListener("DOMContentLoaded", () => {
-                document.documentElement.classList.remove("preload-mode");
-            });
-        })();
-    </script>
+        // Re-enable transitions after a brief delay
+        window.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                css.remove();
+            }, 50);
+        });
+    })();
+</script>
 
     <!-- ==================== HTMX FOR DYNAMIC INTERACTIONS ==================== -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
     <!-- ==================== VIBE COLOR INJECTION ==================== -->
-    <!-- Dynamic color theming based on user vibe mode -->
     {% if g.vibe_color %}
     <style>
         :root {
@@ -49,7 +52,6 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
     <!-- ==================== FONTS ==================== -->
-    <!-- Inter font for clean, modern typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- ==================== ICONS ==================== -->
@@ -60,7 +62,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
 
-    <!-- Page-specific CSS -->
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -69,51 +70,63 @@
     {% if current_user.is_authenticated %}
         
         <!-- ========== DESKTOP SIDEBAR NAVIGATION ========== -->
-        <aside class="sidebar" id="sidebar">
-            <!-- Brand Logo -->
-            <div class="sidebar__brand">
+        <aside class="sidebar glass-effect" id="sidebar">
+            <!-- <div class="sidebar__brand">
                 <a href="{{ url_for('main.home') }}" class="sidebar__logo">
+                    <span class="brand-icon">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
                     <span class="brand-c">C</span>
                     <span class="brand-text">Connect</span>
                 </a>
-            </div>
+            </div> -->
 
-            <!-- Navigation Links -->
             <nav class="sidebar__nav">
                 <a href="{{ url_for('main.dashboard') }}" class="sidebar__link" data-tooltip="Dashboard">
-                    <i class="bi bi-house-door"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-house-door"></i>
+                    </div>
                     <span class="sidebar__link-text">Dashboard</span>
                 </a>
                 <a href="{{ url_for('main.search_page') }}" class="sidebar__link" data-tooltip="Discover">
-                    <i class="bi bi-compass"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-compass"></i>
+                    </div>
                     <span class="sidebar__link-text">Discover</span>
                 </a>
                 <a href="{{ url_for('connections.connections_home') }}" class="sidebar__link" data-tooltip="Connections">
-                    <i class="bi bi-people"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
                     <span class="sidebar__link-text">Connections</span>
                 </a>
                 <a href="{{ url_for('messages.inbox') }}" class="sidebar__link" data-tooltip="Messages">
-                    <i class="bi bi-chat-dots"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
                     <span class="sidebar__link-text">Messages</span>
                 </a>
                 <a href="{{ url_for('auth.profile') }}" class="sidebar__link" data-tooltip="Profile">
-                    <i class="bi bi-person-circle"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
                     <span class="sidebar__link-text">Profile</span>
                 </a>
                 <a href="{{ url_for('main.settings') }}" class="sidebar__link" data-tooltip="Settings">
-                    <i class="bi bi-gear"></i>
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-gear"></i>
+                    </div>
                     <span class="sidebar__link-text">Settings</span>
                 </a>
             </nav>
 
-            <!-- Sidebar Toggle Button -->
             <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </aside>
 
         <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
-        <nav class="bottom-nav">
+        <nav class="bottom-nav glass-effect">
             <a href="{{ url_for('main.search_page') }}" class="bottom-nav__item">
                 <i class="bi bi-compass"></i>
                 <span>Discover</span>
@@ -123,7 +136,8 @@
                 <span>Connect</span>
             </a>
             <a href="{{ url_for('main.dashboard') }}" class="bottom-nav__item bottom-nav__item--primary">
-                <i class="bi bi-house-door"></i>
+                <div class="bottom-nav__primary-bg"></div>
+                <i class="bi bi-house-door-fill"></i>
             </a>
             <a href="{{ url_for('messages.inbox') }}" class="bottom-nav__item">
                 <i class="bi bi-chat-dots"></i>
@@ -135,23 +149,29 @@
             </a>
         </nav>
 
-        <!-- ========== TOP BAR (MOBILE & DESKTOP) ========== -->
-        <header class="topbar">
+        <!-- ========== TOP BAR ========== -->
+        <header class="topbar glass-effect">
             <div class="topbar__container">
-                <!-- Mobile Menu Toggle -->
-                <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Open menu">
-                    <i class="bi bi-list"></i>
-                </button>
+                <!-- Left Side -->
+                <div class="topbar__left">
+                    <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Open menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
 
-                <!-- Brand (Mobile Only) -->
-                <a href="{{ url_for('main.home') }}" class="topbar__brand">
-                    <span class="brand-c">C</span>
-                    <span class="brand-text">Connect</span>
-                </a>
+                <!-- Center Brand -->
+                <div class="topbar__center">
+                    <a href="{{ url_for('main.home') }}" class="topbar__brand">
+                        <span class="brand-icon-small">
+                            <i class="bi bi-circle-fill"></i>
+                        </span>
+                        <span class="brand-c">C</span>
+                        <span class="brand-text">Connect</span>
+                    </a>
+                </div>
 
                 <!-- Right Actions -->
                 <div class="topbar__actions">
-                    <!-- Notifications -->
                     <a href="{{ url_for('notifications.notifications_list') }}" class="topbar__icon-btn" aria-label="Notifications">
                         <i class="bi bi-bell"></i>
                         {% set unread = current_user.notifications | selectattr("is_read", "equalto", False) | list %}
@@ -160,22 +180,20 @@
                         {% endif %}
                     </a>
 
-                    <!-- Theme Toggle (Desktop Only) -->
                     <button class="topbar__icon-btn topbar__theme-toggle" id="themeToggle" aria-label="Toggle theme">
                         <i class="bi bi-sun-fill" id="themeIcon"></i>
                     </button>
 
-                    <!-- Profile Dropdown -->
                     <div class="topbar__profile" id="profileDropdown">
                         <button class="topbar__profile-btn" aria-label="Profile menu">
                             <div class="topbar__avatar">
                                 {{ current_user.username[0].upper() }}
                             </div>
                             <span class="topbar__username">{{ current_user.username }}</span>
+                            <i class="bi bi-chevron-down topbar__profile-arrow"></i>
                         </button>
                         
-                        <!-- Dropdown Menu -->
-                        <div class="topbar__dropdown" id="profileMenu">
+                        <div class="topbar__dropdown glass-effect" id="profileMenu">
                             <a href="{{ url_for('auth.profile') }}" class="topbar__dropdown-item">
                                 <i class="bi bi-person-circle"></i>
                                 <span>My Profile</span>
@@ -195,12 +213,14 @@
             </div>
         </header>
 
-        <!-- ========== MOBILE SIDEBAR MENU (OVERLAY) ========== -->
+        <!-- ========== MOBILE SIDEBAR MENU ========== -->
         <div class="mobile-menu" id="mobileMenu">
-            <div class="mobile-menu__content">
-                <!-- Header -->
+            <div class="mobile-menu__content glass-effect">
                 <div class="mobile-menu__header">
                     <a href="{{ url_for('main.home') }}" class="mobile-menu__brand">
+                        <span class="brand-icon-small">
+                            <i class="bi bi-circle-fill"></i>
+                        </span>
                         <span class="brand-c">C</span>
                         <span class="brand-text">Connect</span>
                     </a>
@@ -209,7 +229,6 @@
                     </button>
                 </div>
 
-                <!-- Navigation Links -->
                 <nav class="mobile-menu__nav">
                     <a href="{{ url_for('main.dashboard') }}" class="mobile-menu__link">
                         <i class="bi bi-house-door"></i>
@@ -243,36 +262,36 @@
     {% else %}
         <!-- ==================== GUEST USER LAYOUT ==================== -->
         
-        <!-- ========== GUEST NAVIGATION BAR ========== -->
-        <nav class="guest-nav">
+        <nav class="guest-nav glass-effect">
             <div class="guest-nav__container">
-                <!-- Brand -->
                 <a href="{{ url_for('main.home') }}" class="guest-nav__brand">
+                    <span class="brand-icon-small">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
                     <span class="brand-c">C</span>
                     <span class="brand-text">Connect</span>
                 </a>
 
-                <!-- Desktop Links -->
                 <div class="guest-nav__links">
                     <a href="{{ url_for('main.home') }}" class="guest-nav__link">Home</a>
                     <a href="{{ url_for('main.about') }}" class="guest-nav__link">About</a>
                     <a href="{{ url_for('main.contact') }}" class="guest-nav__link">Contact</a>
                     <a href="{{ url_for('auth.login') }}" class="guest-nav__link">Login</a>
-                    <a href="{{ url_for('auth.signup') }}" class="guest-nav__btn">Get Started</a>
+                    <a href="{{ url_for('auth.signup') }}" class="guest-nav__btn">
+                        <span>Get Started</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
                     
-                    <!-- Theme Toggle (Desktop Only) -->
                     <button class="guest-nav__theme-toggle" id="themeToggle" aria-label="Toggle theme">
                         <i class="bi bi-sun-fill" id="themeIcon"></i>
                     </button>
                 </div>
 
-                <!-- Mobile Toggle -->
                 <button class="guest-nav__mobile-toggle" id="guestMenuToggle" aria-label="Toggle menu">
                     <i class="bi bi-list"></i>
                 </button>
             </div>
 
-            <!-- Mobile Menu -->
             <div class="guest-nav__mobile-menu" id="guestMobileMenu">
                 <a href="{{ url_for('main.home') }}" class="guest-nav__mobile-link">Home</a>
                 <a href="{{ url_for('main.about') }}" class="guest-nav__mobile-link">About</a>
@@ -289,7 +308,7 @@
         {% if messages %}
             <div class="flash-container">
                 {% for category, message in messages %}
-                    <div class="flash-message flash-message--{{ category }}" role="alert">
+                    <div class="flash-message glass-effect flash-message--{{ category }}" role="alert">
                         <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' if category == 'danger' else 'info-circle-fill' }}"></i>
                         <span>{{ message }}</span>
                         <button class="flash-message__close" aria-label="Close">
@@ -302,8 +321,6 @@
     {% endwith %}
 
     <!-- ==================== MAIN CONTENT ==================== -->
-    <!-- NOTE: Changed from "block body" to "block content" for better convention -->
-    <!-- If you prefer "block body", change this back and update child templates -->
     <main class="main-content">
         {% block body %}
         <!-- Page content goes here -->
@@ -315,6 +332,9 @@
         <div class="footer__container">
             <div class="footer__brand">
                 <div class="footer__logo">
+                    <span class="brand-icon-small">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
                     <span class="brand-c">C</span>
                     <span class="brand-text">Connect</span>
                 </div>
@@ -338,7 +358,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 
-    <!-- Logout Confirmation -->
     <script>
         function confirmLogout(event) {
             event.preventDefault();
@@ -348,7 +367,6 @@
         }
     </script>
 
-    <!-- Page-specific JS -->
     {% block extra_js %}{% endblock %}
 </body>
 </html>

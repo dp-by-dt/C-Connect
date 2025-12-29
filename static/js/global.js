@@ -1,6 +1,6 @@
 /* =====================================================
-   C-CONNECT GLOBAL JAVASCRIPT v2.0
-   Modern Interactions & Utilities
+   C-CONNECT GLOBAL JAVASCRIPT v3.0
+   Smooth Interactions & Enhanced UX
    ===================================================== */
 
 // ==================== THEME MANAGEMENT ====================
@@ -11,11 +11,9 @@ class ThemeManager {
     }
 
     init() {
-        // Get saved theme or default to 'light'
         const savedTheme = localStorage.getItem(this.themeKey) || 'light';
         this.setTheme(savedTheme, false);
 
-        // Setup theme toggle button
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.addEventListener('click', () => this.toggleTheme());
@@ -23,25 +21,21 @@ class ThemeManager {
     }
 
     setTheme(theme, save = true) {
-        // Apply theme class to html element
         if (theme === 'dark') {
             document.documentElement.classList.add('theme-dark');
         } else {
             document.documentElement.classList.remove('theme-dark');
         }
         
-        // Update icon
         const icon = document.getElementById('themeIcon');
         if (icon) {
             icon.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
         }
 
-        // Save to localStorage if needed
         if (save) {
             localStorage.setItem(this.themeKey, theme);
         }
 
-        // Dispatch custom event
         window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
     }
 
@@ -56,7 +50,6 @@ class ThemeManager {
     }
 }
 
-// Initialize theme manager
 const themeManager = new ThemeManager();
 
 // ==================== SIDEBAR TOGGLE (DESKTOP) ====================
@@ -65,17 +58,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarToggle = document.getElementById('sidebarToggle');
 
     if (sidebar && sidebarToggle) {
-        // Load saved sidebar state
         const savedState = localStorage.getItem('sidebar-expanded');
         if (savedState === 'true') {
             sidebar.classList.add('is-expanded');
         }
 
-        // Toggle sidebar on button click
         sidebarToggle.addEventListener('click', () => {
             sidebar.classList.toggle('is-expanded');
             const isExpanded = sidebar.classList.contains('is-expanded');
             localStorage.setItem('sidebar-expanded', isExpanded);
+            
+            // Smooth animation for toggle button
+            sidebarToggle.style.transform = isExpanded ? 'translateY(-50%) rotate(5deg)' : 'translateY(-50%) rotate(-5deg)';
+            setTimeout(() => {
+                sidebarToggle.style.transform = 'translateY(-50%)';
+            }, 200);
         });
     }
 });
@@ -88,13 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
 
     if (mobileMenu && mobileMenuToggle) {
-        // Open mobile menu
         mobileMenuToggle.addEventListener('click', () => {
             mobileMenu.classList.add('is-open');
             document.body.style.overflow = 'hidden';
         });
 
-        // Close mobile menu
         const closeMobileMenu = () => {
             mobileMenu.classList.remove('is-open');
             document.body.style.overflow = '';
@@ -108,13 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileMenuOverlay.addEventListener('click', closeMobileMenu);
         }
 
-        // Close on navigation link click
         const mobileLinks = mobileMenu.querySelectorAll('.mobile-menu__link');
         mobileLinks.forEach(link => {
             link.addEventListener('click', closeMobileMenu);
         });
 
-        // Close on ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && mobileMenu.classList.contains('is-open')) {
                 closeMobileMenu();
@@ -129,20 +122,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileBtn = profileDropdown?.querySelector('.topbar__profile-btn');
 
     if (profileDropdown && profileBtn) {
-        // Toggle dropdown
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             profileDropdown.classList.toggle('is-open');
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!profileDropdown.contains(e.target)) {
                 profileDropdown.classList.remove('is-open');
             }
         });
 
-        // Close on ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 profileDropdown.classList.remove('is-open');
@@ -178,41 +168,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const flashMessages = document.querySelectorAll('.flash-message');
     
     flashMessages.forEach(message => {
-        // Auto dismiss after 5 seconds
         setTimeout(() => {
-            message.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => message.remove(), 300);
+            message.style.animation = 'slideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => message.remove(), 400);
         }, 5000);
 
-        // Manual close button
         const closeBtn = message.querySelector('.flash-message__close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                message.style.animation = 'slideOut 0.3s ease forwards';
-                setTimeout(() => message.remove(), 300);
+                message.style.animation = 'slideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                setTimeout(() => message.remove(), 400);
             });
         }
     });
 });
 
-// Add slideOut animation
+// Flash message slideOut animation
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideOut {
         to {
-            transform: translateX(100%);
+            transform: translateX(120%);
             opacity: 0;
         }
     }
 `;
 document.head.appendChild(style);
 
+// ==================== ACTIVE NAVIGATION HIGHLIGHTING ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.sidebar__link, .mobile-menu__link, .bottom-nav__item');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && currentPath.includes(href) && href !== '/') {
+            link.classList.add('active');
+        }
+    });
+});
+
+// Add active state styling
+const activeStyle = document.createElement('style');
+activeStyle.textContent = `
+    .sidebar__link.active,
+    .mobile-menu__link.active {
+        background: var(--bg-hover);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .sidebar__link.active::before {
+        transform: translateX(0);
+    }
+    
+    .bottom-nav__item.active {
+        color: var(--primary-color);
+    }
+`;
+document.head.appendChild(activeStyle);
+
 // ==================== UTILITY FUNCTIONS ====================
 
 /**
  * Show loading state on button
- * @param {HTMLElement} button - Button element
- * @returns {string} Original button HTML
  */
 function showLoading(button) {
     if (!button) return '';
@@ -220,12 +239,12 @@ function showLoading(button) {
     button.setAttribute('data-original-html', originalHTML);
     button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
     button.disabled = true;
+    button.style.cursor = 'not-allowed';
     return originalHTML;
 }
 
 /**
  * Hide loading state on button
- * @param {HTMLElement} button - Button element
  */
 function hideLoading(button) {
     if (!button) return;
@@ -233,24 +252,22 @@ function hideLoading(button) {
     if (originalHTML) {
         button.innerHTML = originalHTML;
         button.disabled = false;
+        button.style.cursor = 'pointer';
         button.removeAttribute('data-original-html');
     }
 }
 
 /**
  * Show toast notification
- * @param {string} message - Message to display
- * @param {string} type - Type of toast (success, danger, warning, info)
  */
 function showToast(message, type = 'info') {
     let toastContainer = document.querySelector('.toast-container');
     
-    // Create toast container if it doesn't exist
     if (!toastContainer) {
         toastContainer = document.createElement('div');
         toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
         toastContainer.style.zIndex = '1200';
-        toastContainer.style.marginTop = '80px';
+        toastContainer.style.marginTop = '88px';
         document.body.appendChild(toastContainer);
     }
     
@@ -271,7 +288,7 @@ function showToast(message, type = 'info') {
     };
     
     const toastHTML = `
-        <div class="toast align-items-center text-bg-${colors[type]} border-0" role="alert" style="backdrop-filter: blur(10px);">
+        <div class="toast align-items-center text-bg-${colors[type]} border-0 glass-effect" role="alert">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi bi-${icons[type]} me-2"></i>${message}
@@ -287,15 +304,11 @@ function showToast(message, type = 'info') {
     const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 4000 });
     toast.show();
     
-    // Remove toast element after hidden
     toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
 }
 
 /**
  * Debounce function
- * @param {Function} func - Function to debounce
- * @param {number} wait - Wait time in milliseconds
- * @returns {Function} Debounced function
  */
 function debounce(func, wait = 300) {
     let timeout;
@@ -311,9 +324,6 @@ function debounce(func, wait = 300) {
 
 /**
  * Animated counter
- * @param {HTMLElement} element - Element to animate
- * @param {number} target - Target number
- * @param {number} duration - Animation duration in milliseconds
  */
 function animateCounter(element, target, duration = 2000) {
     if (!element) return;
@@ -334,7 +344,6 @@ function animateCounter(element, target, duration = 2000) {
 
 /**
  * Toggle password visibility
- * @param {string} inputId - ID of password input
  */
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
@@ -355,8 +364,6 @@ function togglePassword(inputId) {
 
 /**
  * Initialize search functionality
- * @param {string} inputId - ID of search input
- * @param {string} itemsSelector - Selector for items to filter
  */
 function initializeSearch(inputId, itemsSelector) {
     const searchInput = document.getElementById(inputId);
@@ -370,6 +377,7 @@ function initializeSearch(inputId, itemsSelector) {
             const text = item.textContent.toLowerCase();
             if (text.includes(lowerQuery)) {
                 item.style.display = '';
+                item.style.animation = 'fadeIn 0.3s ease';
             } else {
                 item.style.display = 'none';
             }
@@ -382,12 +390,8 @@ function initializeSearch(inputId, itemsSelector) {
 }
 
 // ==================== AJAX FORM ACTIONS ====================
-/**
- * Initialize AJAX actions for connection requests
- */
 function initializeAjaxActions() {
     document.addEventListener('click', function(e) {
-        // Cancel connection requests
         if (e.target.matches('.cancel-btn') || e.target.closest('.cancel-btn')) {
             e.preventDefault();
             const button = e.target.closest('.cancel-btn');
@@ -395,7 +399,6 @@ function initializeAjaxActions() {
             
             showLoading(button);
             
-            // Get CSRF token
             const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
             
             fetch(`/connections/cancel/${connId}`, {
@@ -408,15 +411,15 @@ function initializeAjaxActions() {
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
-                    // Fade out and remove connection item
                     const item = button.closest('.connection-item');
                     if (item) {
-                        item.style.transition = 'opacity 0.3s ease';
+                        item.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                        item.style.transform = 'translateX(100%)';
                         item.style.opacity = '0';
                         setTimeout(() => { 
                             item.remove(); 
                             updateOutgoingCount();
-                        }, 300);
+                        }, 400);
                     }
                     showToast(data.message || 'Request cancelled', 'success');
                 } else {
@@ -443,10 +446,8 @@ function updateOutgoingCount() {
         const newCount = outgoingItems.length;
         badge.textContent = newCount;
         
-        // Hide badge if zero
         if (newCount === 0) {
             badge.style.display = 'none';
-            // Show empty state if no items
             const emptyState = document.querySelector('.empty-state');
             if (emptyState) {
                 emptyState.style.display = 'block';
@@ -490,6 +491,7 @@ function lazyLoadImages() {
                 const img = entry.target;
                 img.src = img.dataset.src;
                 img.removeAttribute('data-src');
+                img.style.animation = 'fadeIn 0.5s ease';
                 imageObserver.unobserve(img);
             }
         });
@@ -498,62 +500,107 @@ function lazyLoadImages() {
     images.forEach(img => imageObserver.observe(img));
 }
 
-// Initialize lazy loading on page load
 document.addEventListener('DOMContentLoaded', lazyLoadImages);
 
-// ==================== SCROLL ANIMATIONS ====================
-class ScrollAnimations {
-    constructor() {
-        this.init();
+// ==================== BUTTON RIPPLE EFFECT ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.btn, .topbar__icon-btn, .sidebar__link');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple-effect');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+});
+
+// Ripple effect styles
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+    .ripple-effect {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: scale(0);
+        animation: ripple-animation 0.6s ease-out;
+        pointer-events: none;
     }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(rippleStyle);
 
-    init() {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        this.observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate-in');
-                    this.observer.unobserve(entry.target);
+// ==================== ENHANCE FORM INTERACTIONS ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const formControls = document.querySelectorAll('.form-control');
+    
+    formControls.forEach(input => {
+        // Float label effect
+        input.addEventListener('focus', () => {
+            input.parentElement?.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', () => {
+            if (!input.value) {
+                input.parentElement?.classList.remove('focused');
+            }
+        });
+        
+        // Character counter for textareas
+        if (input.tagName === 'TEXTAREA' && input.hasAttribute('maxlength')) {
+            const maxLength = input.getAttribute('maxlength');
+            const counter = document.createElement('small');
+            counter.className = 'character-counter text-muted';
+            counter.textContent = `0 / ${maxLength}`;
+            input.parentElement?.appendChild(counter);
+            
+            input.addEventListener('input', () => {
+                counter.textContent = `${input.value.length} / ${maxLength}`;
+                if (input.value.length > maxLength * 0.9) {
+                    counter.style.color = 'var(--danger-color)';
+                } else {
+                    counter.style.color = 'var(--text-muted)';
                 }
             });
-        }, observerOptions);
-
-        this.observeElements();
-    }
-
-    observeElements() {
-        const elements = document.querySelectorAll('.animate-on-scroll');
-        elements.forEach(el => this.observer.observe(el));
-    }
-
-    refresh() {
-        this.observeElements();
-    }
-}
-
-const scrollAnimations = new ScrollAnimations();
+        }
+    });
+});
 
 // ==================== INITIALIZE ON DOM LOAD ====================
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize AJAX actions
     initializeAjaxActions();
     
-    // Add fade-in class to body
     document.body.classList.add('fade-in');
     
-    // Remove page loader if exists
     const loader = document.querySelector('.page-loader');
     if (loader) {
         loader.style.opacity = '0';
         setTimeout(() => loader.remove(), 300);
     }
     
-    // Log initialization
-    console.log('✨ C-Connect: Global JavaScript initialized successfully!');
+    console.log('✨ C-Connect v3.0: Enhanced UI initialized successfully!');
 });
 
 // ==================== EXPORT GLOBAL API ====================
@@ -566,7 +613,7 @@ window.cconnect = {
     animateCounter,
     togglePassword,
     initializeSearch,
-    scrollAnimations,
     initializeAjaxActions,
-    updateOutgoingCount
+    updateOutgoingCount,
+    lazyLoadImages
 };
