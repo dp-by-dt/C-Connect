@@ -1,13 +1,315 @@
+<!-- ==================== FLASH MESSAGES COMPONENT ====================
+     Toast-style notification system
+     Auto-dismisses after 5 seconds, manual close available
+     =================================================================== -->
+
+<style>
+/* ===== Flash Message Container ===== */
+.flash-messages-container {
+    position: fixed;
+    top: calc(var(--topbar-height) + 1rem);
+    right: 1rem;
+    z-index: 1100;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+/* ===== Individual Flash Message ===== */
+.flash-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    animation: flashSlideIn 0.3s ease;
+    pointer-events: all;
+    position: relative;
+}
+
+/* Slide In Animation */
+@keyframes flashSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Slide Out Animation */
+@keyframes flashSlideOut {
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+.flash-message.flash-message--hiding {
+    animation: flashSlideOut 0.3s ease forwards;
+}
+
+/* ===== Message Type Styles ===== */
+.flash-message--success {
+    border-left: 4px solid var(--success-color);
+}
+
+.flash-message--danger,
+.flash-message--error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.flash-message--warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.flash-message--info {
+    border-left: 4px solid var(--info-color);
+}
+
+/* ===== Message Icon ===== */
+.flash-message__icon {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    margin-top: 0.125rem;
+}
+
+.flash-message--success .flash-message__icon {
+    color: var(--success-color);
+}
+
+.flash-message--danger .flash-message__icon,
+.flash-message--error .flash-message__icon {
+    color: var(--danger-color);
+}
+
+.flash-message--warning .flash-message__icon {
+    color: var(--warning-color);
+}
+
+.flash-message--info .flash-message__icon {
+    color: var(--info-color);
+}
+
+/* ===== Message Content ===== */
+.flash-message__content {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+/* ===== Close Button ===== */
+.flash-message__close {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1.125rem;
+}
+
+.flash-message__close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* ===== Progress Bar (Optional) ===== */
+.flash-message__progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    animation: flashProgress 5s linear;
+}
+
+@keyframes flashProgress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .flash-messages-container {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+        top: calc(var(--topbar-height) + 0.75rem);
+    }
+    
+    .flash-message {
+        padding: 0.875rem 1rem;
+    }
+}
+</style>
+
+<!-- ===== FLASH MESSAGES MARKUP ===== -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="flash-container">
+    <div class="flash-messages-container" id="flashMessagesContainer">
       {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="flash-message flash-message--{{ category }}" role="alert" data-flash-message>
+          <!-- Icon based on category -->
+          <div class="flash-message__icon">
+            {% if category == 'success' %}
+              <i class="bi bi-check-circle-fill"></i>
+            {% elif category == 'danger' or category == 'error' %}
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            {% elif category == 'warning' %}
+              <i class="bi bi-exclamation-circle-fill"></i>
+            {% else %}
+              <i class="bi bi-info-circle-fill"></i>
+            {% endif %}
+          </div>
+          
+          <!-- Message content -->
+          <div class="flash-message__content">
+            {{ message }}
+          </div>
+          
+          <!-- Close button -->
+          <button class="flash-message__close" 
+                  aria-label="Close notification"
+                  onclick="dismissFlashMessage(this)">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          
+          <!-- Progress bar (auto-dismiss indicator) -->
+          <div class="flash-message__progress"></div>
         </div>
       {% endfor %}
     </div>
   {% endif %}
 {% endwith %}
 
+<!-- ===== FLASH MESSAGE JAVASCRIPT ===== -->
+<script>
+/**
+ * Dismiss flash message
+ * @param {HTMLElement} button - Close button element
+ */
+function dismissFlashMessage(button) {
+    const message = button.closest('.flash-message');
+    if (message) {
+        message.classList.add('flash-message--hiding');
+        setTimeout(() => {
+            message.remove();
+            // Remove container if no messages left
+            const container = document.getElementById('flashMessagesContainer');
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 300);
+    }
+}
+
+/**
+ * Auto-dismiss flash messages after 5 seconds
+ */
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashMessages = document.querySelectorAll('[data-flash-message]');
+        
+        flashMessages.forEach(function(message) {
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                if (message && message.parentNode) {
+                    message.classList.add('flash-message--hiding');
+                    setTimeout(function() {
+                        message.remove();
+                        // Remove container if empty
+                        const container = document.getElementById('flashMessagesContainer');
+                        if (container && container.children.length === 0) {
+                            container.remove();
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        });
+    });
+})();
+
+/**
+ * Programmatically show flash message
+ * @param {string} message - Message text
+ * @param {string} category - Message category (success, danger, warning, info)
+ */
+function showFlashMessage(message, category = 'info') {
+    let container = document.getElementById('flashMessagesContainer');
+    
+    // Create container if it doesn't exist
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'flashMessagesContainer';
+        container.className = 'flash-messages-container';
+        document.body.appendChild(container);
+    }
+    
+    // Icon mapping
+    const icons = {
+        success: 'check-circle-fill',
+        danger: 'exclamation-triangle-fill',
+        error: 'exclamation-triangle-fill',
+        warning: 'exclamation-circle-fill',
+        info: 'info-circle-fill'
+    };
+    
+    // Create message element
+    const messageEl = document.createElement('div');
+    messageEl.className = `flash-message flash-message--${category}`;
+    messageEl.setAttribute('role', 'alert');
+    messageEl.setAttribute('data-flash-message', '');
+    
+    messageEl.innerHTML = `
+        <div class="flash-message__icon">
+            <i class="bi bi-${icons[category] || icons.info}"></i>
+        </div>
+        <div class="flash-message__content">
+            ${message}
+        </div>
+        <button class="flash-message__close" 
+                aria-label="Close notification"
+                onclick="dismissFlashMessage(this)">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="flash-message__progress"></div>
+    `;
+    
+    container.appendChild(messageEl);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        if (messageEl && messageEl.parentNode) {
+            messageEl.classList.add('flash-message--hiding');
+            setTimeout(function() {
+                messageEl.remove();
+                if (container && container.children.length === 0) {
+                    container.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+// Make function available globally
+window.showFlashMessage = showFlashMessage;
+</script>
