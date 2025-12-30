@@ -10,7 +10,7 @@ from sqlalchemy import desc
 
 from blueprints.connections.service import is_connected
 
-
+profile = Profile
 
 
 @messages.route("/")
@@ -18,7 +18,6 @@ from blueprints.connections.service import is_connected
 def inbox():
     cleanup_expired_messages()
     #defining Profile
-    profile = Profile
 
     # 1. Get CONNECTED users
     connections = Connection.query.filter(
@@ -147,5 +146,6 @@ def chat(user_id):
     return render_template(
                 "messages/chat.html", 
                 messages=messages,
-                target_user=target_user
+                target_user=target_user,
+                profile=profile
             )

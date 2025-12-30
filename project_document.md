@@ -1104,7 +1104,11 @@ The above two columns helps pin point the notification and delete that only
     dashboard.html
     discover.html (❕Almost good)
     home.html (⚠️need imporve in darkmode)
-    
+
+
+6. Messages blueprint
+    inbox.html
+    chat.html (pretty decent    )
 
 
 
