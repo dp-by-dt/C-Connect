@@ -1102,6 +1102,9 @@ The above two columns helps pin point the notification and delete that only
 
 4. Main blueprint
     dashboard.html
+    discover.html (❕Almost good)
+    home.html (⚠️need imporve in darkmode)
+    
 
 
 
