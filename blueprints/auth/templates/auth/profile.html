@@ -15,11 +15,17 @@
 
 /* ===== LEFT SIDE - PROFILE CARD (FIXED) ===== */
 .profile-page__left {
-    flex: 0 0 450px;
+    flex: 0 0 550px;
     position: sticky;
     top: calc(var(--topbar-height) + 2rem);
     height: fit-content;
     animation: fadeInLeft 0.6s ease;
+
+    /* ANTI-JERK FIXES */
+    will-change: transform;
+    transform: translateZ(0);  /* Hardware acceleration */
+    backface-visibility: hidden;
+    contain: layout style;     /* Contain repaints */
 }
 
 @keyframes fadeInLeft {
@@ -252,7 +258,7 @@
 
 /* ===== Interests Section ===== */
 .profile-card__interests {
-    margin-bottom: 2rem;
+    margin: 2rem auto ;
 }
 
 .profile-card__interests-tags {
@@ -576,8 +582,15 @@
 
     {# ========== LEFT SIDE - PROFILE CARD ========== #}
     <aside class="profile-page__left">
+
         <div class="profile-card">
-            {# Profile Picture #}
+
+            {% with user=user, conn_stats=stats %}
+                {% include "components/profile_card.html" %}
+            {% endwith %}
+
+
+<!-- {# Profile Picture #}
             <div class="profile-card__avatar-wrapper">
                 <div class="profile-card__avatar">
                     {% if profile.profile_picture %}
@@ -587,37 +600,39 @@
                     {% endif %}
                 </div>
             </div>
+ -->
 
-            {# Profile Info #}
-            <div class="profile-card__info">
-                <h1 class="profile-card__name">{{ current_user.username }}</h1>
-                <p class="profile-card__email">{{ current_user.email }}</p>
+
+ 
+
+            {# Interests Section #}
+            <div class="profile-card__interests">
+                <h2 class="profile-card__section-title">
+                    <i class="bi bi-stars me-2"></i>Interests
+                </h2>
+                {% if profile.interests %}
+                    <div class="profile-card__interests-tags">
+                        {% for interest in profile.interests %}
+                            <span class="profile-card__interest-tag"># {{ interest }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="profile-card__bio-empty">No interests added yet.</p>
+                {% endif %}
             </div>
 
-            {# Stats (Connections & Posts Count) #}
-            <div class="profile-card__stats">
-                <div class="profile-card__stat">
-                    <div class="profile-card__stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <span class="profile-card__stat-value">
-                        {{ stats.connections if stats.connections is defined else '0'}}
-                    </span>
-                    <span class="profile-card__stat-label">Connections</span>
-                </div>
-                <div class="profile-card__stat">
-                    <div class="profile-card__stat-icon">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                    </div>
-                    <span class="profile-card__stat-value">{{ posts|length if posts|length is defined else '0' }}</span>
-                    <span class="profile-card__stat-label">Posts</span>
-                </div>
-            </div>
 
-            {# Bio Section #}
+        </div>
+    </aside>
+
+    {# ========== RIGHT SIDE - POSTS SECTION ========== #}
+    <main class="profile-page__right">
+        <div class="profile-posts">
+           {# Bio Section #}
             <div class="profile-card__bio">
                 <h2 class="profile-card__section-title">
-                    <i class="bi bi-chat-left-quote me-2"></i>Bio
+                    <!-- <i class="bi bi-chat-left-quote me-2"></i> -->
+                     Bio
                 </h2>
                 {% if profile.bio %}
                     <p class="profile-card__bio-text">{{ profile.bio }}</p>
@@ -629,7 +644,8 @@
             {# Details Section #}
             <div class="profile-card__details">
                 <h2 class="profile-card__section-title">
-                    <i class="bi bi-info-circle me-2"></i>Details
+                    <!-- <i class="bi bi-info-circle me-2"></i> -->
+                    Details
                 </h2>
                 
                 {# Email #}
@@ -650,7 +666,13 @@
                     </div>
                     <div class="profile-card__detail-content">
                         <div class="profile-card__detail-label">Department</div>
-                        <div class="profile-card__detail-value">{{ profile.department or "Not specified" }}</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.department %}
+                                <p>{{ profile.department }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -661,7 +683,13 @@
                     </div>
                     <div class="profile-card__detail-content">
                         <div class="profile-card__detail-label">Year</div>
-                        <div class="profile-card__detail-value">{{ profile.year or "Not specified" }}</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.year %}
+                                <p>{{ profile.year }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
@@ -672,42 +700,25 @@
                     </div>
                     <div class="profile-card__detail-content">
                         <div class="profile-card__detail-label">Location</div>
-                        <div class="profile-card__detail-value">{{ profile.location or "Not specified" }}</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.location %}
+                                <p>{{ profile.location }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {# Interests Section #}
-            <div class="profile-card__interests">
-                <h2 class="profile-card__section-title">
-                    <i class="bi bi-stars me-2"></i>Interests
-                </h2>
-                {% if profile.interests %}
-                    <div class="profile-card__interests-tags">
-                        {% for interest in profile.interests %}
-                            <span class="profile-card__interest-tag"># {{ interest }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="profile-card__bio-empty">No interests added yet.</p>
-                {% endif %}
-            </div>
-
-            {# Edit Profile Button #}
-            <a href="{{ url_for('auth.profile_edit') }}" class="profile-card__edit-btn">
-                <i class="bi bi-pencil-square"></i>
-                <span>Edit Profile</span>
-            </a>
         </div>
-    </aside>
 
-    {# ========== RIGHT SIDE - POSTS SECTION ========== #}
-    <main class="profile-page__right">
-        <div class="profile-posts">
+
+
+        <div class="profile-posts" style="margin-top: 1.8rem;">
             {# Posts Header #}
             <div class="profile-posts__header">
                 <h2 class="profile-posts__title">
-                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    <!-- <i class="bi bi-grid-3x3-gap-fill"></i> -->
                     Posts
                 </h2>
                 <p class="profile-posts__subtitle">Your recent posts and activities</p>

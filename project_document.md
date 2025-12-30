@@ -1079,6 +1079,29 @@ The above two columns helps pin point the notification and delete that only
     But it clears input after giving flash message ⚠️
 
 
+-----------------------
+
+### UI Upgrade v4
+1. templates:
+    base.html
+    global.css
+    global.js
+
+2. components
+    user_card.html
+    user_card_action_btn.html
+    flash.html
+    profile_card.html (✅added... For viewing own profile pic as a card)
+
+3. Auth blueprint
+    login.html
+    profile.html
+    profile_edit.html
+    signup.html (⚠️later)
+
+
+
+
 
 
 
