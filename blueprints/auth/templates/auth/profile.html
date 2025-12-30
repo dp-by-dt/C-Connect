@@ -362,7 +362,6 @@
     gap: 1.25rem;
 }
 
-/* TODO: Backend Integration - Replace with actual post data */
 /* Use:  for post in user.posts */
 .profile-posts__placeholder {
     aspect-ratio: 1;
@@ -596,21 +595,21 @@
             </div>
 
             {# Stats (Connections & Posts Count) #}
-            {# TODO: Backend - Add actual counts #}
-            {# Use: {{ current_user.connections.count() }} or similar #}
             <div class="profile-card__stats">
                 <div class="profile-card__stat">
                     <div class="profile-card__stat-icon">
                         <i class="bi bi-people-fill"></i>
                     </div>
-                    <span class="profile-card__stat-value">{{ current_user.connection_count if current_user.connection_count is defined else '0' }}</span>
+                    <span class="profile-card__stat-value">
+                        {{ stats.connections if stats.connections is defined else '0'}}
+                    </span>
                     <span class="profile-card__stat-label">Connections</span>
                 </div>
                 <div class="profile-card__stat">
                     <div class="profile-card__stat-icon">
                         <i class="bi bi-grid-3x3-gap-fill"></i>
                     </div>
-                    <span class="profile-card__stat-value">{{ current_user.posts_count if current_user.posts_count is defined else '0' }}</span>
+                    <span class="profile-card__stat-value">{{ posts|length if posts|length is defined else '0' }}</span>
                     <span class="profile-card__stat-label">Posts</span>
                 </div>
             </div>
@@ -717,12 +716,12 @@
             {# Posts Grid #}
             {# TODO: Backend Integration #}
             {# Replace with: {% if user.posts %} ... {% for post in user.posts %} #}
-            {% if false %}
+            {% if posts and posts|length > 0 %}
                 <div class="profile-posts__grid">
-                    {# Placeholder posts - Remove when integrating backend #}
-                    {% for i in range(6) %}
+                    {% for post in posts %}
                         <div class="profile-posts__placeholder">
-                            <i class="bi bi-image"></i>
+                            <span>Post #{{ post.id }}</span>
+                            {# TODO: Backend Integration to show posts.content #}
                         </div>
                     {% endfor %}
                 </div>

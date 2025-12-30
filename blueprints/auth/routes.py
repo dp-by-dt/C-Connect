@@ -1,7 +1,7 @@
 from . import auth
 from flask import render_template, request, flash, redirect, url_for, render_template, request
 from setup_db import add_user as adduser_glob
-from models import User, Profile
+from models import User, Profile, Post
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager, db
 from .forms import SignupForm, LoginForm, EditProfileForm
@@ -185,8 +185,36 @@ def logout():
 def profile():
 
     profile = current_user.profile
-    # display default placeholders if None
-    return render_template('auth/profile.html', profile=profile, user=current_user)#, conn=conn)
+    user_id = current_user.id
+    # provide posts of the current user from posts table
+    # from Post, fetch all the posts for user_id == user.id
+    posts = Post.query.filter_by(user_id=user_id).all()
+
+    # count accepted connections (either side)
+    accepted_count = db.session.query(Connection).filter(
+        (Connection.status == 'accepted') & (
+            (Connection.user_id == user_id) | (Connection.target_user_id == user_id)
+        )
+    ).count()
+
+    # pending incoming
+    pending_incoming = db.session.query(Connection).filter_by(
+        target_user_id=user_id, status='pending'
+    ).count()
+
+    # pending outgoing
+    pending_outgoing = db.session.query(Connection).filter_by(
+        user_id=user_id, status='pending'
+    ).count()
+
+    # optionally other stats
+    stats = {
+        "connections": accepted_count,
+        "pending_incoming": pending_incoming,
+        "pending_outgoing": pending_outgoing
+    }
+
+    return render_template('auth/profile.html', profile=profile, user=current_user, posts=posts, stats=stats)#, conn=conn)
 
 
 # NEW ROUTE: Profile edit (for future implementation)
