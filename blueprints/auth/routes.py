@@ -180,7 +180,7 @@ def logout():
 # NEW ROUTE: Profile page for viewing/editing user profile
 # REASON: Essential for social network; allows users to update their information
 @auth.route('/profile')
-@limiter.limit("20 per day", key_func=get_user_id)
+@limiter.limit("200 per day", key_func=get_user_id)
 @login_required
 def profile():
 

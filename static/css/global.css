@@ -871,7 +871,7 @@ h6 { font-size: 0.9375rem; }
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
     text-decoration: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     font-weight: 600;
     transition: all var(--transition-base);
     display: flex;
