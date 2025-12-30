@@ -4,428 +4,736 @@
 
 {% block extra_css %}
 <style>
-.dashboard-container {
-    padding: 2rem 0 4rem;
+/* ==================== DASHBOARD LAYOUT ==================== */
+.dashboard {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+    animation: fadeIn 0.6s ease;
 }
 
-.welcome-banner {
-    padding: 2.5rem 2rem;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Welcome Section ===== */
+.dashboard__welcome {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
     margin-bottom: 2rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
     position: relative;
     overflow: hidden;
 }
 
-.welcome-banner::before {
+.dashboard__welcome-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+/* Decorative gradient overlay */
+.dashboard__welcome::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.3;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    opacity: 0.05;
+    z-index: 0;
 }
 
-.welcome-content {
+.dashboard__welcome > * {
     position: relative;
     z-index: 1;
 }
 
-.welcome-title {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
+.dashboard__avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
-    margin-bottom: 0.5rem;
-}
-
-.welcome-subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1rem;
-    margin: 0;
-}
-
-.stat-card {
-    padding: 1.75rem 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-decoration: none;
-    display: block;
-}
-
-.stat-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
-    color: white;
-    margin: 0 auto 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+    transition: transform var(--transition-base);
 }
 
-.stat-value {
+.dashboard__avatar:hover {
+    transform: scale(1.05) rotate(5deg);
+}
+
+.dashboard__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+}
+
+.dashboard__user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard__greeting {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.dashboard__username {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.dashboard__email {
+    font-size: 0.9375rem;
+    color: var(--text-tertiary);
+    margin-top: 0.25rem;
+}
+
+.dashboard__edit-btn {
+    padding: 0.625rem 1.25rem;
+    background: var(--bg-hover);
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.dashboard__edit-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Profile Completion Card ===== */
+.dashboard__completion {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard__completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard__completion-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard__completion-title i {
+    color: var(--primary-color);
+}
+
+.dashboard__completion-percent {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* ===== CLEAN PROGRESS BAR ===== */
+.dashboard__progress-bar {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.dashboard__progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+
+/* Animated shimmer effect deleted*/
+
+
+
+/* ===== Stats Grid ===== */
+.dashboard__stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    margin-top: 1rem;
+    width: 30%;  /* ← TAKE 30% OF RIGHT SIDE */
+    min-width: 80px;  /* Minimum width */
+    max-width: 40%;
+    flex-shrink: 0;  /* Don't shrink */
+}
+
+
+
+/* ===== SIMPLE STATS (no card) ===== */
+.dashboard__stat-simple {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;  /* Tighter gap */
+    padding: 1rem 0.75rem;  /* Smaller padding */
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    flex: 1;
+}
+
+
+.dashboard__stat-simple:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+}
+
+/* ===== MESSAGES BUTTON ===== */
+.dashboard__stat-messages-btn {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white !important;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.user-card__action-btn--pending {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border: 1px solid var(--primary-color);
+}
+
+
+/* Top row: Connections + Posts side-by-side */
+.dashboard__stats-top {
+    display: flex;
+    gap: .75rem;
+    flex: 1;
+}
+
+
+.dashboard__stat-messages-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Override stat styles for simple stats */
+.dashboard__stat-simple .dashboard__stat-icon {
+    background: transparent !important;
+}
+
+.dashboard__stat-simple .dashboard__stat-icon i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    background: var(--bg-hover);
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+
+.dashboard__stat-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-xs);
+}
+
+.dashboard__stat-value {
+    display: block;
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
-.stat-label {
+.dashboard__stat-label {
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--text-secondary);
-    font-size: 0.9375rem;
-    font-weight: 500;
-}
-
-.profile-card {
-    padding: 2rem;
-}
-
-.profile-avatar {
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: white;
-    margin: 0 auto 1.25rem;
-    box-shadow: var(--shadow-md);
-}
-
-.profile-name {
-    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 0.25rem;
 }
 
-.profile-email {
-    color: var(--text-muted);
-    font-size: 0.875rem;
+/* ===== Section ===== */
+.dashboard__section {
+    margin-bottom: 2.5rem;
 }
 
-.completion-bar {
-    margin-top: 1.5rem;
-}
-
-.completion-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.progress-wrapper {
-    background: var(--bg-secondary);
-    border-radius: 10px;
-    height: 8px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-    border-radius: 10px;
-    transition: width 0.6s ease;
-}
-
-.section-card {
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.section-header {
+.dashboard__section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
 }
 
-.section-title {
+.dashboard__section-title {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.625rem;
 }
 
-.quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
+.dashboard__section-title i {
+    color: var(--primary-color);
+    font-size: 1.375rem;
 }
 
-.action-item {
-    padding: 1.5rem 1rem;
-    text-align: center;
+.dashboard__section-action {
+    font-size: 0.875rem;
+    color: var(--primary-color);
     text-decoration: none;
-    transition: all 0.3s ease;
-    border-radius: var(--border-radius-md);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-}
-
-.action-item:hover {
-    background: var(--bg-tertiary);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-}
-
-.action-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 12px;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-    margin: 0 auto 0.75rem;
+    gap: 0.375rem;
+    transition: all var(--transition-fast);
 }
 
-.action-label {
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    font-weight: 500;
+.dashboard__section-action:hover {
+    gap: 0.625rem;
+    color: var(--primary-hover);
 }
 
-.empty-state {
+.dashboard__section-action i {
+    font-size: 1rem;
+}
+
+/* ===== Feed Preview / Empty State ===== */
+.dashboard__feed-empty {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-xl);
     padding: 3rem 2rem;
     text-align: center;
+    transition: all var(--transition-base);
 }
 
-.empty-icon {
-    font-size: 3rem;
+.dashboard__feed-empty:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.dashboard__feed-empty-icon {
+    font-size: 3.5rem;
     color: var(--text-muted);
-    opacity: 0.5;
     margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
-.empty-title {
+.dashboard__feed-empty-text {
     font-size: 1.125rem;
-    font-weight: 600;
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
 
-.empty-text {
-    color: var(--text-muted);
+.dashboard__feed-empty-subtext {
     font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
 }
 
+.dashboard__feed-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard__feed-empty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== Suggestions Row ===== */
+.dashboard__suggestions {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.dashboard__suggestions::-webkit-scrollbar {
+    height: 6px;
+}
+
+.dashboard__suggestions::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dashboard__suggestions::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.dashboard__suggestion-card {
+    min-width: 280px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+}
+
+.dashboard__suggestion-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.dashboard__suggestion-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.dashboard__suggestion-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* ===== Responsive Design ===== */
 @media (max-width: 768px) {
-    .dashboard-container {
-        padding: 1rem 0 3rem;
+    .dashboard {
+        padding-bottom: calc(var(--bottom-nav-height) + 1rem);
     }
     
-    .welcome-banner {
-        padding: 1.5rem 1rem;
-    }
-    
-    .stat-card {
-        padding: 1.5rem 1rem;
-    }
-    
-    .profile-card {
+    .dashboard__welcome {
+        flex-direction: column;  
+        align-items: stretch;
         padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .dashboard__welcome-main {
+        width: 100%;
+        margin-left: 10% ;
     }
     
-    .quick-actions {
-        grid-template-columns: repeat(2, 1fr);
+    .dashboard__avatar {
+        width: 64px;
+        height: 64px;
+        font-size: 1.75rem;
+        flex-shrink: 0;
+    }
+    
+    .dashboard__user-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .dashboard__username {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .dashboard__edit-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .dashboard__stats {
+        width: 100% !important;  /* Full width */
+        min-width: auto !important;
+        flex-direction: row;  /* ← Horizontal */
+        margin-top: 1rem;
+        margin-left: 10%;
+        gap: 0.5rem;
+    }
+    
+    .dashboard__stats-top {
+        flex-direction: row !important;  /* Side-by-side */
+        gap: 0.5rem;
+        flex: 2;  /* Take more space */
+    }
+    
+    .dashboard__stat-simple {
+        padding: 0.75rem 0.5rem;  /* Smaller */
+        flex: 1;  /* Equal width */
+    }
+    
+    .dashboard__stat-messages-btn {
+        flex: 1;  /* Equal width */
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .dashboard__stat-value {
+        font-size: 1.5rem;  /* Smaller */
+    }
+    
+    .dashboard__section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .dashboard__feed-empty {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .dashboard__suggestions {
+        gap: 0.875rem;
+    }
+    
+    .dashboard__suggestion-card {
+        min-width: 240px;
+    }
+
+
+}
+
+@media (max-width: 480px) {
+    .dashboard__stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard__stat-simple {
+        padding: 1.5rem;
     }
 }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="dashboard-container">
-    <div class="container">
-        <!-- Welcome Banner -->
-        <div class="welcome-banner glass-card animate-on-scroll">
-            <div class="welcome-content">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1 class="welcome-title">
-                            Welcome back, {{ username }}! 👋
-                        </h1>
-                        <p class="welcome-subtitle">
-                            Here's what's happening in your campus network today
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-custom btn-sm" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: white;">
-                            <i class="bi bi-person-gear me-2"></i>Edit Profile
-                        </a>
-                    </div>
-                </div>
+<div class="dashboard">
+    <!-- ========== WELCOME SECTION ========== -->
+    <section class="dashboard__welcome">
+        <div class="dashboard__welcome-main">
+            <div class="dashboard__avatar">
+                <!-- TODO: Add profile picture support -->
+                {% if profile_pic%}
+                    <img src="{{ profile_pic }}" alt="{{ username }}">
+                {% else %}
+                    {{ username[0]|upper }}
+                {% endif %}
+            </div>
+            
+            <div class="dashboard__user-info" style="flex: 1;">
+                <p class="dashboard__greeting">Welcome back,</p>
+                <h1 class="dashboard__username">{{ username }}</h1>
+                <p class="dashboard__email">{{ current_user.email }}</p>
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-sm-6 animate-on-scroll">
-                <a href="{{ url_for('connections.connections_home') }}" class="stat-card glass-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="stat-value">{{ stats.connections }}</div>
-                    <div class="stat-label">Connections</div>
+        <!-- ========== STATS GRID ========== -->
+        <section class="dashboard__stats">
+            <!-- Connections -->
+             <div class="dashboard__stats-top">
+                <a href="{{ url_for('connections.connections_home') }}" class="dashboard__stat-simple">
+                    <strong class="dashboard__stat-value">{{ stats.connections }}</strong>
+                    <span class="dashboard__stat-label">Connections</span>
+                </a>
+                
+                <!-- Posts -->
+                <a href="{{ url_for('posts.feed') }}" class="dashboard__stat-simple">
+                    <strong class="dashboard__stat-value">{{ posts|length }}</strong>
+                    <span class="dashboard__stat-label">Posts</span>
                 </a>
             </div>
-            <div class="col-lg-3 col-sm-6 animate-on-scroll">
-                <div class="stat-card glass-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-chat-dots-fill"></i>
-                    </div>
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Messages</div>
-                </div>
+            
+            <!-- Messages (Placeholder) -->
+            <!-- TODO: Add actual message count when messaging feature is complete -->
+            <!-- Messages BUTTON (full width) -->
+            <a href="/messages/" class="dashboard__stat-messages-btn user-card__action-btn--pending">
+                <i class="bi bi-send-fill me-2"></i>
+                Messages
+            </a>
+        </section>
+
+    </section>
+
+
+    
+<!-- ========== PROFILE COMPLETION ========== -->
+<div class="dashboard__completion" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 200px;">
+        <div class="dashboard__completion-header">
+            <div class="dashboard__completion-title">
+                <i class="bi bi-check-circle"></i>
+                <span>Profile Completion</span>
             </div>
-            <div class="col-lg-3 col-sm-6 animate-on-scroll">
-                <div class="stat-card glass-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-calendar-event-fill"></i>
-                    </div>
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Events</div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-sm-6 animate-on-scroll">
-                <a href="{{ url_for('posts.feed') }}" class="stat-card glass-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-collection-fill"></i>
-                    </div>
-                    <div class="stat-value">{{ posts|length }}</div>
-                    <div class="stat-label">Posts</div>
-                </a>
-            </div>
+            <span class="dashboard__completion-percent">25%</span>
         </div>
-
-        <div class="row">
-            <!-- Profile Summary -->
-            <div class="col-lg-4 mb-4">
-                <div class="profile-card glass-card animate-on-scroll">
-                    <div class="text-center">
-                        <div class="profile-avatar">{{ username[0].upper() }}</div>
-                        <h3 class="profile-name">{{ username }}</h3>
-                        <p class="profile-email">{{ current_user.email }}</p>
-                    </div>
-                    
-                    <div class="completion-bar">
-                        <div class="completion-label">
-                            <span style="color: var(--text-secondary);">Profile Completion</span>
-                            <span style="color: var(--primary-color); font-weight: 600;">25%</span>
-                        </div>
-                        <div class="progress-wrapper">
-                            <div class="progress-fill" style="width: 25%;"></div>
-                        </div>
-                        <p style="color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.75rem; margin-bottom: 0;">
-                            <i class="bi bi-info-circle me-1"></i>Complete your profile to connect better
-                        </p>
-                    </div>
-
-                    <div style="margin-top: 1.5rem;">
-                        <a href="{{ url_for('auth.profile') }}" class="btn btn-primary-custom w-100 mb-2">
-                            <i class="bi bi-pencil me-2"></i>Edit Profile
-                        </a>
-                        <a href="{{ url_for('main.settings') }}" class="btn btn-outline-custom w-100">
-                            <i class="bi bi-gear me-2"></i>Settings
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="col-lg-8">
-                <!-- Suggested Connections -->
-                <div class="section-card glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <i class="bi bi-person-plus"></i>
-                            People You May Know
-                        </h2>
-                        <a href="{{ url_for('main.search_page') }}" class="btn btn-sm btn-outline-custom">
-                            View All
-                        </a>
-                    </div>
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="bi bi-people"></i>
-                        </div>
-                        <h3 class="empty-title">No suggestions yet</h3>
-                        <p class="empty-text">Complete your profile to get personalized suggestions</p>
-                        <a href="{{ url_for('main.search_page') }}" class="btn btn-primary-custom btn-sm mt-3">
-                            <i class="bi bi-compass me-2"></i>Explore Campus
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="section-card glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <i class="bi bi-lightning-charge"></i>
-                            Quick Actions
-                        </h2>
-                    </div>
-                    <div class="quick-actions">
-                        <a href="{{ url_for('main.search_page') }}" class="action-item">
-                            <div class="action-icon">
-                                <i class="bi bi-compass"></i>
-                            </div>
-                            <div class="action-label">Discover</div>
-                        </a>
-                        <a href="{{ url_for('messages.inbox') }}" class="action-item">
-                            <div class="action-icon">
-                                <i class="bi bi-chat-dots"></i>
-                            </div>
-                            <div class="action-label">Messages</div>
-                        </a>
-                        <a href="#" class="action-item" onclick="event.preventDefault(); window.cconnect.showToast('Feature coming soon!', 'info');">
-                            <div class="action-icon">
-                                <i class="bi bi-calendar-plus"></i>
-                            </div>
-                            <div class="action-label">Events</div>
-                        </a>
-                        <a href="#" class="action-item" onclick="event.preventDefault(); window.cconnect.showToast('Feature coming soon!', 'info');">
-                            <div class="action-icon">
-                                <i class="bi bi-collection"></i>
-                            </div>
-                            <div class="action-label">Groups</div>
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <div class="dashboard__progress-bar">
+            <div class="dashboard__progress-fill" id="progressFill"></div>
         </div>
     </div>
+    
+    <!-- Edit button on side -->
+    <a href="{{ url_for('auth.profile') }}" class="dashboard__edit-btn" style="flex-shrink: 0; white-space: nowrap;">
+        <i class="bi bi-pencil-square"></i>
+        <span>Profile</span>
+    </a>
 </div>
 
+
+    <!-- ========== YOUR FEED SECTION ========== -->
+    <section class="dashboard__section">
+        <header class="dashboard__section-header">
+            <h2 class="dashboard__section-title">
+                <i class="bi bi-rss-fill"></i>
+                Your Feed
+            </h2>
+            <a href="{{ url_for('posts.feed') }}" class="dashboard__section-action">
+                Go to feed
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </header>
+
+        {% if posts %}
+            <!-- TODO: Show recent posts preview when posts exist -->
+            <div class="dashboard__feed-preview">
+                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                    Recent activity will appear here.
+                </p>
+
+
+   
+                {# {% for post in posts %}
+                    {% with post=post%}
+                        {% include "components/posts_card.html" %}
+                    {% endwith %}
+                {% endfor %} =============== here needs attention #}
+
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="dashboard__feed-empty">
+                <div class="dashboard__feed-empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <p class="dashboard__feed-empty-text">Your feed is currently empty</p>
+                <p class="dashboard__feed-empty-subtext">Start connecting and creating to see activity here</p>
+                <a href="{{ url_for('posts.feed') }}" class="dashboard__feed-empty-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Create your first post</span>
+                </a>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- ========== PEOPLE YOU MAY KNOW ========== -->
+    <section class="dashboard__section">
+        <header class="dashboard__section-header">
+            <h2 class="dashboard__section-title">
+                <i class="bi bi-person-plus-fill"></i>
+                People you may know
+            </h2>
+            <a href="{{ url_for('main.search_page') }}" class="dashboard__section-action">
+                Explore
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </header>
+
+        <!-- TODO: Add actual user suggestions when recommendation system is ready -->
+        <!-- Replace with:  if suggested_users  ...  for user in suggested_users  -->
+        <div class="dashboard__section">
+            <div class="dashboard__suggestion-card">
+                <div class="dashboard__suggestion-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <p class="dashboard__suggestion-placeholder">
+                    Complete your profile to unlock personalized suggestions and connect with people who share your interests.
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ========== PROGRESS BAR ANIMATION ========== -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Animate profile completion on scroll
-    const progressFill = document.querySelector('.progress-fill');
-    const profileCard = document.querySelector('.profile-card');
+    const progressFill = document.getElementById('progressFill');
+    const completionCard = document.querySelector('.dashboard__completion');
     
-    if (progressFill && profileCard) {
+    if (progressFill && completionCard) {
+        // Animate progress bar when it comes into view
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
+                    // Small delay for better UX
                     setTimeout(() => {
                         progressFill.style.width = '25%';
                     }, 300);
@@ -434,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, { threshold: 0.5 });
         
-        observer.observe(profileCard);
+        observer.observe(completionCard);
     }
 });
 </script>

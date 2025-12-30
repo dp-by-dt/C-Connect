@@ -1092,13 +1092,16 @@ The above two columns helps pin point the notification and delete that only
     user_card_action_btn.html
     flash.html
     profile_card.html (✅added... For viewing own profile pic as a card)
+    posts_card.html (⚠️Added(need correction)... For showing posts in cards)
 
 3. Auth blueprint
     login.html
     profile.html
-    profile_edit.html
+    profile_edit.html (⚠️Not much change needed)
     signup.html (⚠️later)
 
+4. Main blueprint
+    dashboard.html
 
 
 

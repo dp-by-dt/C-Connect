@@ -88,7 +88,7 @@ def dashboard():
         "pending_outgoing": pending_outgoing
     }
 
-    return render_template('main/dashboard.html', username=current_user.username, stats=stats)
+    return render_template('main/dashboard.html', username=current_user.username, stats=stats, profile_pic=current_user.profile.profile_picture, posts=current_user.posts)
 
 
 #removed the routes /discover and /api/discover (added to removed.py)
