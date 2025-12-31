@@ -1104,6 +1104,8 @@ The above two columns helps pin point the notification and delete that only
     dashboard.html
     discover.html (❕Almost good)
     home.html (⚠️need imporve in darkmode)
+    search.html (❕Almost good)
+    settings.html (❕Almost good)
 
 
 6. Messages blueprint
@@ -1131,6 +1133,7 @@ Later modifications
 
 -------
 Later features 
+0. Download your profile card
 1. forget password
 1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)
 3. Stories
