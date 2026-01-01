@@ -1,10 +1,10 @@
 from . import auth
-from flask import render_template, request, flash, redirect, url_for, render_template, session
+from flask import render_template, request, flash, redirect, url_for, session
 from setup_db import add_user as adduser_glob
 from models import User, Profile, Post
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager, db
-from .forms import SignupForm, LoginForm, EditProfileForm, ForgotPasswordForm, ResetPasswordForm
+from .forms import SignupForm, LoginForm, EditProfileForm, ForgotPasswordForm, ResetPasswordForm, ChangePasswordForm
 from urllib.parse import urlparse, urljoin
 from flask import current_app as app
 from blueprints.connections.service import is_connected, list_requests
@@ -20,7 +20,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
 from utils.tokens import generate_reset_token, verify_reset_token
 from utils.email import send_reset_email
-#importing 
 
 
 
@@ -234,6 +233,37 @@ def reset_password(token):
 
     return render_template(
         'auth/reset_password.html',
+        form=form
+    )
+
+
+
+# --------------- For Changing Password ----------------------
+
+@auth.route("/change-password", methods=["GET", "POST"])
+@login_required
+@limiter.limit("5 per hour")
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        # Verify current password
+        if not current_user.check_password(form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+            return render_template(
+                "auth/change_password.html",
+                form=form
+            )
+
+        # Set new password
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+
+        flash("Your password has been changed successfully.", "success")
+        return redirect(url_for("main.dashboard"))
+
+    return render_template(
+        "auth/change_password.html",
         form=form
     )
 

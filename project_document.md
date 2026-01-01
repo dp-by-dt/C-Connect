@@ -1143,6 +1143,13 @@ The above two columns helps pin point the notification and delete that only
 - And tested OK 
 
 
+### Change Password
+
+- Added the file change_passoword.html
+- Configured in the `forms` file and added the route
+- Integrated with the settings page
+
+
 
 
 -----------------------

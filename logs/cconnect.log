@@ -5933,3 +5933,4 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2026-01-01 22:06:47,686 [INFO] app: Cleaned up 0 old notifications.
 2026-01-01 22:13:33,817 [INFO] app: Cleaned up 0 old notifications.
 2026-01-01 23:02:59,216 [INFO] app: Cleaned up 0 old notifications.
+2026-01-01 23:18:06,546 [INFO] app: Cleaned up 0 old notifications.
