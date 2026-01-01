@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from utils.tokens import generate_reset_token, verify_reset_token
 from utils.email import send_reset_email
 
+from utils.storage import delete_profile_picture_file
+
 
 
 # ------- functions --------
@@ -410,6 +412,43 @@ def profile_edit():
                 form.interests.data = profile.interests
 
     return render_template('auth/profile_edit.html', form=form, profile=profile)
+
+
+
+
+#-------------- Deleting profile picture --------------
+@auth.route("/profile/delete-picture", methods=["POST"])
+@login_required
+@limiter.limit("3 per hour")
+def delete_profile_picture():
+    profile = current_user.profile
+    if not profile or not profile.profile_picture:
+        flash("No profile picture to remove.", "info")
+        return redirect(url_for("auth.profile_edit"))
+
+    deleted = False
+    try:
+        # OPTIONAL but recommended: delete profile pic file from storage
+        delete_profile_picture_file(profile.profile_picture)
+
+        profile.profile_picture = None
+        profile.updated_at = db.func.now()
+        db.session.commit()
+        deleted = True
+        
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception("Failed to delete profile picture: %s", exc)
+        
+
+    if deleted:
+        flash("Profile picture removed successfully.", "success")
+    else: 
+        flash("Could not remove profile picture.", "danger")
+
+    return redirect(url_for("auth.profile_edit"))
+
+
 
 
 

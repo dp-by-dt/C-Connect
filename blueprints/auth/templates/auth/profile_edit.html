@@ -188,6 +188,23 @@ input[type="file"] {
                     </p>
                 </div>
 
+                <h2 class="section-title edit-body">
+                    <i class="bi bi-image"></i>
+                    Profile Picture
+                </h2>
+
+                <!-- Option to delete profile photo -->
+                {% if profile.profile_picture %}
+                    <div class="text-center mb-3">
+                        <form method="POST" action="{{ url_for('auth.delete_profile_picture') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash me-1"></i> Remove profile picture
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+
                 <!-- Form -->
                 <div class="edit-body">
                     <form method="POST" enctype="multipart/form-data">
@@ -195,16 +212,13 @@ input[type="file"] {
 
                         <!-- Profile Picture Section -->
                         <div class="form-section">
-                            <h2 class="section-title">
-                                <i class="bi bi-image"></i>
-                                Profile Picture
-                            </h2>
                             
                             {% if profile.profile_picture %}
                             <div class="text-center mb-3">
                                 <img src="{{ profile.profile_picture }}" alt="Current profile" class="current-image">
                             </div>
                             {% endif %}
+
 
                             <div class="form-group">
                                 <div class="file-upload-wrapper">

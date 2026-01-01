@@ -1150,6 +1150,12 @@ The above two columns helps pin point the notification and delete that only
 - Integrated with the settings page
 
 
+### Delete Profile Picture
+
+- Added `utils/storage.py` for helping function
+- Put the deleting button in the `profile_edit.html` , outside the current form (so that clicking this won't trigger the whole editing form. Because nested form can't be used)
+- Add appropriate route. Also flushes any uploaded file of the profile_picture
+
 
 
 -----------------------
