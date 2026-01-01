@@ -1157,6 +1157,41 @@ The above two columns helps pin point the notification and delete that only
 - Add appropriate route. Also flushes any uploaded file of the profile_picture
 
 
+### Error Handling Pages
+
+1. 400 - Bad request: (somehting went wrong with users request)
+    Malformed form submission
+    Missing required fields
+    Invalid query parameters
+    CSRF mismatch
+
+2. 403 - Forbidden: (don't have permission to access)
+    Trying to edit someone else’s profile
+    Accessing admin-only routes
+    Permission-based denial
+    * 401 - Not logged in 
+    * 403 - Logged in but no permission
+
+3. 404 - Not Found (url don't exist)
+4. 500 - Internal server error
+
+
+- Added the error files in templates/errors/400.html or (403 or 404 or 500.html)
+- The `registererrohandler` was corrected in the `factoryhelpers`
+- registered the error handlers too (in app.py)
+- for each of the error pages, now have a common `errors.css` file in static
+
+the file structure:
+    static/
+    └── css/
+        └── errors.css          ← NEW: Shared stylesheet
+    templates/
+    ├── errors/
+    │   ├── 400.html        
+    │   ├── 403.html        
+    │   ├── 404.html        
+    │   └── 500.html        
+
 
 -----------------------
 ### Sequence right now:

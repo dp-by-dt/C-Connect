@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="error-wrapper">
+    <div class="error-container">
+        <div class="error-icon error-icon--float">🧭</div>
+        <h1 class="error-code error-code--primary">404</h1>
+        <h2 class="error-title">Page Not Found</h2>
+        <p class="error-message">
+            The page you're looking for seems to have wandered off into the campus woods.
+        </p>
+        <div class="error-hint">
+            💡 The URL might be mistyped or the page may have been moved
+        </div>
+        <div class="error-actions">
+            <a href="{{ url_for('main.dashboard') }}" class="error-btn error-btn-primary">
+                <i class="bi bi-house"></i>
+                Go to Dashboard
+            </a>
+            <a href="javascript:history.back()" class="error-btn error-btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

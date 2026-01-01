@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Access Denied{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="error-wrapper">
+    <div class="error-container">
+        <div class="error-icon error-icon--shake">🔒</div>
+        <h1 class="error-code error-btn--danger">403</h1>
+        <h2 class="error-title">Access Denied</h2>
+        <p class="error-message">
+            You don't have permission to access this page. If you believe this is an error, please contact support.
+        </p>
+        <div class="error-actions">
+            <a href="{{ url_for('main.dashboard') }}" class="error-btn error-btn-primary">
+                <i class="bi bi-house"></i>
+                Back to Dashboard
+            </a>
+            <a href="javascript:history.back()" class="error-btn error-btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

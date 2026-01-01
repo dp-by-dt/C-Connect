@@ -1,0 +1,232 @@
+/* =====================================================
+   ERROR PAGES SHARED STYLESHEET
+   Used by: 400.html, 403.html, 404.html, 500.html
+   ===================================================== */
+
+/* ==================== LAYOUT ==================== */
+.error-wrapper {
+    min-height: calc(100vh - var(--topbar-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.error-container {
+    max-width: 540px;
+    width: 100%;
+    text-align: center;
+}
+
+/* ==================== ICON ==================== */
+.error-icon {
+    font-size: 6rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+}
+
+/* Icon Animations - Applied via additional classes */
+.error-icon--wobble {
+    animation: wobble 2s ease-in-out infinite;
+}
+
+.error-icon--shake {
+    animation: shake 3s ease-in-out infinite;
+}
+
+.error-icon--float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.error-icon--spin {
+    animation: spin 4s linear infinite;
+}
+
+/* ==================== ERROR CODE ==================== */
+.error-code {
+    font-size: 5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+}
+
+/* Color variants */
+.error-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.error-btn--danger {
+    background: linear-gradient(135deg, var(--danger-color), #e74c3c);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.error-btn--warning {
+    background: linear-gradient(135deg, var(--warning-color), #f39c12);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ==================== TEXT ==================== */
+.error-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+/* ==================== HINT BOX ==================== */
+.error-hint {
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--text-tertiary);
+    font-size: 0.9375rem;
+}
+
+/* ==================== ACTIONS ==================== */
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-btn {
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.error-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.error-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.error-btn-secondary {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.error-btn-secondary:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes wobble {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-message {
+        font-size: 1rem;
+    }
+    
+    .error-icon {
+        font-size: 4.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .error-wrapper {
+        padding: 1.5rem 0.75rem;
+    }
+    
+    .error-code {
+        font-size: 3.5rem;
+    }
+    
+    .error-title {
+        font-size: 1.25rem;
+    }
+    
+    .error-message {
+        font-size: 0.9375rem;
+    }
+    
+    .error-icon {
+        font-size: 4rem;
+    }
+    
+    .error-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+    }
+}
