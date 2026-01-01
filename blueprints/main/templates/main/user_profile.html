@@ -130,10 +130,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    
 }
 
 .user-profile-header__status--connected {
@@ -234,7 +234,7 @@
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     padding: 0.5rem;
     opacity: 0;
     visibility: hidden;
@@ -562,14 +562,19 @@
     }
     
     .user-profile-header__actions {
-        flex-direction: column;
+        flex-direction: row;        /* CHANGED: row not column */
+        gap: 0.5rem;
         width: 100%;
+        justify-content: center;
     }
     
     .user-profile-header__btn {
-        width: 90%;
-        display: inline-flex;
+        flex: 1;                    /* NEW: Equal width */
+        max-width: 160px;           /* NEW: Limit width */
+        min-width: 120px;
         justify-content: center;
+        font-size: 0.875rem;
+        padding: 0.75rem 1rem;      /* Adjusted padding */
     }
     
     .user-profile-header__dropdown {
@@ -577,8 +582,22 @@
         position: relative;
     }
     
+    /* 🔥 SPECIAL: Connected dropdown button on mobile */
     .user-profile-header__dropdown-toggle {
-        width: 100%;
+        flex: none;                 /* NEW: Fixed size */
+        width: 48px;                /* NEW: Icon-only size */
+        height: 48px;
+        padding: 0;
+        min-width: auto;
+        font-size: 1.2rem;
+    }
+
+
+    .user-profile-header__dropdown .user-profile-header__btn--outline {
+        width: 48px;                /* NEW: Match toggle size */
+        height: 48px;
+        padding: 0;
+        min-width: auto;
     }
     
     .user-profile-details,
@@ -654,16 +673,10 @@
         <!-- Connection Status Badge -->
         {% if conn %}
             {% if conn.status == 'accepted' %}
-                <div class="user-profile-header__status user-profile-header__status--connected">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>Connected</span>
-                </div>
+
             {% elif conn.status == 'pending' %}
                 {% if conn.user_id == current_user.id %}
-                    <div class="user-profile-header__status user-profile-header__status--pending">
-                        <i class="bi bi-clock-fill"></i>
-                        <span>Request Pending</span>
-                    </div>
+
                 {% else %}
                     <div class="user-profile-header__status user-profile-header__status--pending">
                         <i class="bi bi-exclamation-circle-fill"></i>
@@ -673,68 +686,71 @@
             {% endif %}
         {% endif %}
 
-        <!-- Action Buttons -->
-        <div class="user-profile-header__actions">
-            {% if conn is none %}
-                <!-- No connection - Send Request -->
-                <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}" style="margin: 0;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="user-profile-header__btn user-profile-header__btn--primary">
-                        <i class="bi bi-person-plus"></i>
-                        <span>Send Connection Request</span>
-                    </button>
-                </form>
+<!-- Action Buttons -->
+<div class="user-profile-header__actions">
+    {% if conn is none %}
+        <!-- No connection - Connect Button -->
+        <form method="POST" action="{{ url_for('connections.connections_send', target_id=user.id) }}" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="user-profile-header__btn user-profile-header__btn--primary">
+                <i class="bi bi-person-plus"></i>
+                <span>Connect</span>
+            </button>
+        </form>
 
-            {% elif conn.status == 'pending' and conn.user_id == current_user.id %}
-                <!-- Outgoing request - Pending -->
-                <button class="user-profile-header__btn user-profile-header__btn--outline" disabled>
-                    <i class="bi bi-clock"></i>
-                    <span>Request Pending</span>
-                </button>
-
-            {% elif conn.status == 'pending' and conn.target_user_id == current_user.id %}
-                <!-- Incoming request - Accept/Reject -->
-                <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=conn.id) }}" style="margin: 0;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="user-profile-header__btn user-profile-header__btn--primary">
-                        <i class="bi bi-check-lg"></i>
-                        <span>Accept Request</span>
-                    </button>
-                </form>
-                <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=conn.id) }}" style="margin: 0;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="user-profile-header__btn user-profile-header__btn--outline">
-                        <i class="bi bi-x-lg"></i>
-                        <span>Reject</span>
-                    </button>
-                </form>
-
-            {% elif conn.status == 'accepted' %}
-                <!-- Connected - Message + Dropdown -->
-                <a href="{{ url_for('messages.chat', user_id=user.id) }}" 
-                   class="user-profile-header__btn user-profile-header__btn--primary">
-                    <i class="bi bi-chat-dots-fill"></i>
-                    <span>Message</span>
-                </a>
-                
-                <!-- Dropdown Menu -->
-                <div class="user-profile-header__dropdown" id="profileDropdown">
-                    <button class="user-profile-header__dropdown-toggle" onclick="toggleDropdown(event)">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <div class="user-profile-header__dropdown-menu">
-                        <!-- TODO: Add disconnect functionality in backend -->
-                        <!-- Placeholder for now -->
-                        <button class="user-profile-header__dropdown-item" onclick="alert('Disconnect feature coming soon!')">
-                            <i class="bi bi-person-x"></i>
-                            <span>Disconnect</span>
-                        </button>
-                    </div>
-                </div>
-            {% endif %}
-
-
+    {% elif conn.status == 'pending' and conn.user_id == current_user.id %}
+        <!-- Outgoing request - Pending -->
+        <div class="user-profile-header__status user-profile-header__status--pending">
+            <i class="bi bi-clock-fill"></i>
+            <span>Request Pending</span>
         </div>
+
+    {% elif conn.status == 'pending' and conn.target_user_id == current_user.id %}
+        <!-- Incoming request - Accept/Reject (unchanged) -->
+
+            <button type="submit" class="user-profile-header__btn user-profile-header__btn--primary">
+                <i class="bi bi-check-lg"></i>
+                <span>Accept Request</span>
+            </button>
+
+        <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=conn.id) }}" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="user-profile-header__btn user-profile-header__btn--outline">
+                <i class="bi bi-x-lg"></i>
+                <span>Reject</span>
+            </button>
+        </form>
+
+    {% elif conn.status == 'accepted' %}
+        <!-- Connected - Message + Connected Dropdown -->
+        <a href="{{ url_for('messages.chat', user_id=user.id) }}" 
+           class="user-profile-header__btn user-profile-header__btn--primary">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span>Message</span>
+        </a>
+        
+        <!-- NEW: Connected Dropdown (replaces 3-dots) -->
+        <div class="user-profile-header__dropdown" id="profileDropdown">
+            <button class="user-profile-header__status user-profile-header__status--connected" onclick="toggleDropdown(event)">
+                <i class="bi bi-person-check"></i>
+                <span>Connected</span>
+            </button>
+
+
+            <div class="user-profile-header__dropdown-menu">
+                <!-- DISCONNECT PLACEHOLDER -->
+                <form method="POST" action="/connections/disconnect/PLACEHOLDER_CONN_ID" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="user-profile-header__dropdown-item">
+                        <i class="bi bi-person-x"></i>
+                        <span>Disconnect</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
     </section>
 
     <!-- ========== PROFILE DETAILS CARD ========== -->

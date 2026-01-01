@@ -1106,13 +1106,25 @@ The above two columns helps pin point the notification and delete that only
     home.html (⚠️need imporve in darkmode)
     search.html (❕Almost good)
     settings.html (❕Almost good)
+    about.html (❕Almost good)
+    contact.html (❕Almost good)
+    user_profile.html (⚠️Needs more backend integration)
 
+5. Connections blueprint
+    list.html (❕Almost good: this is for showing the incoming and connections)
 
 6. Messages blueprint
     inbox.html
-    chat.html (pretty decent    )
+    chat.html (pretty decent)
 
+7. Notifications blueprint
+    notif_list (❕Good  - with gpt)
 
+8. Posts blueprint
+    feed.html
+
+9. Vibe
+    
 
 
 
