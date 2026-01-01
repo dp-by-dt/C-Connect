@@ -1125,8 +1125,72 @@ The above two columns helps pin point the notification and delete that only
 
 9. Vibe
     vibe.html
-    
 
+
+
+
+### Forget Password
+
+- Created helper functions in `utils/` folder
+- `configured` salting bases
+- Password reset `route` added
+- `ForgetPasswordForm` and `ResetPasswordForm` added in `forms.py`
+- Connected the frontend linking
+- Set up main username, password (google app password) `secretly`
+- Loads them in `config`
+- Initiated the main in `app.py`
+- forget password and reset password html files added in `auth`
+- And tested OK 
+
+
+
+
+-----------------------
+### Sequence right now:
+1. Must do now:
+    ✅ Forgot password / reset password
+    ✅ Delete profile image
+    ✅ Change password
+    ✅ Logout from all sessions (optional but nice)
+    ✅ Proper 400 / 403 / 404 / 500 pages
+        
+
+2. Create Entry Points:
+**Clear buttons to:**
+    ➕ Create post
+    ➕ Add vibe
+    👀 Discover people
+**CTA blocks on empty states:**
+    “No posts yet → create your first”
+    “No vibes → express one now”
+
+3. UI - Micro Polish:
+    Button consistency
+    Disabled states
+    Hover / focus states
+    Color theme applied properly
+    Small spacing & alignment fixes
+    Remove dead links
+
+
+4. Strenghtening core concepts: (Post → reaction → notification → response → return)
+    Like / react indicators
+    Small feedback animations
+    “Someone viewed your profile”
+    “X reacted to your post”
+    Simple discover suggestions
+
+
+5. Pre-launch (for testing): You watch behavior, not opinions for, 
+Goal:
+    Find friction
+    See dead zones
+    Spot confusion
+After that I'll know:
+    What users actually use
+    What they ignore
+    Where engagement drops
+Then new features can be added
 
 
 
