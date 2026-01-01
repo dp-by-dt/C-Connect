@@ -1,143 +1,654 @@
 {% extends "base.html" %}
 
-
 {% block extra_css %}
 <style>
+/* ==================== VIBE PAGE STYLING ==================== */
+.vibe-wrapper {
+    min-height: calc(100vh - var(--topbar-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.vibe-container {
+    max-width: 560px;
+    width: 100%;
+    animation: fadeInUp 0.6s ease;
+}
+
+/* Header */
+.vibe-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s ease;
+}
+
+.vibe-emoji {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(26, 77, 46, 0.2));
+}
+
+.theme-dark .vibe-emoji {
+    filter: drop-shadow(0 4px 12px rgba(143, 185, 150, 0.3));
+}
+
+.vibe-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.vibe-subtitle {
+    color: var(--text-tertiary);
+    font-size: 0.9375rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Question Card */
+.question-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    animation: fadeInUp 0.6s ease 0.2s backwards;
+    transition: all var(--transition-smooth);
+}
+
+.question-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.question-text {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Options Grid */
+.options-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.option-card {
+    background: var(--bg-hover);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.option-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.option-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+    color: var(--primary-color);
+}
+
+.option-card:hover::before {
+    opacity: 0.1;
+}
+
+.option-card:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+.option-card span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Anonymous Thought Section */
+.thought-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-subtle);
+    animation: fadeInUp 0.6s ease 0.4s backwards;
+}
+
+.thought-label {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    margin-bottom: 0.875rem;
+    display: block;
+    text-align: center;
+    font-weight: 500;
+}
+
+.thought-input {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    transition: all var(--transition-base);
+    font-family: inherit;
+}
+
+.thought-input::placeholder {
+    color: var(--text-muted);
+}
+
+.thought-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1);
+    transform: translateY(-2px);
+}
+
+.theme-dark .thought-input:focus {
+    box-shadow: 0 0 0 4px rgba(143, 185, 150, 0.15);
+}
+
+/* Result Card */
+.result-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    animation: fadeInUp 0.6s ease;
+    transition: all var(--transition-smooth);
+}
+
+.result-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.result-stats {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.9375rem;
+    margin-top: 1.25rem;
+    font-weight: 500;
+}
+
+.campus-feeling {
+    text-align: center;
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(26, 77, 46, 0.1), rgba(47, 122, 74, 0.1));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-dark .campus-feeling {
+    background: linear-gradient(135deg, rgba(143, 185, 150, 0.15), rgba(193, 218, 197, 0.1));
+}
+
+.campus-feeling::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(26, 77, 46, 0.1) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.campus-feeling-text {
+    color: var(--primary-color);
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ghost Tape Container */
+.ghost-tape-container {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-top: 2rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.theme-dark .ghost-tape-container {
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ghost-tape-wrapper {
+    white-space: nowrap;
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.ghost-tape {
+    display: inline-block;
+    animation: scroll-left 50s linear infinite;
+    padding-right: 100%;
+    will-change: transform;
+}
+
 .ghost-tape:hover {
     animation-play-state: paused;
 }
 
+.ghost-item {
+    display: inline-block;
+    margin-right: 4rem;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    opacity: 0.85;
+    transition: all var(--transition-fast);
+    font-weight: 500;
+}
 
+.ghost-item:hover {
+    opacity: 1;
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+
+.ghost-quote {
+    font-style: italic;
+    color: var(--text-primary);
+}
+
+.vanish-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger-color);
+    padding: 0 0.375rem;
+    margin-left: 0.625rem;
+    cursor: pointer;
+    font-size: 1rem;
+    opacity: 0.5;
+    transition: all var(--transition-fast);
+    border-radius: var(--radius-sm);
+}
+
+.vanish-btn:hover {
+    opacity: 1;
+    transform: scale(1.3);
+    background: rgba(198, 61, 61, 0.1);
+}
+
+.no-thoughts {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    padding: 2.5rem 1.5rem;
+    font-weight: 500;
+}
+
+/* Add Thought Section (After Voting) */
+.add-thought-section {
+    margin-top: 2rem;
+    animation: fadeInUp 0.6s ease 0.4s backwards;
+}
+
+.add-thought-section .thought-input {
+    margin-bottom: 1rem;
+}
+
+.submit-thought-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-thought-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.submit-thought-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.submit-thought-btn:active::before {
+    width: 400px;
+    height: 400px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+@keyframes scroll-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .vibe-wrapper {
+        padding: 1.5rem 0.875rem;
+        align-items: flex-start;
+    }
+
+    .question-card,
+    .result-card {
+        padding: 2rem 1.5rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .question-text {
+        font-size: 1.25rem;
+    }
+
+    .vibe-emoji {
+        font-size: 3rem;
+    }
+
+    .vibe-title {
+        font-size: 1.5rem;
+    }
+
+    .option-card {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+    }
+
+    .ghost-tape-container {
+        padding: 1.25rem;
+    }
+
+    .ghost-item {
+        margin-right: 3rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .vibe-wrapper {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .question-card,
+    .result-card {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .vibe-emoji {
+        font-size: 2.5rem;
+    }
+
+    .question-text {
+        font-size: 1.125rem;
+    }
+
+    .campus-feeling-text {
+        font-size: 1rem;
+    }
+}
+
+/* Desktop Enhancements */
+@media (min-width: 1024px) {
+    .vibe-container {
+        max-width: 640px;
+    }
+
+    .question-card,
+    .result-card {
+        padding: 3rem;
+    }
+
+    .vibe-emoji {
+        font-size: 4rem;
+    }
+}
 </style>
 {% endblock %}
 
-
 {% block body %}
-<div class="container mt-4">
+<div class="vibe-wrapper">
+    <div class="vibe-container">
 
-    <!-- ================= INPUT MODE ================= -->
-    {% if mode == "input" %}
-    <div class="card p-4">
-        <h3 class="mb-3 text-center">🟣 Daily Vibe</h3>
+        <!-- ================= INPUT MODE ================= -->
+        {% if mode == "input" %}
+        
+        <div class="vibe-header">
+            <span class="vibe-emoji">🟣</span>
+            <h1 class="vibe-title">Daily Vibe</h1>
+            <p class="vibe-subtitle">How's campus feeling today?</p>
+        </div>
 
-        <p class="fs-5 text-center fw-bold">
-            {{ question.question_text }}
-        </p>
+        <div class="question-card glass-effect">
+            <p class="question-text">
+                {{ question.question_text }}
+            </p>
 
-        <form method="POST" action="{{ url_for('vibe.respond_vibe') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <form method="POST" action="{{ url_for('vibe.respond_vibe') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="d-grid gap-2 mt-4">
-                {% for opt in options %}
-                <button type="submit"
-                        name="choice"
-                        value="{{ loop.index0 }}"
-                        class="btn btn-outline-primary btn-lg">
-                    {{ opt }}
-                </button>
-                {% endfor %}
-            </div>
+                <div class="options-grid">
+                    {% for opt in options %}
+                    <button type="submit"
+                            name="choice"
+                            value="{{ loop.index0 }}"
+                            class="option-card">
+                        <span>{{ opt }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
 
-            <div class="mt-4">
-                <label class="form-label text-muted">
-                    Optional anonymous thought (max 80 chars)
-                </label>
-                <input type="text"
-                       name="anonymous_text"
-                       maxlength="80"
-                       class="form-control"
-                       placeholder="One line...">
-            </div>
-        </form>
-    </div>
-    {% endif %}
+                <div class="thought-section">
+                    <label class="thought-label">
+                        💭 Share an anonymous thought (optional, max 80 characters)
+                    </label>
+                    <input type="text"
+                           name="anonymous_text"
+                           maxlength="80"
+                           class="thought-input"
+                           placeholder="One line...">
+                </div>
+            </form>
+        </div>
 
-
-    <!-- ================= RESULT MODE ================= -->
-    {% if mode == "result" %}
-    <div class="card p-4">
-
-        <h3 class="mb-2 text-center">🟣 Today’s Vibe</h3>
-
-        <p class="fs-5 text-center fw-bold">
-            {{ question.question_text }}
-        </p>
-
-        {% if state %}
-        <p class="text-center text-muted">
-            Total responses: {{ state.total_responses }}
-        </p>
         {% endif %}
+
+
+        <!-- ================= RESULT MODE ================= -->
+        {% if mode == "result" %}
+
+        <div class="vibe-header">
+            <span class="vibe-emoji">🟣</span>
+            <h1 class="vibe-title">Today's Vibe</h1>
+            <p class="vibe-subtitle">Campus collective mood</p>
+        </div>
+
+        <div class="result-card glass-effect">
+            <p class="question-text">
+                {{ question.question_text }}
+            </p>
+
+            {% if state %}
+            <p class="result-stats">
+                🌟 {{ state.total_responses }} students have shared their vibe
+            </p>
+
+            <div class="campus-feeling">
+                <p class="campus-feeling-text">
+                    Campus is feeling: {{ options[state.dominant_choice] }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
 
         <!-- Ghost Tape -->
         {% if ghost_tape %}
-        <div class="border rounded p-2 mt-4"
-             style="white-space: nowrap; overflow: hidden;">
-
-            <div class="ghost-tape"
-     style="display: inline-block; animation: scroll-left 30s linear infinite;">
-
-                {% for item in ghost_tape %}
-                    <span class="me-4">
-                        "{{ item.anonymous_text }}"
+        <div class="ghost-tape-container glass-effect">
+            <div class="ghost-tape-wrapper">
+                <div class="ghost-tape">
+                    {% for item in ghost_tape %}
+                    {% for item in ghost_tape %}
+                    <span class="ghost-item">
+                        <span class="ghost-quote">"{{ item.anonymous_text }}"</span>
                         <form method="POST"
                               action="{{ url_for('vibe.vanish_response', response_id=item.id) }}"
                               style="display:inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="btn btn-sm btn-link text-danger p-0 ms-1"
-                                    title="Vanish this line">
-                                ✖
+                            <button class="vanish-btn"
+                                    type="submit"
+                                    title="Vanish this thought">
+                                ✕
                             </button>
                         </form>
                     </span>
-                {% endfor %}
+                    {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-
         </div>
         {% else %}
-        <p class="text-center text-muted mt-4">
-            No anonymous thoughts yet today.
-        </p>
-        {% endif %}
-
-
-        <!-- For helping the theming accroding to the vibe mode -->
-        {% if state %}
-            <p class="text-center fw-semibold mt-2"
-            style="color: var(--vibe-accent);">
-                Campus is feeling: {{ options[state.dominant_choice] }}
+        <div class="ghost-tape-container glass-effect">
+            <p class="no-thoughts">
+                No anonymous thoughts yet today. Be the first to share! 💭
             </p>
+        </div>
         {% endif %}
 
-
-
+        <!-- Add Thought After Voting (if user hasn't added one yet) -->
         {% if user_response and not user_response.anonymous_text %}
-        <div class="mt-4">
+        <div class="add-thought-section">
             <form method="POST" action="{{ url_for('vibe.add_anonymous_text') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="thought-label">
+                    💭 Add your anonymous thought now
+                </label>
                 <input type="text"
-                    name="anonymous_text"
-                    maxlength="80"
-                    class="form-control"
-                    placeholder="Add a thought (once)">
-                <button class="btn btn-sm btn-outline-primary mt-2">
-                    Submit
+                       name="anonymous_text"
+                       maxlength="80"
+                       class="thought-input"
+                       placeholder="Share something in 80 characters..."
+                       required>
+                <button type="submit" class="submit-thought-btn">
+                    Submit Thought
                 </button>
             </form>
         </div>
         {% endif %}
 
+        {% endif %}
 
     </div>
-    {% endif %}
-
 </div>
-
-<!-- Ghost tape animation -->
-<style>
-@keyframes scroll-left {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(-100%); }
-}
-</style>
 {% endblock %}
