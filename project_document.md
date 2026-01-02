@@ -1190,7 +1190,28 @@ the file structure:
     │   ├── 400.html        
     │   ├── 403.html        
     │   ├── 404.html        
-    │   └── 500.html        
+    │   └── 500.html    
+
+
+
+### Profile Completion Progress Bar
+
+- The weights of the percentage completion as follows:
+| Item            | Condition                        | Weight |
+| --------------- | -------------------------------- | ------ |
+| Profile picture | `profile.profile_picture` exists | 20     |
+| Username        | always exists                    | 10     |
+| Bio             | non-empty & length ≥ ~20         | 20     |
+| Academic info   | department **and** year          | 20     |
+| Location        | non-empty                        | 10     |
+| Interests       | at least one                     | 20     |
+
+
+- Created `utils/profile_completion.py`: Inputs `user` or `profile` ; outputs [% and missing items]
+- `route` calls this fucntion and passes to the `dashboard` file
+- if full complete, progress bar disappears and success flash message comes (else re-appears)
+- if not complete, the completing hints appears. 
+- Ui sligtly modified for this and tested OK.
 
 
 -----------------------

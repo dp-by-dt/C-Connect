@@ -7,9 +7,11 @@ from flask import redirect, url_for
 from extensions import db
 from flask import abort
 from flask import request
+from flask import flash, session
 
 
 from sqlalchemy import case, or_, and_, func
+from utils.profile_completion import calculate_profile_completion
 
 from datetime import datetime, timezone
 
@@ -88,22 +90,25 @@ def dashboard():
         "pending_outgoing": pending_outgoing
     }
 
-    return render_template('main/dashboard.html', username=current_user.username, stats=stats, profile_pic=current_user.profile.profile_picture, posts=current_user.posts)
+    completion = calculate_profile_completion(user_profile=current_user.profile)
+
+    #show flash message if the profile is complete
+    if (completion["percentage"] == 100) and not session.get("profile_completed"):
+        flash("Your profile is now complete!", "success")
+        session["profile_completed"] = True
+
+    if completion["percentage"] < 100:
+        session.pop("profile_completed", None)
 
 
-#removed the routes /discover and /api/discover (added to removed.py)
-###---------------- removed because it is replaced by Search now 
+    return render_template('main/dashboard.html', 
+                    username=current_user.username, 
+                    stats=stats, posts=current_user.posts, 
+                    profile_pic=current_user.profile.profile_picture, 
+                    profile_completion=completion
+                )
 
 
-
-
-# Added this as a new blueprint -------------------------- DELETE HERE
-# REASON: Core feature for social network; will be implemented later
-# @main.route('/messages')
-# @login_required
-# def messages():
-#     # TODO: Implement messaging system with database models
-#     return render_template('main/messages.html')
 
 
 # NEW ROUTE: Settings page

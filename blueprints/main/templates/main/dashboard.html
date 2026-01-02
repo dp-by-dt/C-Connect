@@ -472,6 +472,242 @@
     opacity: 0.5;
 }
 
+
+/* ======= For progress bar section ============  */
+/* ===== Profile Completion Card (REPLACE EXISTING .dashboard__completion STYLES) ===== */
+.dashboard__completion {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: stretch;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.dashboard__completion:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+/* Subtle background glow */
+.dashboard__completion::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(26, 77, 46, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.dashboard__completion-content {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard__completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.dashboard__completion-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.dashboard__completion-title i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.dashboard__completion-percent {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Progress Bar */
+.dashboard__progress-bar {
+    height: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard__progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    border-radius: 5px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated shimmer on progress bar */
+.dashboard__progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 200%;
+    }
+}
+
+/* Checklist */
+.dashboard__completion-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dashboard__completion-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.dashboard__completion-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.dashboard__completion-item-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dashboard__completion-item-icon i {
+    font-size: 0.625rem;
+    color: var(--primary-color);
+}
+
+.dashboard__completion-item-text {
+    flex: 1;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+/* Edit Profile Button */
+.dashboard__completion-btn {
+    align-self: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard__completion-btn i {
+    font-size: 1.5rem;
+}
+
+.dashboard__completion-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard__completion-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard__completion {
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+    
+    .dashboard__completion-btn {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        padding: 0.875rem 1.5rem;
+    }
+    
+    .dashboard__completion-btn i {
+        font-size: 1.125rem;
+    }
+    
+    .dashboard__completion-percent {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard__completion {
+        padding: 1.25rem;
+    }
+    
+    .dashboard__completion-title {
+        font-size: 1rem;
+    }
+    
+    .dashboard__completion-item {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.875rem;
+    }
+}
+
+
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
     .dashboard {
@@ -626,27 +862,43 @@
 
 
     
-<!-- ========== PROFILE COMPLETION ========== -->
-<div class="dashboard__completion" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 200px;">
+<!-- ========== PROFILE COMPLETION (REPLACE ENTIRE SECTION) ========== -->
+{% if profile_completion.percentage < 100 %}
+<div class="dashboard__completion">
+    <div class="dashboard__completion-content">
         <div class="dashboard__completion-header">
             <div class="dashboard__completion-title">
-                <i class="bi bi-check-circle"></i>
+                <i class="bi bi-check-circle-fill"></i>
                 <span>Profile Completion</span>
             </div>
-            <span class="dashboard__completion-percent">25%</span>
+            <span class="dashboard__completion-percent">
+                {{ profile_completion.percentage }}%
+            </span>
         </div>
+        
         <div class="dashboard__progress-bar">
             <div class="dashboard__progress-fill" id="progressFill"></div>
         </div>
+        
+        {% if profile_completion.missing %}
+        <div class="dashboard__completion-checklist">
+            {% for item in profile_completion.missing %}
+            <div class="dashboard__completion-item">
+                <div class="dashboard__completion-item-icon">
+                </div>
+                <span class="dashboard__completion-item-text">Complete {{ item }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
     
-    <!-- Edit button on side -->
-    <a href="{{ url_for('auth.profile') }}" class="dashboard__edit-btn" style="flex-shrink: 0; white-space: nowrap;">
+    <a href="{{ url_for('auth.profile') }}" class="dashboard__completion-btn">
         <i class="bi bi-pencil-square"></i>
-        <span>Profile</span>
+        <span>Edit Profile</span>
     </a>
 </div>
+{% endif %}
 
 
     <!-- ========== YOUR FEED SECTION ========== -->
@@ -727,6 +979,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progressFill');
     const completionCard = document.querySelector('.dashboard__completion');
+    const completion_percentage = {{ profile_completion.percentage }};
     
     if (progressFill && completionCard) {
         // Animate progress bar when it comes into view
@@ -735,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (entry.isIntersecting) {
                     // Small delay for better UX
                     setTimeout(() => {
-                        progressFill.style.width = '25%';
+                        progressFill.style.width = completion_percentage + '%';
                     }, 300);
                     observer.unobserve(entry.target);
                 }

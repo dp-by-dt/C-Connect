@@ -6321,3 +6321,14 @@ Traceback (most recent call last):
   File "d:\C-Connect\blueprints\main\routes.py", line 115, in settings
     raise Exception('tesing')
 Exception: tesing
+2026-01-02 11:44:06,053 [INFO] app: Cleaned up 2 old notifications.
+2026-01-02 12:21:59,320 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:24:17,891 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:24:57,253 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:26:40,602 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:27:02,850 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:27:30,084 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:47:05,939 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:47:05,940 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 12:59:23,703 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 13:08:25,174 [INFO] app: Cleaned up 0 old notifications.
