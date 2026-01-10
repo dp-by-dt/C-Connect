@@ -5893,3 +5893,5 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2025-12-29 08:39:25,838 [INFO] app: Cleaned up 0 old notifications.
 2026-01-10 23:29:15,855 [INFO] app: Cleaned up 0 old notifications.
 2026-01-10 23:29:15,868 [INFO] app: ProfileVisit cleanup removed 39 rows
+2026-01-10 23:38:39,673 [INFO] app: Cleaned up 0 old notifications.
+2026-01-11 00:06:11,074 [INFO] app: Cleaned up 0 old notifications.

@@ -16,60 +16,60 @@
 
 
 
-/* ==================== CSS VARIABLES ==================== */
+/* ==================== CSS VARIABLES(NEw purple based) ==================== */
+/* ====== Old vars added in the css_cheatsheet.md file */
 :root {
-    /* ===== Brand Colors - Rich Deep Green Theme ===== */
-    --primary-color: #1a4d2e;           /* Rich deep forest green */
-    --primary-hover: #27613d;           /* Slightly lighter */
-    --primary-light: #2f7a4a;           /* Bright forest */
-    --accent-color: #8fb996;            /* Muted sage accent */
-    --accent-bright: #b8e986;           /* Fresh lime CTA */
+    /* ===== Brand Colors - Elegant Indigo/Purple Theme ===== */
+    --primary-color: #6366f1;           /* Indigo */
+    --primary-hover: #4f46e5;           /* Deeper Indigo */
+    --primary-light: #818cf8;           /* Light Indigo */
+    --accent-color: #8b5cf6;            /* Purple */
+    --accent-bright: #7c3aed;           /* Vibrant Purple CTA */
     
     /* ===== Backgrounds (Light Mode) ===== */
-    --bg-primary: #fefffe;
-    --bg-secondary: #f5faf7;
-    --bg-tertiary: #ebf5ef;
-    --bg-hover: #e0f0e6;
-    --bg-gradient-start: #f5faf7;
-    --bg-gradient-end: #ebf5ef;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #f1f3f5;
+    --bg-hover: #e9ecef;
+    --bg-gradient-start: #f8f9fa;
+    --bg-gradient-end: #f1f3f5;
     
     /* ===== Glass Effect ===== */
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(26, 77, 46, 0.12);
-    --glass-shadow: rgba(26, 77, 46, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(99, 102, 241, 0.12);
+    --glass-shadow: rgba(99, 102, 241, 0.08);
     
     /* ===== Text Colors ===== */
-    --text-primary: #0d1f16;
-    --text-secondary: #1a4d2e;
-    --text-tertiary: #2f7a4a;
-    --text-muted: #7a9e88;
-    
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5568;
+    --text-tertiary: #718096;
+    --text-muted: #a0aec0;
     
     /* ===== Semantic Colors ===== */
-    --success-color: #3d6b1f;
-    --danger-color: #c63d3d;
-    --warning-color: #d89a2c;
-    --info-color: #3d6b8f;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
     
     /* ===== Borders & Shadows ===== */
-    --border-color: rgba(45, 80, 22, 0.12);
-    --border-subtle: rgba(45, 80, 22, 0.06);
+    --border-color: #e5e7eb;
+    --border-subtle: rgba(229, 231, 235, 0.5);
     
-    --radius-sm: 10px;
-    --radius-md: 16px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 50%;
     
-    --shadow-xs: 0 2px 8px var(--glass-shadow);
-    --shadow-sm: 0 4px 16px var(--glass-shadow);
-    --shadow-md: 0 8px 24px var(--glass-shadow);
-    --shadow-lg: 0 12px 40px rgba(45, 80, 22, 0.15);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
     
     /* ===== Transitions ===== */
-    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-smooth: 350ms ease;
     
     /* ===== Layout Dimensions ===== */
     --sidebar-width: 260px;
@@ -80,39 +80,36 @@
 
 /* ===== Dark Theme ===== */
 .theme-dark {
-    --primary-color: #8fb996;
-    --primary-hover: #a8c9ae;
-    --primary-light: #c1dac5;
-    --accent-color: #2f7a4a;
-    --accent-bright: #b8e986;
+    --primary-color: #818cf8;
+    --primary-hover: #a5b4fc;
+    --primary-light: #c7d2fe;
+    --accent-color: #a78bfa;
+    --accent-bright: #c4b5fd;
     
-    --bg-primary: #0a1410;
-    --bg-secondary: #0f1a15;
-    --bg-tertiary: #14211a;
-    --bg-hover: #1a2820;
-    --bg-gradient-start: #0a1410;
-    --bg-gradient-end: #14211a;
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #232936;
+    --bg-hover: #2d3748;
+    --bg-gradient-start: #0f1419;
+    --bg-gradient-end: #232936;
     
-    --glass-bg: rgba(15, 26, 21, 0.85);
-    --glass-border: rgba(143, 185, 150, 0.18);
+    --glass-bg: rgba(26, 31, 46, 0.95);
+    --glass-border: rgba(129, 140, 248, 0.18);
     --glass-shadow: rgba(0, 0, 0, 0.5);
     
-    --text-primary: #e8f4ec;
-    --text-secondary: #c5dccb;
-    --text-tertiary: #8fb996;
-    --text-muted: #5a7864;
+    --text-primary: #f7fafc;
+    --text-secondary: #cbd5e0;
+    --text-tertiary: #a0aec0;
+    --text-muted: #718096;
     
-
+    --border-color: #2d3748;
+    --border-subtle: rgba(45, 55, 72, 0.5);
     
-    --border-color: rgba(168, 208, 141, 0.15);
-    --border-subtle: rgba(168, 208, 141, 0.08);
-    
-    --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
-
 
 
 

@@ -782,3 +782,115 @@ document.getElementById('darkModeToggle').checked =
 **Last Updated:** Compatible with current C-Connect implementation
 **Bootstrap Version:** 5.3.2
 **Icons:** Bootstrap Icons 1.11.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------- After UI-Upgrade-v4 
+----------- The old color theme variables from global.css file -----------
+
+/* ==================== CSS VARIABLES (original below) ==================== */
+/* :root {
+    /* ===== Brand Colors - Rich Deep Green Theme ===== */
+    --primary-color: #1a4d2e;           /* Rich deep forest green */
+    --primary-hover: #27613d;           /* Slightly lighter */
+    --primary-light: #2f7a4a;           /* Bright forest */
+    --accent-color: #8fb996;            /* Muted sage accent */
+    --accent-bright: #b8e986;           /* Fresh lime CTA */
+    
+    /* ===== Backgrounds (Light Mode) ===== */
+    --bg-primary: #fefffe;
+    --bg-secondary: #f5faf7;
+    --bg-tertiary: #ebf5ef;
+    --bg-hover: #e0f0e6;
+    --bg-gradient-start: #f5faf7;
+    --bg-gradient-end: #ebf5ef;
+    
+    /* ===== Glass Effect ===== */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(26, 77, 46, 0.12);
+    --glass-shadow: rgba(26, 77, 46, 0.1);
+    
+    /* ===== Text Colors ===== */
+    --text-primary: #0d1f16;
+    --text-secondary: #1a4d2e;
+    --text-tertiary: #2f7a4a;
+    --text-muted: #7a9e88;
+    
+    
+    /* ===== Semantic Colors ===== */
+    --success-color: #3d6b1f;
+    --danger-color: #c63d3d;
+    --warning-color: #d89a2c;
+    --info-color: #3d6b8f;
+    
+    /* ===== Borders & Shadows ===== */
+    --border-color: rgba(45, 80, 22, 0.12);
+    --border-subtle: rgba(45, 80, 22, 0.06);
+    
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 50%;
+    
+    --shadow-xs: 0 2px 8px var(--glass-shadow);
+    --shadow-sm: 0 4px 16px var(--glass-shadow);
+    --shadow-md: 0 8px 24px var(--glass-shadow);
+    --shadow-lg: 0 12px 40px rgba(45, 80, 22, 0.15);
+    
+    /* ===== Transitions ===== */
+    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* ===== Layout Dimensions ===== */
+    --sidebar-width: 260px;
+    --sidebar-collapsed: 80px;
+    --topbar-height: 72px;
+    --bottom-nav-height: 68px;
+}
+
+/* ===== Dark Theme ===== */
+.theme-dark {
+    --primary-color: #8fb996;
+    --primary-hover: #a8c9ae;
+    --primary-light: #c1dac5;
+    --accent-color: #2f7a4a;
+    --accent-bright: #b8e986;
+    
+    --bg-primary: #0a1410;
+    --bg-secondary: #0f1a15;
+    --bg-tertiary: #14211a;
+    --bg-hover: #1a2820;
+    --bg-gradient-start: #0a1410;
+    --bg-gradient-end: #14211a;
+    
+    --glass-bg: rgba(15, 26, 21, 0.85);
+    --glass-border: rgba(143, 185, 150, 0.18);
+    --glass-shadow: rgba(0, 0, 0, 0.5);
+    
+    --text-primary: #e8f4ec;
+    --text-secondary: #c5dccb;
+    --text-tertiary: #8fb996;
+    --text-muted: #5a7864;
+    
+
+    
+    --border-color: rgba(168, 208, 141, 0.15);
+    --border-subtle: rgba(168, 208, 141, 0.08);
+    
+    --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+} */
