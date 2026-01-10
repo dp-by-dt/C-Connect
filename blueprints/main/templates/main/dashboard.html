@@ -901,6 +901,21 @@
 {% endif %}
 
 
+    <!-- ================ CTA primary ===================-->
+     <div class="dashboard__quick-actions">
+        <a href="{{ url_for('posts.feed') }}" class="btn btn-primary-custom">
+            <i class="bi bi-pencil-square"></i>
+            Create a post
+        </a>
+
+        <a href="{{ url_for('vibe.daily_vibe') }}" class="btn btn-outline-custom">
+            <i class="bi bi-lightning"></i>
+            Answer today’s vibe
+        </a>
+    </div>
+
+
+
     <!-- ========== YOUR FEED SECTION ========== -->
     <section class="dashboard__section">
         <header class="dashboard__section-header">

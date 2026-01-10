@@ -6332,3 +6332,13 @@ Exception: tesing
 2026-01-02 12:47:05,940 [INFO] app: Cleaned up 0 old notifications.
 2026-01-02 12:59:23,703 [INFO] app: Cleaned up 0 old notifications.
 2026-01-02 13:08:25,174 [INFO] app: Cleaned up 0 old notifications.
+2026-01-02 14:57:26,445 [INFO] app: Cleaned up 2 old notifications.
+2026-01-02 19:36:57,131 [INFO] app: Cleaned up 0 old notifications.
+2026-01-03 00:59:17,832 [INFO] app: Cleaned up 0 old notifications.
+2026-01-03 00:59:17,844 [INFO] app: ProfileVisit cleanup removed 7 rows
+2026-01-08 21:49:42,826 [INFO] app: Cleaned up 0 old notifications.
+2026-01-08 21:49:42,837 [INFO] app: ProfileVisit cleanup removed 28 rows
+2026-01-08 23:31:31,023 [INFO] app: Cleaned up 0 old notifications.
+2026-01-09 21:21:21,299 [INFO] app: Cleaned up 0 old notifications.
+2026-01-10 09:14:40,598 [INFO] app: Cleaned up 0 old notifications.
+2026-01-10 12:02:22,334 [INFO] app: Cleaned up 0 old notifications.

@@ -10,6 +10,12 @@
     box-sizing: border-box;
 }
 
+
+
+
+
+
+
 /* ==================== CSS VARIABLES ==================== */
 :root {
     /* ===== Brand Colors - Rich Deep Green Theme ===== */
@@ -106,6 +112,13 @@
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
+
+
+
+
+
+
+
 
 /* ==================== GLASS EFFECT UTILITY ==================== */
 .glass-effect {
