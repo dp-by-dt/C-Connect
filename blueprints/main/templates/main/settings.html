@@ -291,6 +291,34 @@
                     </div>
                 </div>
 
+
+
+                <!-- Security Section -->
+                <div class="settings-section glass-card animate-on-scroll">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="bi bi-lock"></i>
+                        </div>
+                        <h2 class="section-title">Security</h2>
+                    </div>
+
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-label">Change Password</div>
+                            <div class="setting-description">Change your current password</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <a href="{{ url_for('auth.change_password') }}" class="btn btn-primary btn-sm">
+                                Change Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
                 <!-- Danger Zone -->
                 <div class="settings-section glass-card danger-zone animate-on-scroll">
                     <div class="section-header">

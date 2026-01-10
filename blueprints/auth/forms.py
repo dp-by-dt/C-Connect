@@ -1,7 +1,7 @@
 # File for Authentication classes using CSRF
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField, FileField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField, FileField, EmailField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, ValidationError
 
 from flask_wtf.file import FileAllowed, FileRequired
@@ -58,3 +58,45 @@ class EditProfileForm(FlaskForm):
         FileAllowed({'png', 'jpg', 'jpeg', 'webp'}, 'jpg, png or webp only!')
     ])
     submit = SubmitField('Save')
+
+
+
+#-------------- Forget password seciton -------------
+class ForgotPasswordForm(FlaskForm):
+    email = EmailField(
+        "Email",
+        validators=[DataRequired(), Email()]
+    )
+    submit = SubmitField("Send reset link")
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField(
+        "New Password",
+        validators=[DataRequired(), Length(min=8)]
+    )
+    confirm = PasswordField(
+        "Confirm Password",
+        validators=[EqualTo('password')]
+    )
+    submit = SubmitField("Reset Password")
+
+
+
+
+# ---------- Change Password Section ------------
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField(
+        "Current Password",
+        validators=[DataRequired()]
+    )
+    new_password = PasswordField(
+        "New Password",
+        validators=[DataRequired(), Length(min=8)]
+    )
+    confirm_password = PasswordField(
+        "Confirm New Password",
+        validators=[EqualTo("new_password")]
+    )
+    submit = SubmitField("Change Password")

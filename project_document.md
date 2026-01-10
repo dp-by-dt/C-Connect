@@ -1079,6 +1079,187 @@ The above two columns helps pin point the notification and delete that only
     But it clears input after giving flash message ⚠️
 
 
+-----------------------
+
+### UI Upgrade v4
+1. templates:
+    base.html
+    global.css
+    global.js
+
+2. components
+    user_card.html
+    user_card_action_btn.html
+    flash.html
+    profile_card.html (✅added... For viewing own profile pic as a card)
+    posts_card.html (⚠️Added(need correction)... For showing posts in cards)
+
+3. Auth blueprint
+    login.html
+    profile.html
+    profile_edit.html (⚠️Not much change needed)
+    signup.html (⚠️later)
+
+4. Main blueprint
+    dashboard.html
+    discover.html (❕Almost good)
+    home.html (⚠️need imporve in darkmode)
+    search.html (❕Almost good)
+    settings.html (❕Almost good)
+    about.html (❕Almost good)
+    contact.html (❕Almost good)
+    user_profile.html (⚠️Needs more backend integration)
+
+5. Connections blueprint
+    list.html (❕Almost good: this is for showing the incoming and connections)
+
+6. Messages blueprint
+    inbox.html
+    chat.html (pretty decent)
+
+7. Notifications blueprint
+    notif_list (❕Good  - with gpt)
+
+8. Posts blueprint
+    feed.html
+
+9. Vibe
+    vibe.html
+
+
+
+
+### Forget Password
+
+- Created helper functions in `utils/` folder
+- `configured` salting bases
+- Password reset `route` added
+- `ForgetPasswordForm` and `ResetPasswordForm` added in `forms.py`
+- Connected the frontend linking
+- Set up main username, password (google app password) `secretly`
+- Loads them in `config`
+- Initiated the main in `app.py`
+- forget password and reset password html files added in `auth`
+- And tested OK 
+
+
+### Change Password
+
+- Added the file change_passoword.html
+- Configured in the `forms` file and added the route
+- Integrated with the settings page
+
+
+### Delete Profile Picture
+
+- Added `utils/storage.py` for helping function
+- Put the deleting button in the `profile_edit.html` , outside the current form (so that clicking this won't trigger the whole editing form. Because nested form can't be used)
+- Add appropriate route. Also flushes any uploaded file of the profile_picture
+
+
+### Error Handling Pages
+
+1. 400 - Bad request: (somehting went wrong with users request)
+    Malformed form submission
+    Missing required fields
+    Invalid query parameters
+    CSRF mismatch
+
+2. 403 - Forbidden: (don't have permission to access)
+    Trying to edit someone else’s profile
+    Accessing admin-only routes
+    Permission-based denial
+    * 401 - Not logged in 
+    * 403 - Logged in but no permission
+
+3. 404 - Not Found (url don't exist)
+4. 500 - Internal server error
+
+
+- Added the error files in templates/errors/400.html or (403 or 404 or 500.html)
+- The `registererrohandler` was corrected in the `factoryhelpers`
+- registered the error handlers too (in app.py)
+- for each of the error pages, now have a common `errors.css` file in static
+
+the file structure:
+    static/
+    └── css/
+        └── errors.css          ← NEW: Shared stylesheet
+    templates/
+    ├── errors/
+    │   ├── 400.html        
+    │   ├── 403.html        
+    │   ├── 404.html        
+    │   └── 500.html    
+
+
+
+### Profile Completion Progress Bar
+
+- The weights of the percentage completion as follows:
+| Item            | Condition                        | Weight |
+| --------------- | -------------------------------- | ------ |
+| Profile picture | `profile.profile_picture` exists | 20     |
+| Username        | always exists                    | 10     |
+| Bio             | non-empty & length ≥ ~20         | 20     |
+| Academic info   | department **and** year          | 20     |
+| Location        | non-empty                        | 10     |
+| Interests       | at least one                     | 20     |
+
+
+- Created `utils/profile_completion.py`: Inputs `user` or `profile` ; outputs [% and missing items]
+- `route` calls this fucntion and passes to the `dashboard` file
+- if full complete, progress bar disappears and success flash message comes (else re-appears)
+- if not complete, the completing hints appears. 
+- Ui sligtly modified for this and tested OK.
+
+
+-----------------------
+### Sequence right now:
+1. Must do now:
+    ✅ Forgot password / reset password
+    ✅ Delete profile image
+    ✅ Change password
+    ✅ Logout from all sessions (optional but nice)
+    ✅ Proper 400 / 403 / 404 / 500 pages
+        
+
+2. Create Entry Points:
+**Clear buttons to:**
+    ➕ Create post
+    ➕ Add vibe
+    👀 Discover people
+**CTA blocks on empty states:**
+    “No posts yet → create your first”
+    “No vibes → express one now”
+
+3. UI - Micro Polish:
+    Button consistency
+    Disabled states
+    Hover / focus states
+    Color theme applied properly
+    Small spacing & alignment fixes
+    Remove dead links
+
+
+4. Strenghtening core concepts: (Post → reaction → notification → response → return)
+    Like / react indicators
+    Small feedback animations
+    “Someone viewed your profile”
+    “X reacted to your post”
+    Simple discover suggestions
+
+
+5. Pre-launch (for testing): You watch behavior, not opinions for, 
+Goal:
+    Find friction
+    See dead zones
+    Spot confusion
+After that I'll know:
+    What users actually use
+    What they ignore
+    Where engagement drops
+Then new features can be added
 
 
 
@@ -1098,6 +1279,7 @@ Later modifications
 
 -------
 Later features 
+0. Download your profile card
 1. forget password
 1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)
 3. Stories

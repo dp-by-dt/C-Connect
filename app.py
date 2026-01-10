@@ -7,9 +7,10 @@ from flask_login import current_user
 from datetime import date
 from models import VibeQuestion, VibeResponse, VibeDailyState
 from flask import g
+from flask_mail import Mail
 
 
-
+mail = Mail()
 
 #Creating App instant and Registering Blueprints
 def create_app():
@@ -18,6 +19,7 @@ def create_app():
     #configure the Database
     app.config.from_object('config.Config')
 
+    mail.init_app(app)
     #migrate.init_app(app,db) #optional for db migrations
     #csrf.init_app(app) #but later in factory_helpers file or somewhere
 

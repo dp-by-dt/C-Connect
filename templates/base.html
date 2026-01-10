@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-
-    <!-- Fix dark mode flicker -->
-
-
-
-    <script>
-    document.documentElement.classList.add("preload-mode");
-
+    <!-- ==================== THEME INITIALIZATION (ANTI-FLICKER) ==================== -->
+<script>
     (function() {
-        const t = localStorage.getItem("theme") || "system";
+        // Prevent any transitions during load
+        const css = document.createElement('style');
+        css.textContent = '* { transition: none !important; }';
+        document.head.appendChild(css);
+        
+        const t = localStorage.getItem("cconnect-theme") || "light";
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         const dark = (t === "dark") || (t === "system" && prefersDark);
 
@@ -21,234 +19,345 @@
             document.documentElement.classList.remove("theme-dark");
         }
 
-        // show after theme applied
+        // Re-enable transitions after a brief delay
         window.addEventListener("DOMContentLoaded", () => {
-            document.documentElement.classList.remove("preload-mode");
+            setTimeout(() => {
+                css.remove();
+            }, 50);
         });
     })();
 </script>
 
+    <!-- ==================== HTMX FOR DYNAMIC INTERACTIONS ==================== -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-
-
-<!-- Inject color theme according to vibe mode  -->
+    <!-- ==================== VIBE COLOR INJECTION ==================== -->
     {% if g.vibe_color %}
     <style>
-    :root {
-        --vibe-accent: {{ g.vibe_color }};
-    }
+        :root {
+            --vibe-accent: {{ g.vibe_color }};
+        }
     </style>
     {% endif %}
 
-
-
-
-
+    <!-- ==================== META & TITLE ==================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="C-Connect - Connect with your campus community">
     <title>{% block title %}C-Connect{% endblock %} | Campus Connect</title>
 
-    
-    <!-- Preconnect to CDNs -->
+    <!-- ==================== PRECONNECT TO CDNS ==================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <!-- Fevicon Icons -->
+    <!-- ==================== FONTS ==================== -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ==================== ICONS ==================== -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-    
-    <!-- Bootstrap 5 CSS -->
+    <!-- ==================== STYLESHEETS ==================== -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Global CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
-    
-    <!-- Page-specific CSS -->
+
     {% block extra_css %}{% endblock %}
-
-
 </head>
+
 <body>
-    <!-- {% include 'components/flash.html' %} -->
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
-        <div class="container-fluid px-lg-5 px-3">
-            <!-- Brand -->
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">
-                <span class="brand-c">C</span><span class="brand-connect">-Connect</span>
-            </a>
-            
-            <!-- Mobile Toggle -->
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="bi bi-list" style="font-size: 1.5rem; color: var(--text-primary);"></i>
+    <!-- ==================== AUTHENTICATED USER LAYOUT ==================== -->
+    {% if current_user.is_authenticated %}
+        
+        <!-- ========== DESKTOP SIDEBAR NAVIGATION ========== -->
+        <aside class="sidebar glass-effect" id="sidebar">
+            <!-- <div class="sidebar__brand">
+                <a href="{{ url_for('main.home') }}" class="sidebar__logo">
+                    <span class="brand-icon">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
+                    <span class="brand-c">C</span>
+                    <span class="brand-text">Connect</span>
+                </a>
+            </div> -->
+
+            <nav class="sidebar__nav">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar__link" data-tooltip="Dashboard">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-house-door"></i>
+                    </div>
+                    <span class="sidebar__link-text">Dashboard</span>
+                </a>
+                <a href="{{ url_for('main.search_page') }}" class="sidebar__link" data-tooltip="Discover">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-compass"></i>
+                    </div>
+                    <span class="sidebar__link-text">Discover</span>
+                </a>
+                <a href="{{ url_for('connections.connections_home') }}" class="sidebar__link" data-tooltip="Connections">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <span class="sidebar__link-text">Connections</span>
+                </a>
+                <a href="{{ url_for('messages.inbox') }}" class="sidebar__link" data-tooltip="Messages">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <span class="sidebar__link-text">Messages</span>
+                </a>
+                <a href="{{ url_for('auth.profile') }}" class="sidebar__link" data-tooltip="Profile">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <span class="sidebar__link-text">Profile</span>
+                </a>
+                <a href="{{ url_for('main.settings') }}" class="sidebar__link" data-tooltip="Settings">
+                    <div class="sidebar__link-icon">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <span class="sidebar__link-text">Settings</span>
+                </a>
+            </nav>
+
+            <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="bi bi-chevron-right"></i>
             </button>
-            
-            <!-- Navigation Links -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
-                    {% if current_user.is_authenticated %}
-                        <!-- Authenticated User Menu -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.dashboard') }}">
-                                <i class="bi bi-layout-sidebar"></i>Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.search_page') }}">
-                                <i class="bi bi-compass"></i>Discover
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('connections.connections_home') }}">
-                                <i class="bi bi-people"></i>Connections
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('messages.inbox') }}">
-                                <i class="bi bi-chat-dots"></i>Messages
-                            </a>
-                        </li>
-                        <li class="nav-item position-relative">
-                            <a class="nav-link" href="{{ url_for('notifications.notifications_list') }}">
-                                <i class="bi bi-bell"></i>
-                                <span class="d-lg-none">Notifications</span>
-                                {% set unread = current_user.notifications | selectattr("is_read", "equalto", False) | list %}
-                                {% if unread|length > 0 %}
-                                <span class="badge bg-danger rounded-pill">{{ unread|length }}</span>
-                                {% endif %}
-                            </a>
-                        </li>
+        </aside>
 
+        <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
+        <nav class="bottom-nav glass-effect">
+            <a href="{{ url_for('main.search_page') }}" class="bottom-nav__item">
+                <i class="bi bi-compass"></i>
+                <span>Discover</span>
+            </a>
+            <a href="{{ url_for('connections.connections_home') }}" class="bottom-nav__item">
+                <i class="bi bi-people"></i>
+                <span>Connect</span>
+            </a>
+            <a href="{{ url_for('main.dashboard') }}" class="bottom-nav__item bottom-nav__item--primary">
+                <div class="bottom-nav__primary-bg"></div>
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+            <a href="{{ url_for('messages.inbox') }}" class="bottom-nav__item">
+                <i class="bi bi-chat-dots"></i>
+                <span>Messages</span>
+            </a>
+            <a href="{{ url_for('auth.profile') }}" class="bottom-nav__item">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
 
+        <!-- ========== TOP BAR ========== -->
+        <header class="topbar glass-effect">
+            <div class="topbar__container">
+                <!-- Left Side -->
+                <div class="topbar__left">
+                    <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Open menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
 
-                        
-                        <!-- User Dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">
-                                    {{ current_user.username[0].upper() }}
-                                </div>
-                                <span class="d-none d-lg-inline">{{ current_user.username }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                        <i class="bi bi-person-circle"></i>My Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('main.settings') }}">
-                                        <i class="bi bi-gear"></i>Settings
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="#" onclick="confirmLogout(event)">
-                                        <i class="bi bi-box-arrow-right"></i>Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <!-- Guest Menu -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.contact') }}">Contact</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-primary-custom btn-sm" href="{{ url_for('auth.signup') }}">
-                                Get Started
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    <!-- Theme Toggle -->
-                    <li class="nav-item ms-lg-2">
-                        <button class="btn-theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                            <i class="bi bi-sun-fill" id="themeIcon"></i>
+                <!-- Center Brand -->
+                <div class="topbar__center">
+                    <a href="{{ url_for('main.home') }}" class="topbar__brand">
+                        <span class="brand-icon-small">
+                            <i class="bi bi-circle-fill"></i>
+                        </span>
+                        <span class="brand-c">C</span>
+                        <span class="brand-text">Connect</span>
+                    </a>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="topbar__actions">
+                    <a href="{{ url_for('notifications.notifications_list') }}" class="topbar__icon-btn" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                        {% set unread = current_user.notifications | selectattr("is_read", "equalto", False) | list %}
+                        {% if unread|length > 0 %}
+                        <span class="topbar__badge">{{ unread|length }}</span>
+                        {% endif %}
+                    </a>
+
+                    <button class="topbar__icon-btn topbar__theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <i class="bi bi-sun-fill" id="themeIcon"></i>
+                    </button>
+
+                    <div class="topbar__profile" id="profileDropdown">
+                        <button class="topbar__profile-btn" aria-label="Profile menu">
+                            <div class="topbar__avatar">
+                                {{ current_user.username[0].upper() }}
+                            </div>
+                            <span class="topbar__username">{{ current_user.username }}</span>
+                            <i class="bi bi-chevron-down topbar__profile-arrow"></i>
                         </button>
-                    </li>
-                </ul>
+                        
+                        <div class="topbar__dropdown glass-effect" id="profileMenu">
+                            <a href="{{ url_for('auth.profile') }}" class="topbar__dropdown-item">
+                                <i class="bi bi-person-circle"></i>
+                                <span>My Profile</span>
+                            </a>
+                            <a href="{{ url_for('main.settings') }}" class="topbar__dropdown-item">
+                                <i class="bi bi-gear"></i>
+                                <span>Settings</span>
+                            </a>
+                            <div class="topbar__dropdown-divider"></div>
+                            <a href="#" class="topbar__dropdown-item topbar__dropdown-item--danger" onclick="confirmLogout(event)">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <!-- Flash Messages -->
+        <!-- ========== MOBILE SIDEBAR MENU ========== -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu__content glass-effect">
+                <div class="mobile-menu__header">
+                    <a href="{{ url_for('main.home') }}" class="mobile-menu__brand">
+                        <span class="brand-icon-small">
+                            <i class="bi bi-circle-fill"></i>
+                        </span>
+                        <span class="brand-c">C</span>
+                        <span class="brand-text">Connect</span>
+                    </a>
+                    <button class="mobile-menu__close" id="mobileMenuClose" aria-label="Close menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <nav class="mobile-menu__nav">
+                    <a href="{{ url_for('main.dashboard') }}" class="mobile-menu__link">
+                        <i class="bi bi-house-door"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('main.search_page') }}" class="mobile-menu__link">
+                        <i class="bi bi-compass"></i>
+                        <span>Discover</span>
+                    </a>
+                    <a href="{{ url_for('connections.connections_home') }}" class="mobile-menu__link">
+                        <i class="bi bi-people"></i>
+                        <span>Connections</span>
+                    </a>
+                    <a href="{{ url_for('messages.inbox') }}" class="mobile-menu__link">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Messages</span>
+                    </a>
+                    <a href="{{ url_for('auth.profile') }}" class="mobile-menu__link">
+                        <i class="bi bi-person-circle"></i>
+                        <span>View Profile</span>
+                    </a>
+                    <a href="{{ url_for('main.settings') }}" class="mobile-menu__link">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="mobile-menu__overlay" id="mobileMenuOverlay"></div>
+        </div>
+
+    {% else %}
+        <!-- ==================== GUEST USER LAYOUT ==================== -->
+        
+        <nav class="guest-nav glass-effect">
+            <div class="guest-nav__container">
+                <a href="{{ url_for('main.home') }}" class="guest-nav__brand">
+                    <span class="brand-icon-small">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
+                    <span class="brand-c">C</span>
+                    <span class="brand-text">Connect</span>
+                </a>
+
+                <div class="guest-nav__links">
+                    <a href="{{ url_for('main.home') }}" class="guest-nav__link">Home</a>
+                    <a href="{{ url_for('main.about') }}" class="guest-nav__link">About</a>
+                    <a href="{{ url_for('main.contact') }}" class="guest-nav__link">Contact</a>
+                    <a href="{{ url_for('auth.login') }}" class="guest-nav__link">Login</a>
+                    <a href="{{ url_for('auth.signup') }}" class="guest-nav__btn">
+                        <span>Get Started</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                    
+                    <button class="guest-nav__theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <i class="bi bi-sun-fill" id="themeIcon"></i>
+                    </button>
+                </div>
+
+                <button class="guest-nav__mobile-toggle" id="guestMenuToggle" aria-label="Toggle menu">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <div class="guest-nav__mobile-menu" id="guestMobileMenu">
+                <a href="{{ url_for('main.home') }}" class="guest-nav__mobile-link">Home</a>
+                <a href="{{ url_for('main.about') }}" class="guest-nav__mobile-link">About</a>
+                <a href="{{ url_for('main.contact') }}" class="guest-nav__mobile-link">Contact</a>
+                <a href="{{ url_for('auth.login') }}" class="guest-nav__mobile-link">Login</a>
+                <a href="{{ url_for('auth.signup') }}" class="guest-nav__mobile-link guest-nav__mobile-link--primary">Get Started</a>
+            </div>
+        </nav>
+
+    {% endif %}
+
+    <!-- ==================== FLASH MESSAGES ==================== -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-container">
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show glass-alert" role="alert">
-                        <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' if category == 'danger' else 'info-circle-fill' }} me-2"></i>
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <div class="flash-message glass-effect flash-message--{{ category }}" role="alert">
+                        <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' if category == 'danger' else 'info-circle-fill' }}"></i>
+                        <span>{{ message }}</span>
+                        <button class="flash-message__close" aria-label="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
     {% endwith %}
 
-    <!-- Main Content -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <main class="main-content">
         {% block body %}
         <!-- Page content goes here -->
         {% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer-glass">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2">
-                        <span class="brand-c" style="font-size: 1.25rem;">C</span>
-                        <span class="brand-connect" style="font-size: 1.25rem;">-Connect</span>
-                    </div>
-                    <p class="footer-tagline mb-0">Connecting Campus Communities</p>
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="footer">
+        <div class="footer__container">
+            <div class="footer__brand">
+                <div class="footer__logo">
+                    <span class="brand-icon-small">
+                        <i class="bi bi-circle-fill"></i>
+                    </span>
+                    <span class="brand-c">C</span>
+                    <span class="brand-text">Connect</span>
                 </div>
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-center justify-content-md-end gap-3 flex-wrap">
-                        <a href="{{ url_for('main.about') }}" class="footer-link">About</a>
-                        <a href="{{ url_for('main.contact') }}" class="footer-link">Contact</a>
-                        <a href="#" class="footer-link">Privacy</a>
-                        <a href="#" class="footer-link">Terms</a>
-                    </div>
-                </div>
+                <p class="footer__tagline">Connecting Campus Communities</p>
             </div>
-            <div class="row mt-3">
-                <div class="col text-center">
-                    <small class="text-muted">
-                        &copy; 2024 C-Connect. Made with <i class="bi bi-heart-fill" style="color: var(--danger-color);"></i> for students.
-                    </small>
-                </div>
+            
+            <div class="footer__links">
+                <a href="{{ url_for('main.about') }}" class="footer__link">About</a>
+                <a href="{{ url_for('main.contact') }}" class="footer__link">Contact</a>
+                <a href="#" class="footer__link">Privacy</a>
+                <a href="#" class="footer__link">Terms</a>
+            </div>
+
+            <div class="footer__credits">
+                <small>&copy; 2024 C-Connect. Made with <i class="bi bi-heart-fill"></i> for students.</small>
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- ==================== SCRIPTS ==================== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Global JS -->
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
-    
-    <!-- Logout Confirmation -->
+
     <script>
         function confirmLogout(event) {
             event.preventDefault();
@@ -258,12 +367,6 @@
         }
     </script>
 
-    <!-- State Button -->
-
-
-
-            
-    <!-- Page-specific JS -->
     {% block extra_js %}{% endblock %}
 </body>
 </html>

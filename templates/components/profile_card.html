@@ -8,8 +8,8 @@
 .user-card {
     position: relative;
     width: 100%;
-    max-width: 280px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: auto;
     background: var(--bg-primary);
     border-radius: var(--radius-xl);
     overflow: hidden;
@@ -19,6 +19,33 @@
     border: 1px solid var(--border-color);
     /* Golden ratio: 1.618 - Card ratio is roughly 1:1.5 .... changed now*/
     aspect-ratio: 3 / 4;
+}
+
+/* ===== Fill Container on Large Screens ===== */
+@media (min-width: 1025px) {
+    .user-card {
+        max-width: 80% !important;      /* Fill parent container */
+        width: 100%;                     /* Full width */
+        margin: auto;
+    }
+}
+
+/* Keep original constraints for smaller screens */
+@media (max-width: 1024px) {
+    .user-card {
+        max-width: 280px;                /* Original card size */
+        width: 100%;
+        margin: 0 auto;
+    }
+}
+
+/* NEW: Fix tablet range (470-769px) */
+@media (min-width: 470px) and (max-width: 769px) {
+    .user-card {
+        max-width: 320px !important;
+        width: 100%;
+        margin: 0 auto;
+    }
 }
 
 .user-card:hover {
@@ -143,6 +170,9 @@
     opacity: 0.9;
 }
 
+
+
+
 /* ===== Action Button (Right Side) ===== */
 .user-card__action-btn {
     padding: 0.5rem 1rem;
@@ -230,8 +260,8 @@
 
 <!-- ===== USER CARD MARKUP ===== -->
 <div class="user-card animate-on-scroll" 
-     data-user-card 
-     onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'">
+     data-user-card style="cursor: auto;">
+     <!-- onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'" -->
     
     <!-- Image Wrapper (95% of card) -->
     <div class="user-card__image-wrapper">
@@ -256,51 +286,28 @@
         <!-- Footer (Glass Effect with Actions) -->
         <div class="user-card__footer" onclick="event.stopPropagation();">
             <div class="user-card__footer-content">
+
                 <!-- Left: Connection Count -->
                 <div class="user-card__connections">
                     <i class="bi bi-people-fill"></i>
-                    <span>{{ user.connection_count if user.connection_count is defined else 208 }}</span>
+                    <span>{{ conn_stats.connections if conn_stats.connections is defined else 208 }}</span>
                 </div>
                 
-                <!-- Right: Action Button -->
-                {% if conn_status == 'connected' %}
-                    <!-- Connected - Message Button -->
-                    <form method="POST" 
-                          action="{{ url_for('messages.chat', user_id=user.id) }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="user-card__action-btn user-card__action-btn--primary">
-                            <i class="bi bi-chat-dots-fill"></i>
-                            <span>Message</span>
-                        </button>
-                    </form>
-                    
-                {% elif conn_status == 'incoming' %}
-                    <!-- Incoming Request - Pending State -->
-                    <button class="user-card__action-btn user-card__action-btn--pending" disabled>
-                        <i class="bi bi-clock"></i>
-                        <span>Pending</span>
-                    </button>
-                    
-                {% elif conn_status == 'requested' %}
-                    <!-- Request Sent - Requested State (No connecting animation) -->
-                    <button class="user-card__action-btn user-card__action-btn--pending" disabled>
-                        <i class="bi bi-check2"></i>
-                        <span>Requested</span>
-                    </button>
-                    
-                {% else %}
-                    <!-- No Connection - Add Member Button -->
-                    <form method="POST" 
-                          action="{{ url_for('connections.connections_send', target_id=user.id) }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="user-card__action-btn user-card__action-btn--primary">
-                            <i class="bi bi-plus-circle-fill"></i>
-                            <span>Add Member</span>
-                        </button>
-                    </form>
-                {% endif %}
+                <!-- middle: Action Button -->
+                    {# Edit Profile Button #}
+                    <a href="{{ url_for('auth.profile_edit') }}" 
+                        class="user-card__action-btn user-card__action-btn--pending"
+                        style="text-decoration: none; cursor: pointer;">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit profile</span>
+                    </a>
+
+                <!-- right: posts count -->
+                <div class="user-card__connections">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    <span>{{ posts|length if posts|length is defined else '0' }}</span>
+                </div>
+
             </div>
         </div>
     </div>

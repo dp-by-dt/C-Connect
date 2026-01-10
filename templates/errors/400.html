@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Bad Request{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="error-wrapper">
+    <div class="error-container">
+        <div class="error-icon error-icon--wobble">⚠️</div>
+        <h1 class="error-code error-code--primary">400</h1>
+        <h2 class="error-title">Bad Request</h2>
+        <p class="error-message">
+            Oops! Something went wrong with your request. The data sent to the server couldn't be processed.
+        </p>
+        <div class="error-actions">
+            <a href="{{ url_for('main.dashboard') }}" class="error-btn error-btn-primary">
+                <i class="bi bi-house"></i>
+                Back to Dashboard
+            </a>
+            <a href="javascript:history.back()" class="error-btn error-btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

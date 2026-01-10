@@ -41,6 +41,21 @@ def feed():
 
     posts = pagination.items
 
+    #passing profile picture of the user who's the post is
+    # since the profile picture is stored in Profiel model (not in User), we can access it via user relationship
+    #that is take the user_id of the owner of the post, 
+    user_ids = [post.user_id for post in posts]
+    profile_picture_cache = {}
+    # lookup in the profile table for the "profile_picture" for that user_id
+    from models import Profile
+    profiles = Profile.query.filter(Profile.user_id.in_(user_ids)).all()
+    for profile in profiles:
+        profile_picture_cache[profile.user_id] = profile.profile_picture
+
+    #profile_picture = profile.query.filter_by(user_id=user.id).first().profile_picture
+    
+    
+    # Get liked post IDs for current user
     liked_post_ids = {
         like.post_id
         for like in PostLike.query.filter_by(user_id=current_user.id).all()
@@ -49,6 +64,7 @@ def feed():
     return render_template(
         "posts/feed.html",
         posts=posts,
+        profile_picture_cache=profile_picture_cache,
         pagination=pagination,
         liked_post_ids=liked_post_ids
     )

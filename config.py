@@ -13,6 +13,18 @@ class Config:
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'database.db')}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    #for forget password
+    SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")
+    RESET_TOKEN_EXP_MINUTES = 15
+
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = "no-reply@c-connect.com"
+
+
     # Uploads
     UPLOAD_FOLDER = os.environ.get(
         "UPLOAD_FOLDER",

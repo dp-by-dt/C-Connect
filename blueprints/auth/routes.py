@@ -1,10 +1,10 @@
 from . import auth
-from flask import render_template, request, flash, redirect, url_for, render_template, request
+from flask import render_template, request, flash, redirect, url_for, session
 from setup_db import add_user as adduser_glob
-from models import User, Profile
+from models import User, Profile, Post
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import login_manager, db
-from .forms import SignupForm, LoginForm, EditProfileForm
+from .forms import SignupForm, LoginForm, EditProfileForm, ForgotPasswordForm, ResetPasswordForm, ChangePasswordForm
 from urllib.parse import urlparse, urljoin
 from flask import current_app as app
 from blueprints.connections.service import is_connected, list_requests
@@ -18,6 +18,11 @@ from flask_limiter.util import get_remote_address
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
+from utils.tokens import generate_reset_token, verify_reset_token
+from utils.email import send_reset_email
+
+from utils.storage import delete_profile_picture_file
+
 
 
 # ------- functions --------
@@ -163,6 +168,110 @@ def login():
     return render_template('auth/login.html',form=form)
 
 
+#-----------------for forget password------------
+
+@auth.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per hour")
+def forgot_password():
+    form = ForgotPasswordForm()
+
+    if form.validate_on_submit():
+        email = form.email.data.lower().strip()
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            token = generate_reset_token(user.email)
+            reset_url = url_for(
+                'auth.reset_password',
+                token=token,
+                _external=True
+            )
+            send_reset_email(user.email, reset_url)
+
+        # SAME MESSAGE ALWAYS (SECURITY)
+        flash(
+            "If the email is registered, a password reset link has been sent.",
+            "info"
+        )
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/forgot_password.html', form=form)
+
+
+
+
+@auth.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    form = ResetPasswordForm()
+
+    if session.get("password_reset_used"):
+        flash("This password reset link has already been used.", "warning")
+        return redirect(url_for("auth.login"))
+
+
+    try:
+        email = verify_reset_token(
+            token,
+            max_age=app.config['RESET_TOKEN_EXP_MINUTES'] * 60
+        )
+    except Exception:
+        flash("The reset link is invalid or has expired.", "danger")
+        return redirect(url_for('auth.forgot_password'))
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Invalid reset request.", "danger")
+        return redirect(url_for('auth.forgot_password'))
+
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+
+        login_user(user)
+        flash("Your password has been reset and you are now logged in.", "success")
+        # After successful reset
+        session["password_reset_used"] = True
+        return redirect(url_for('main.dashboard'))
+
+    return render_template(
+        'auth/reset_password.html',
+        form=form
+    )
+
+
+
+# --------------- For Changing Password ----------------------
+
+@auth.route("/change-password", methods=["GET", "POST"])
+@login_required
+@limiter.limit("5 per hour")
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        # Verify current password
+        if not current_user.check_password(form.current_password.data):
+            flash("Current password is incorrect.", "danger")
+            return render_template(
+                "auth/change_password.html",
+                form=form
+            )
+
+        # Set new password
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+
+        flash("Your password has been changed successfully.", "success")
+        return redirect(url_for("main.dashboard"))
+
+    return render_template(
+        "auth/change_password.html",
+        form=form
+    )
+
+
+
+
 
 
 #for more clarity, use get and post methods here and also add a logout_confirmation html page which is triggered for confirmation before logout
@@ -180,13 +289,41 @@ def logout():
 # NEW ROUTE: Profile page for viewing/editing user profile
 # REASON: Essential for social network; allows users to update their information
 @auth.route('/profile')
-@limiter.limit("20 per day", key_func=get_user_id)
+@limiter.limit("200 per day", key_func=get_user_id)
 @login_required
 def profile():
 
     profile = current_user.profile
-    # display default placeholders if None
-    return render_template('auth/profile.html', profile=profile, user=current_user)#, conn=conn)
+    user_id = current_user.id
+    # provide posts of the current user from posts table
+    # from Post, fetch all the posts for user_id == user.id
+    posts = Post.query.filter_by(user_id=user_id).all()
+
+    # count accepted connections (either side)
+    accepted_count = db.session.query(Connection).filter(
+        (Connection.status == 'accepted') & (
+            (Connection.user_id == user_id) | (Connection.target_user_id == user_id)
+        )
+    ).count()
+
+    # pending incoming
+    pending_incoming = db.session.query(Connection).filter_by(
+        target_user_id=user_id, status='pending'
+    ).count()
+
+    # pending outgoing
+    pending_outgoing = db.session.query(Connection).filter_by(
+        user_id=user_id, status='pending'
+    ).count()
+
+    # optionally other stats
+    stats = {
+        "connections": accepted_count,
+        "pending_incoming": pending_incoming,
+        "pending_outgoing": pending_outgoing
+    }
+
+    return render_template('auth/profile.html', profile=profile, user=current_user, posts=posts, stats=stats)#, conn=conn)
 
 
 # NEW ROUTE: Profile edit (for future implementation)
@@ -278,8 +415,47 @@ def profile_edit():
 
 
 
+
+#-------------- Deleting profile picture --------------
+@auth.route("/profile/delete-picture", methods=["POST"])
+@login_required
+@limiter.limit("3 per hour")
+def delete_profile_picture():
+    profile = current_user.profile
+    if not profile or not profile.profile_picture:
+        flash("No profile picture to remove.", "info")
+        return redirect(url_for("auth.profile_edit"))
+
+    deleted = False
+    try:
+        # OPTIONAL but recommended: delete profile pic file from storage
+        delete_profile_picture_file(profile.profile_picture)
+
+        profile.profile_picture = None
+        profile.updated_at = db.func.now()
+        db.session.commit()
+        deleted = True
+        
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception("Failed to delete profile picture: %s", exc)
+        
+
+    if deleted:
+        flash("Profile picture removed successfully.", "success")
+    else: 
+        flash("Could not remove profile picture.", "danger")
+
+    return redirect(url_for("auth.profile_edit"))
+
+
+
+
+
 # Exempt health checks
 @auth.route('/ping')
 @limiter.exempt
 def ping():
     return "OK"
+
+

@@ -1,120 +1,602 @@
 {% extends "base.html" %}
 
+{% block title %}Messages{% endblock %}
+
 {% block extra_css %}
 <style>
-    .messages-header { text-align: center; margin-bottom: 2rem; }
-.messages-title { font-size: 2.5rem; font-weight: 700; }
-.messages-subtitle { color: var(--text-secondary); }
-.messages-list { max-height: 70vh; overflow-y: auto; border-radius: var(--border-radius-lg); }
-
-.user-avatar {
-    width: 50px; height: 50px; 
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: white; font-size: 1.25rem;
+/* ==================== MESSAGES INBOX PAGE ==================== */
+.messages-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+    animation: fadeIn 0.6s ease;
 }
 
-.message-item { 
-    text-decoration: none; color: inherit; transition: background 0.2s ease; 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-.message-item:hover { background: var(--bg-secondary); }
-.user-name { color: var(--text-primary); }
 
+/* ===== Page Header ===== */
+.messages-page__header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+}
+
+.messages-page__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.messages-page__title i {
+    color: var(--primary-color);
+    font-size: 2.25rem;
+}
+
+.messages-page__subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+}
+
+/* ===== Section Card ===== */
+.messages-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.messages-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.messages-section__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin: 0;
+}
+
+.messages-section__title i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.messages-section__count {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    background: var(--bg-hover);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+/* ===== Conversation List ===== */
+.conversations-list {
+    max-height: 600px;
+    overflow-y: auto;
+    margin: -0.5rem;
+    padding: 0.5rem;
+}
+
+.conversations-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.conversations-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+/* ===== Conversation Item ===== */
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+}
+
+.conversation-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+    transform: translateX(4px);
+}
+
+.conversation-item__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+    position: relative;
+}
+
+.conversation-item__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+}
+
+/* Online indicator */
+.conversation-item__avatar::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: var(--success-color);
+    border: 2px solid var(--bg-primary);
+    border-radius: 50%;
+    /* TODO: Add online status from backend */
+    /* display: none; - Show when user is online */
+}
+
+.conversation-item__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversation-item__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.375rem;
+}
+
+.conversation-item__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item__preview {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item__preview--empty {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.conversation-item__arrow {
+    color: var(--text-muted);
+    font-size: 1.125rem;
+    transition: transform var(--transition-fast);
+}
+
+.conversation-item:hover .conversation-item__arrow {
+    transform: translateX(4px);
+    color: var(--primary-color);
+}
+
+/* ===== Connection Request Item ===== */
+.request-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-hover);
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.request-item__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+}
+
+.request-item__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+}
+
+.request-item__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.request-item__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.request-item__text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.request-item__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.request-item__btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.request-item__btn--accept {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    box-shadow: var(--shadow-xs);
+}
+
+.request-item__btn--accept:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.request-item__btn--reject {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--danger-color);
+}
+
+.request-item__btn--reject:hover {
+    background: rgba(214, 69, 69, 0.1);
+    border-color: var(--danger-color);
+}
+
+/* ===== Empty State ===== */
+.messages-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-base);
+}
+
+.messages-empty:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-hover);
+}
+
+.messages-empty__icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.messages-empty__title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.messages-empty__text {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.messages-empty__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.messages-empty__btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== Coming Soon Badge ===== */
+.coming-soon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    background: linear-gradient(135deg, var(--warning-color), #f5a623);
+    color: white;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-xs);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .messages-page {
+        padding: 0 0.75rem 1.5rem;
+        padding-bottom: calc(var(--bottom-nav-height) + 1rem);
+    }
+    
+    .messages-page__header {
+        padding: 1.5rem 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .messages-page__title {
+        font-size: 1.75rem;
+    }
+    
+    .messages-section {
+        padding: 1.25rem;
+        border-radius: var(--radius-lg);
+    }
+    
+    .conversation-item,
+    .request-item {
+        padding: 0.875rem;
+    }
+    
+    .conversation-item__avatar,
+    .request-item__avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 1.125rem;
+    }
+    
+    .request-item__actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .request-item {
+        flex-wrap: wrap;
+    }
+    
+    .request-item__content {
+        flex: 1 1 100%;
+    }
+    
+    .request-item__btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .messages-empty {
+        padding: 3rem 1.5rem;
+    }
+    
+    .messages-empty__icon {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .messages-page__title {
+        font-size: 1.5rem;
+    }
+    
+    .messages-section__title {
+        font-size: 1rem;
+    }
+    
+    .conversation-item__name,
+    .request-item__name {
+        font-size: 0.9375rem;
+    }
+}
 </style>
 {% endblock %}
 
-
 {% block body %}
-<div class="container py-4">
-    <div class="messages-header animate-on-scroll">
-        <h1 class="messages-title">
-            <i class="bi bi-chat-dots me-2"></i>
+<div class="messages-page">
+    <!-- ========== PAGE HEADER ========== -->
+    <header class="messages-page__header">
+        <h1 class="messages-page__title">
+            <i class="bi bi-chat-dots-fill"></i>
             Messages
         </h1>
-    </div>
+        <p class="messages-page__subtitle">Stay connected with your campus community</p>
+    </header>
 
-    
-
-
-    <!-- CONNECTED USERS -->
+    <!-- ========== CONNECTED USERS - CONVERSATIONS LIST ========== -->
     {% if connected_users %}
-    <div class="section-card glass-card mb-4">
-        <h3 class="section-title mb-3">
-            <i class="bi bi-people"></i> Conversations ({{ connected_users|length }})
-        </h3>
-        <div class="messages-list">
+    <section class="messages-section">
+        <div class="messages-section__header">
+            <h2 class="messages-section__title">
+                <i class="bi bi-chat-left-dots-fill"></i>
+                Conversations
+            </h2>
+            <span class="messages-section__count">{{ connected_users|length }}</span>
+        </div>
+
+        <div class="conversations-list">
             {% for user in connected_users %}
-            <a href="{{ url_for('messages.chat', user_id=user.id) }}" 
-               class="message-item d-flex align-items-center p-3 border-bottom">
-                <div class="user-avatar me-3">{{ user.username[0]|upper }}</div>
-                <div class="flex-grow-1">
-                    <div class="user-name fw-bold">{{ user.username }}</div>
-                    {% if chat_previews[user.id] %}
-                    <div class="message-preview text-muted small">
-                        {{ chat_previews[user.id].content[:60] }}...
-                    </div>
+            <a href="{{ url_for('messages.chat', user_id=user.id) }}" class="conversation-item">
+                <div class="conversation-item__avatar">
+                    <!-- checking if the user has profile picture -->
+                    {% set profile_picture = profile.query.filter_by(user_id=user.id).first().profile_picture %}
+                    {% if profile_picture %}
+                        <img src="{{ profile_picture }}" alt="{{ user.username }}">
                     {% else %}
-                    <div class="message-preview text-muted small">Start a new conversation</div>
+                        {{ user.username[0]|upper }}
                     {% endif %}
                 </div>
-                <i class="bi bi-chevron-right text-muted"></i>
+                
+                <div class="conversation-item__content">
+                    <div class="conversation-item__header">
+                        <div class="conversation-item__name">{{ user.username }}</div>
+                    </div>
+                    
+                    {% if chat_previews and chat_previews[user.id] %}
+                        <div class="conversation-item__preview">
+                            {{ chat_previews[user.id].content[:60] }}{% if chat_previews[user.id].content|length > 60 %}...{% endif %}
+                        </div>
+                    {% else %}
+                        <div class="conversation-item__preview conversation-item__preview--empty">
+                            Start a new conversation
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <i class="bi bi-chevron-right conversation-item__arrow"></i>
             </a>
             {% endfor %}
         </div>
-    </div>
+    </section>
     {% endif %}
 
-    <!-- INCOMING REQUESTS -->
+    <!-- ========== INCOMING CONNECTION REQUESTS ========== -->
     {% if incoming_users %}
-    <div class="section-card glass-card mb-4">
-        <h3 class="section-title mb-3">
-            <i class="bi bi-arrow-right-circle"></i> New Connection Requests
-        </h3>
-        <div class="messages-list">
+    <section class="messages-section">
+        <div class="messages-section__header">
+            <h2 class="messages-section__title">
+                <i class="bi bi-arrow-right-circle-fill"></i>
+                Connection Requests
+            </h2>
+            <span class="messages-section__count">{{ incoming_users|length }}</span>
+        </div>
+
+        <div>
             {% for user in incoming_users %}
             {% set request = incoming_requests|selectattr('user_id', 'equalto', user.id)|first %}
-            <div class="message-item d-flex align-items-center p-3 border-bottom">
-                <div class="user-avatar me-3">{{ user.username[0]|upper }}</div>
-                <div class="flex-grow-1">
-                    <div class="user-name fw-bold">{{ user.username }}</div>
-                    <div class="request-text text-muted small">wants to connect with you</div>
+            <div class="request-item">
+                <div class="request-item__avatar">
+                    <!-- TODO: Add profile picture support -->
+                    {{ user.username[0]|upper }}
                 </div>
-                <div class="d-flex gap-2">
-
-                    <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=request.id) }}?next={{ url_for('messages.inbox') }}"
-                        class="btn btn-sm btn-success">
+                
+                <div class="request-item__content">
+                    <div class="request-item__name">{{ user.username }}</div>
+                    <div class="request-item__text">wants to connect with you</div>
+                </div>
+                
+                <div class="request-item__actions">
+                    <form method="POST" 
+                          action="{{ url_for('connections.connections_accept', conn_id=request.id) }}?next={{ url_for('messages.inbox') }}" 
+                          style="margin: 0;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-primary-custom btn-sm">
-                            <i class="bi bi-check-lg"></i> Accept & Chat
+                        <button type="submit" class="request-item__btn request-item__btn--accept">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Accept</span>
                         </button>
                     </form>
-                    <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=request.id) }}"
-                        class="btn btn-sm btn-outline-danger">
+                    
+                    <form method="POST" 
+                          action="{{ url_for('connections.connections_reject', conn_id=request.id) }}" 
+                          style="margin: 0;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-outline-custom btn-sm">
-                            <i class="bi bi-x-lg"></i> Reject
+                        <button type="submit" class="request-item__btn request-item__btn--reject">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Reject</span>
                         </button>
                     </form>
-
-
-
+                </div>
             </div>
             {% endfor %}
         </div>
+    </section>
+    {% endif %}
+
+    <!-- ========== EMPTY STATE ========== -->
+    {% if not connected_users and not incoming_users %}
+    <div class="messages-empty">
+        <div class="messages-empty__icon">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h2 class="messages-empty__title">No messages yet</h2>
+        <p class="messages-empty__text">
+            Connect with people to start chatting and build your campus community
+        </p>
+        <a href="{{ url_for('main.search_page') }}" class="messages-empty__btn">
+            <i class="bi bi-compass"></i>
+            <span>Find People</span>
+        </a>
     </div>
     {% endif %}
 
-    <!-- EMPTY STATE -->
-    {% if not connected_users and not incoming_users %}
-    <div class="empty-state text-center py-5">
-        <i class="bi bi-chat-dots fs-1 text-muted mb-3"></i>
-        <h4 class="text-muted mb-2">No messages yet</h4>
-        <p class="text-muted mb-4">Connect with people to start chatting</p>
-        <a href="{{ url_for('main.search_page') }}" class="btn btn-primary-custom">
-            <i class="bi bi-compass me-2"></i>Find People
-        </a>
-    </div>
+    <!-- ========== COMING SOON - GROUP CHATS ========== -->
+    <!-- TODO: Add group chat functionality -->
+    <!-- Placeholder for future group messaging feature -->
+    {% if false %}
+    <section class="messages-section">
+        <div class="messages-section__header">
+            <h2 class="messages-section__title">
+                <i class="bi bi-people-fill"></i>
+                Group Chats
+                <span class="coming-soon-badge">
+                    <i class="bi bi-stars"></i>
+                    Coming Soon
+                </span>
+            </h2>
+        </div>
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <p>Group messaging feature is under development</p>
+        </div>
+    </section>
     {% endif %}
 </div>
 {% endblock %}

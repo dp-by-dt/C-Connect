@@ -1,7 +1,7 @@
 from . import messages
 from flask import render_template, jsonify, flash, request
 from flask_login import login_required, current_user
-from models import User, Message, Connection, Notification
+from models import User, Message, Connection, Notification, Profile
 from flask import redirect, url_for
 from extensions import db
 from factory_helpers import cleanup_expired_messages
@@ -10,13 +10,14 @@ from sqlalchemy import desc
 
 from blueprints.connections.service import is_connected
 
-
+profile = Profile
 
 
 @messages.route("/")
 @login_required
 def inbox():
     cleanup_expired_messages()
+    #defining Profile
 
     # 1. Get CONNECTED users
     connections = Connection.query.filter(
@@ -84,7 +85,8 @@ def inbox():
                         connected_users=connected_users, 
                         incoming_requests=incoming_requests,
                         incoming_users=incoming_users,
-                        chat_previews=chat_previews
+                        chat_previews=chat_previews,
+                        profile=profile
                     )  
 
 
@@ -144,5 +146,6 @@ def chat(user_id):
     return render_template(
                 "messages/chat.html", 
                 messages=messages,
-                target_user=target_user
+                target_user=target_user,
+                profile=profile
             )

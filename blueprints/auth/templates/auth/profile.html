@@ -1,270 +1,755 @@
 {% extends "base.html" %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}{{ current_user.username }} - Profile{% endblock %}
 
 {% block extra_css %}
 <style>
-.profile-header {
-    padding: 2rem;
-    margin-bottom: 2rem;
-    text-align: center;
+/* ==================== PROFILE PAGE LAYOUT ==================== */
+.profile-page {
+    display: flex;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - var(--topbar-height) - 4rem);
+}
+
+/* ===== LEFT SIDE - PROFILE CARD (FIXED) ===== */
+.profile-page__left {
+    flex: 0 0 550px;
+    position: sticky;
+    top: calc(var(--topbar-height) + 2rem);
+    height: fit-content;
+    animation: fadeInLeft 0.6s ease;
+
+    /* ANTI-JERK FIXES */
+    will-change: transform;
+    transform: translateZ(0);  /* Hardware acceleration */
+    backface-visibility: hidden;
+    contain: layout style;     /* Contain repaints */
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.profile-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
 }
 
-.profile-header::before {
+/* Decorative gradient background */
+.profile-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 120px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    opacity: 0.1;
-    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    height: 180px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    opacity: 0.08;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    z-index: 0;
 }
 
-.profile-avatar-large {
-    width: 140px;
-    height: 140px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
+.profile-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== Profile Picture ===== */
+.profile-card__avatar-wrapper {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.profile-card__avatar {
+    width: 160px;
+    height: 160px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3.5rem;
+    font-size: 4rem;
     font-weight: 700;
     color: white;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto;
     box-shadow: var(--shadow-lg);
+    border: 5px solid var(--bg-primary);
     position: relative;
-    z-index: 1;
-    border: 4px solid var(--bg-primary);
+    overflow: hidden;
+    transition: transform var(--transition-base);
 }
 
-.profile-avatar-large img {
+.profile-card__avatar:hover {
+    transform: scale(1.05);
+}
+
+.profile-card__avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
 }
 
-.profile-name {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.profile-email {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.profile-body {
-    padding: 2rem;
-}
-
-.form-section {
+/* ===== Profile Info ===== */
+.profile-card__info {
+    text-align: center;
     margin-bottom: 2rem;
 }
 
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+.profile-card__name {
+    font-size: 1.875rem;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
 }
 
-.field-group {
+.profile-card__email {
+    font-size: 0.9375rem;
+    color: var(--text-tertiary);
     margin-bottom: 1.5rem;
 }
 
-.field-label {
+/* ===== Stats (Connections & Posts) ===== */
+.profile-card__stats {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.profile-card__stat {
+    flex: 1;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.profile-card__stat:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.profile-card__stat-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.profile-card__stat-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.profile-card__stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+/* ===== Bio Section ===== */
+.profile-card__bio {
+    margin-bottom: 2rem;
+}
+
+.profile-card__section-title {
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
 }
 
-.field-value {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    padding: 0.875rem 1rem;
-    color: var(--text-primary);
-    font-size: 1rem;
-}
-
-.field-value.textarea {
-    min-height: 100px;
+.profile-card__bio-text {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
     line-height: 1.6;
+    padding: 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--primary-color);
 }
 
-.field-value:disabled {
-    opacity: 0.8;
-    cursor: not-allowed;
+.profile-card__bio-empty {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
-.interests-tags {
+/* ===== Details Section ===== */
+.profile-card__details {
+    margin-bottom: 2rem;
+}
+
+.profile-card__detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.profile-card__detail-item:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(4px);
+}
+
+.profile-card__detail-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.profile-card__detail-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-card__detail-label {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.125rem;
+}
+
+.profile-card__detail-value {
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Interests Section ===== */
+.profile-card__interests {
+    margin: 2rem auto ;
+}
+
+.profile-card__interests-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-.interest-tag {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    color: white;
+.profile-card__interest-tag {
     padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-lg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-xs);
 }
 
-.action-buttons {
+.profile-card__interest-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Edit Profile Button ===== */
+.profile-card__edit-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
     display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
 }
 
-@media (max-width: 576px) {
-    .profile-header {
-        padding: 1.5rem;
+.profile-card__edit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.profile-card__edit-btn i {
+    font-size: 1.125rem;
+}
+
+/* ===== RIGHT SIDE - POSTS SECTION (SCROLLABLE) ===== */
+.profile-page__right {
+    flex: 1;
+    animation: fadeInRight 0.6s ease;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.profile-posts {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-posts__header {
+    margin-bottom: 2rem;
+}
+
+.profile-posts__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.profile-posts__title i {
+    color: var(--primary-color);
+}
+
+.profile-posts__subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-tertiary);
+    margin-top: 0.5rem;
+}
+
+/* ===== Posts Grid (PLACEHOLDER) ===== */
+.profile-posts__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+/* Use:  for post in user.posts */
+.profile-posts__placeholder {
+    aspect-ratio: 1;
+    background: var(--bg-hover);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 3rem;
+    transition: all var(--transition-base);
+    border: 2px dashed var(--border-color);
+}
+
+.profile-posts__placeholder:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+/* Empty state */
+.profile-posts__empty {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.profile-posts__empty-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.profile-posts__empty-text {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.profile-posts__empty-subtext {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+/* ==================== MOBILE STICKY HEADER ==================== */
+/* ==================== NOT NEEDED ANYMORE ==================== */
+.profile-mobile-header {
+    display: none;
+    position: sticky;
+    top: var(--topbar-height);
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.75rem 1rem;
+    transform: translateY(-100%);
+    transition: transform var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-mobile-header.is-visible {
+    transform: translateY(0);
+}
+
+.profile-mobile-header__content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-mobile-header__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.125rem;
+    border: 2px solid var(--bg-primary);
+    flex-shrink: 0;
+}
+
+.profile-mobile-header__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-full);
+}
+
+.profile-mobile-header__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-mobile-header__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-mobile-header__email {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* ==================== ABOVE STICKY HEADER NOT ADDED ==================== */
+
+
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .profile-page {
+        flex-direction: column;
+        gap: 1.5rem;
     }
     
-    .profile-avatar-large {
-        width: 110px;
-        height: 110px;
-        font-size: 2.75rem;
+    .profile-page__left {
+        flex: none;
+        position: static;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
     }
     
-    .profile-name {
+    .profile-page__right {
+        max-width: 100%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .profile-mobile-header {
+        display: block;
+    }
+    
+    .profile-page {
+        gap: 1rem;
+    }
+    
+    .profile-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .profile-card__avatar {
+        width: 120px;
+        height: 120px;
+        font-size: 3rem;
+    }
+    
+    .profile-card__name {
         font-size: 1.5rem;
     }
     
-    .profile-body {
+    .profile-card__stats {
+        flex-direction: row;
+    }
+    
+    .profile-card__stat {
+        padding: 1rem 0.75rem;
+    }
+    
+    .profile-card__stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .profile-posts {
         padding: 1.5rem;
     }
     
-    .action-buttons {
-        flex-direction: column;
+    .profile-posts__grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .profile-card__stats {
+        gap: 0.75rem;
     }
     
-    .action-buttons .btn {
-        width: 100%;
+    .profile-card__stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .profile-card__stat-label {
+        font-size: 0.75rem;
+    }
+    
+    .profile-posts__grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="glass-card animate-on-scroll">
-                <!-- Profile Header -->
-                <div class="profile-header">
-                    <div class="profile-avatar-large">
-                        {% if profile.profile_picture %}
-                            <img src="{{ profile.profile_picture }}" alt="{{ current_user.username }}">
-                        {% else %}
-                            {{ current_user.username[0].upper() }}
-                        {% endif %}
+<div class="profile-page">
+
+
+    {# ========== LEFT SIDE - PROFILE CARD ========== #}
+    <aside class="profile-page__left">
+
+        <div class="profile-card">
+
+            {% with user=user, conn_stats=stats %}
+                {% include "components/profile_card.html" %}
+            {% endwith %}
+
+
+<!-- {# Profile Picture #}
+            <div class="profile-card__avatar-wrapper">
+                <div class="profile-card__avatar">
+                    {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture }}" alt="{{ current_user.username }}">
+                    {% else %}
+                        {{ current_user.username[0].upper() }}
+                    {% endif %}
+                </div>
+            </div>
+ -->
+
+
+ 
+
+            {# Interests Section #}
+            <div class="profile-card__interests">
+                <h2 class="profile-card__section-title">
+                    <i class="bi bi-stars me-2"></i>Interests
+                </h2>
+                {% if profile.interests %}
+                    <div class="profile-card__interests-tags">
+                        {% for interest in profile.interests %}
+                            <span class="profile-card__interest-tag"># {{ interest }}</span>
+                        {% endfor %}
                     </div>
-                    <h1 class="profile-name">{{ current_user.username }}</h1>
-                    <p class="profile-email">{{ current_user.email }}</p>
+                {% else %}
+                    <p class="profile-card__bio-empty">No interests added yet.</p>
+                {% endif %}
+            </div>
+
+
+        </div>
+    </aside>
+
+    {# ========== RIGHT SIDE - POSTS SECTION ========== #}
+    <main class="profile-page__right">
+        <div class="profile-posts">
+           {# Bio Section #}
+            <div class="profile-card__bio">
+                <h2 class="profile-card__section-title">
+                    <!-- <i class="bi bi-chat-left-quote me-2"></i> -->
+                     Bio
+                </h2>
+                {% if profile.bio %}
+                    <p class="profile-card__bio-text">{{ profile.bio }}</p>
+                {% else %}
+                    <p class="profile-card__bio-empty">No bio added yet. Tell others about yourself!</p>
+                {% endif %}
+            </div>
+
+            {# Details Section #}
+            <div class="profile-card__details">
+                <h2 class="profile-card__section-title">
+                    <!-- <i class="bi bi-info-circle me-2"></i> -->
+                    Details
+                </h2>
+                
+                {# Email #}
+                <div class="profile-card__detail-item">
+                    <div class="profile-card__detail-icon">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+                    <div class="profile-card__detail-content">
+                        <div class="profile-card__detail-label">Email</div>
+                        <div class="profile-card__detail-value">{{ current_user.email }}</div>
+                    </div>
                 </div>
 
-                <!-- Profile Body -->
-                <div class="profile-body">
-                    <!-- Basic Information -->
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <i class="bi bi-person-circle me-2"></i>Basic Information
-                        </h2>
-                        
-                        <div class="field-group">
-                            <label class="field-label">Username</label>
-                            <div class="field-value">{{ current_user.username }}</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label">Email Address</label>
-                            <div class="field-value">{{ current_user.email }}</div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label">Bio</label>
-                            <div class="field-value textarea">
-                                {{ profile.bio or "No bio added yet. Tell others about yourself!" }}
-                            </div>
+                {# Department #}
+                <div class="profile-card__detail-item">
+                    <div class="profile-card__detail-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <div class="profile-card__detail-content">
+                        <div class="profile-card__detail-label">Department</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.department %}
+                                <p>{{ profile.department }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
                         </div>
                     </div>
+                </div>
 
-                    <!-- Academic Information -->
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <i class="bi bi-mortarboard me-2"></i>Academic Information
-                        </h2>
-                        
-                        <div class="row">
-                            <div class="col-md-6 field-group">
-                                <label class="field-label">Department</label>
-                                <div class="field-value">
-                                    {{ profile.department or "Not specified" }}
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 field-group">
-                                <label class="field-label">Year</label>
-                                <div class="field-value">
-                                    {{ profile.year or "Not specified" }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="field-group">
-                            <label class="field-label">Location</label>
-                            <div class="field-value">
-                                {{ profile.location or "Not specified" }}
-                            </div>
+                {# Year #}
+                <div class="profile-card__detail-item">
+                    <div class="profile-card__detail-icon">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                    <div class="profile-card__detail-content">
+                        <div class="profile-card__detail-label">Year</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.year %}
+                                <p>{{ profile.year }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
                         </div>
                     </div>
+                </div>
 
-                    <!-- Interests -->
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <i class="bi bi-stars me-2"></i>Interests
-                        </h2>
-                        
-                        {% if profile.interests %}
-                            <div class="interests-tags">
-                                {% for interest in profile.interests %}
-                                    <span class="interest-tag">{{ interest }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="field-value">
-                                No interests added yet. Add your interests to find like-minded people!
-                            </div>
-                        {% endif %}
+                {# Location #}
+                <div class="profile-card__detail-item">
+                    <div class="profile-card__detail-icon">
+                        <i class="bi bi-geo-alt-fill"></i>
                     </div>
-
-                    <!-- Actions -->
-                    <div class="action-buttons">
-                        <a href="{{ url_for('auth.profile_edit') }}" class="btn btn-primary-custom">
-                            <i class="bi bi-pencil me-2"></i>Edit Profile
-                        </a>
-                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-custom">
-                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
-                        </a>
+                    <div class="profile-card__detail-content">
+                        <div class="profile-card__detail-label">Location</div>
+                        <div class="profile-card__detail-value">
+                            {% if profile.location %}
+                                <p>{{ profile.location }}</p>
+                            {% else %}
+                                <p class="profile-card__bio-empty">_</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+
+
+        <div class="profile-posts" style="margin-top: 1.8rem;">
+            {# Posts Header #}
+            <div class="profile-posts__header">
+                <h2 class="profile-posts__title">
+                    <!-- <i class="bi bi-grid-3x3-gap-fill"></i> -->
+                    Posts
+                </h2>
+                <p class="profile-posts__subtitle">Your recent posts and activities</p>
+            </div>
+
+            {# Posts Grid #}
+            {# TODO: Backend Integration #}
+            {# Replace with: {% if user.posts %} ... {% for post in user.posts %} #}
+            {% if posts and posts|length > 0 %}
+                <div class="profile-posts__grid">
+                    {% for post in posts %}
+                        <div class="profile-posts__placeholder">
+                            <span>Post #{{ post.id }}</span>
+                            {# TODO: Backend Integration to show posts.content #}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {# Empty State #}
+                <div class="profile-posts__empty">
+                    <div class="profile-posts__empty-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <p class="profile-posts__empty-text">No posts yet</p>
+                    <p class="profile-posts__empty-subtext">Start sharing your thoughts and moments with the community!</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
 </div>
+
 {% endblock %}
+
+
