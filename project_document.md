@@ -1223,6 +1223,10 @@ the file structure:
 - board posts clear up function "cleanup_expired_posts" in the `factory_helpers` file
 - Created `routes` for /, post creation, fetch active posts, liking events and give likes 
 
+- `debug route` added in `app.py` to know the routes registered
+- Added csrf token in the campus_board routes
+- 
+
 
 -----------------------
 ### Sequence right now:

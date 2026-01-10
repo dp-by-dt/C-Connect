@@ -89,7 +89,27 @@ def create_app():
     register_daily_cleanup(app)
     #cleanup old profile_visit
     register_profilevisit_cleanup(app)
-    
+
+
+    #----------- Debugging the routes urls
+    # Add to your app.py (TEMP):
+    @app.route('/debug-routes')
+    def debug_routes():
+        import urllib.parse
+        output = []
+        for rule in app.url_map.iter_rules():
+            options = {}
+            for arg in rule.arguments:
+                options[arg] = "[{0}]".format(arg)
+            
+            methods = ','.join(rule.methods)
+            url = urllib.parse.unquote("{0}".format(rule))
+            line = urllib.parse.unquote("({0}) {1} {2}".format(methods, url, options))
+            output.append(line)
+        
+        return "<br>".join(sorted(output))
+
+        
     return app
 
 

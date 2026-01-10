@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from flask import request, jsonify, render_template
 from flask_login import login_required, current_user
 
-from extensions import db
+from extensions import db, csrf
 from models import CampusBoardPost, CampusBoardLike
 from factory_helpers import cleanup_expired_posts
 
@@ -20,6 +20,7 @@ def campus_board_page():
 
 #post creation
 @campus_board_bp.route("/create", methods=["POST"])
+@csrf.exempt
 @login_required
 def create_post():
     data = request.get_json()
@@ -52,6 +53,7 @@ def create_post():
 
 #fetch active posts
 @campus_board_bp.route("/list", methods=["GET"])
+@csrf.exempt
 @login_required
 def list_posts():
     cleanup_expired_posts()
@@ -81,6 +83,7 @@ def list_posts():
 
 #liek the events 
 @campus_board_bp.route("/like/<int:post_id>", methods=["POST"])
+@csrf.exempt
 @login_required
 def toggle_like(post_id):
     post = CampusBoardPost.query.get_or_404(post_id)
@@ -117,6 +120,7 @@ def toggle_like(post_id):
 
 #delete own posts
 @campus_board_bp.route("/delete/<int:post_id>", methods=["DELETE"])
+@csrf.exempt
 @login_required
 def delete_post(post_id):
     post = CampusBoardPost.query.get_or_404(post_id)
