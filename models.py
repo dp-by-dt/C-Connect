@@ -262,3 +262,57 @@ class VibeDailyState(db.Model): #daily theme color (also for calender view)
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc)
     )
+
+
+
+
+
+# For campus events board (notice board)
+class CampusBoardPost(db.Model):
+    __tablename__ = "campus_board_posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    content = db.Column(db.String(300), nullable=False)
+
+    department = db.Column(db.String(100), nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    likes_count = db.Column(db.Integer, default=0)
+
+    user = db.relationship("User", backref="campus_board_posts")
+
+    def is_expired(self):
+        return datetime.now(timezone.utc) > self.expires_at
+
+
+
+# likes in campus board section
+class CampusBoardLike(db.Model):
+    __tablename__ = "campus_board_likes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    campus_post_id = db.Column(
+        db.Integer,
+        db.ForeignKey("campus_board_posts.id"),
+        nullable=False
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "campus_post_id",
+            "user_id",
+            name="unique_campus_board_like"
+        ),
+    )

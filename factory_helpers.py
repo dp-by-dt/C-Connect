@@ -10,7 +10,7 @@ from logging.handlers import RotatingFileHandler
 import os
 from flask_limiter.util import get_remote_address
 
-from models import ProfileVisit, Message
+from models import ProfileVisit, Message, CampusBoardPost
 
 
 #Secure headers to stop xss, script injection, image injection etc
@@ -79,6 +79,9 @@ def register_blueprints(app):
 
     from blueprints.vibe import vibe_bp
     app.register_blueprint(vibe_bp)
+
+    from blueprints.campus_board import campus_board_bp
+    app.register_blueprint(campus_board_bp)
 
 
 
@@ -191,3 +194,10 @@ def cleanup_expired_messages(): #message cleanup helper function
 
 
 
+# delete expired posts from the notice board (campus_board)
+def cleanup_expired_posts():
+    now = datetime.now(timezone.utc)
+    CampusBoardPost.query.filter(
+        CampusBoardPost.expires_at < now
+    ).delete()
+    db.session.commit()

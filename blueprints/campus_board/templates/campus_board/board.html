@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div style="max-width: 700px; margin: auto;">
+
+  <h2>📌 Campus Board</h2>
+  <p style="color: #888;">
+    Short, time-bound campus updates. Posts auto-expire.
+  </p>
+
+  <!-- CREATE POST -->
+  <div style="border: 1px solid #444; padding: 12px; margin-bottom: 20px;">
+    <h4>Create update</h4>
+
+    <textarea id="content" rows="3" maxlength="300"
+      placeholder="What's happening on campus?"
+      style="width: 100%;"></textarea>
+
+    <div style="display: flex; gap: 8px; margin-top: 8px;">
+      <input id="department" placeholder="Department (optional)" style="flex:1;">
+      <input id="location" placeholder="Location (optional)" style="flex:1;">
+    </div>
+
+    <div style="margin-top: 8px;">
+      <label>
+        Expires in (hours):
+        <input id="expires" type="number" min="1" max="120" value="24" style="width: 80px;">
+      </label>
+    </div>
+
+    <button onclick="createPost()" style="margin-top: 10px;">
+      Post
+    </button>
+
+    <div id="create-error" style="color:red; margin-top:5px;"></div>
+  </div>
+
+  <!-- POSTS LIST -->
+  <div id="posts"></div>
+
+  <div id="empty-state" style="display:none; color:#777;">
+    No active campus updates.
+  </div>
+
+</div>
+
+<script>
+function fetchPosts() {
+  fetch("/campus-board/list")
+    .then(res => res.json())
+    .then(posts => {
+      const container = document.getElementById("posts");
+      const empty = document.getElementById("empty-state");
+
+      container.innerHTML = "";
+
+      if (posts.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+
+      empty.style.display = "none";
+
+      posts.forEach(p => {
+        const card = document.createElement("div");
+        card.style.border = "1px solid #444";
+        card.style.padding = "10px";
+        card.style.marginBottom = "12px";
+
+        card.innerHTML = `
+          <p style="margin-bottom:6px;">${p.content}</p>
+
+          <small style="color:#aaa;">
+            ${p.department || ""} ${p.location ? "• " + p.location : ""}
+          </small><br>
+
+          <small style="color:#777;">
+            Expires: ${new Date(p.expires_at).toLocaleString()}
+          </small><br><br>
+
+          <button onclick="toggleLike(${p.id})">❤️ ${p.likes}</button>
+          ${p.is_owner ? `<button onclick="deletePost(${p.id})">🗑 Delete</button>` : ""}
+        `;
+
+        container.appendChild(card);
+      });
+    });
+}
+
+function createPost() {
+  const content = document.getElementById("content").value.trim();
+  const department = document.getElementById("department").value;
+  const location = document.getElementById("location").value;
+  const expires = document.getElementById("expires").value;
+  const errorBox = document.getElementById("create-error");
+
+  errorBox.textContent = "";
+
+  if (!content) {
+    errorBox.textContent = "Content cannot be empty.";
+    return;
+  }
+
+  fetch("/campus-board/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content,
+      department,
+      location,
+      expires_in_hours: expires
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      errorBox.textContent = "Failed to create post.";
+      return;
+    }
+
+    document.getElementById("content").value = "";
+    document.getElementById("department").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("expires").value = 24;
+
+    fetchPosts();
+  });
+}
+
+function toggleLike(id) {
+  fetch(`/campus-board/like/${id}`, { method: "POST" })
+    .then(() => fetchPosts());
+}
+
+function deletePost(id) {
+  if (!confirm("Delete this post?")) return;
+
+  fetch(`/campus-board/delete/${id}`, { method: "DELETE" })
+    .then(() => fetchPosts());
+}
+
+// initial load
+fetchPosts();
+</script>
+{% endblock %}

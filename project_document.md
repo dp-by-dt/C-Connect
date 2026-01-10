@@ -1214,6 +1214,16 @@ the file structure:
 - Ui sligtly modified for this and tested OK.
 
 
+
+
+
+### Feature: Campus board
+- Added the new blueprint and registered it
+- Created the tables campus_board_posts and campus_board_likes and migrated 
+- board posts clear up function "cleanup_expired_posts" in the `factory_helpers` file
+- Created `routes` for /, post creation, fetch active posts, liking events and give likes 
+
+
 -----------------------
 ### Sequence right now:
 1. Must do now:
