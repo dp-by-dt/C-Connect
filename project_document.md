@@ -1225,7 +1225,10 @@ the file structure:
 
 - `debug route` added in `app.py` to know the routes registered
 - Added csrf token in the campus_board routes
-- 
+
+- UI upgraded
+- Added entry point for campus board (in the nav & side bar)
+- Tested it OK
 
 
 -----------------------
