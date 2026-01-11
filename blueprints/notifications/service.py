@@ -4,10 +4,11 @@ from datetime import datetime, timedelta, timezone, date
 from flask import current_app
 
 
-
+#notification for connections
 def create_notification(user_id, sender_id, message):
     notif = Notification(
         user_id=user_id,
+        type='connect',
         sender_id=sender_id,
         message=message
     )
@@ -67,7 +68,7 @@ def create_daily_campus_notification_for_user(user):
     # 3. Create notification
     notif = Notification(
         user_id=user.id,
-        type="campus_daily",
+        type="campus_daily_event",
         message="New campus updates available",
         ref_id=None
     )

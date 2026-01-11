@@ -1285,8 +1285,8 @@ flask shell
 
 ### Daily notificatoin for campus board events
 
-- notif creation form `notification/services.py` at campus_board page triggering (from 9am)
-- 
+- notif creation from `notification/services.py`, triggering happens one user logins and reach dashboard
+- clicking notification (mark as read) button, redirects to campus board page
 
 
 
