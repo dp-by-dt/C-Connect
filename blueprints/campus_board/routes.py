@@ -8,13 +8,60 @@ from extensions import db, csrf
 from models import CampusBoardPost, CampusBoardLike
 from factory_helpers import cleanup_expired_posts
 
+from datetime import date
+import json
+from models import VibeQuestion, VibeResponse, VibeDailyState
 
+
+
+#=============== Helper fucntions =================
+
+# -------- vibe content to display ----
+def get_vibe_context(user):
+    today = date.today()
+    question = VibeQuestion.query.filter_by(active_date=today).first()
+
+    if not question:
+        return {"mode": "inactive"}
+
+    options = json.loads(question.options_json)
+
+    response = VibeResponse.query.filter_by(
+        question_id=question.id,
+        user_id=user.id
+    ).first()
+
+    if not response:
+        return {
+            "mode": "input",
+            "question": question,
+            "options": options
+        }
+
+    state = VibeDailyState.query.get(today)
+
+    return {
+        "mode": "result",
+        "question": question,
+        "options": options,
+        "state": state
+    }
+
+
+
+
+
+#=========== The routes =================
 
 #main page of campus board
 @campus_board_bp.route("/", methods=["GET"])
 @login_required
 def campus_board_page():
-    return render_template("campus_board/board.html")
+    vibe = get_vibe_context(current_user)
+    return render_template(
+        "campus_board/board.html",
+        vibe=vibe
+        )
 
 
 

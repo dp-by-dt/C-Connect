@@ -31,7 +31,7 @@ def create_app():
 
     # --------- Before request (for vibe question ) --------
     # to block user to access the app before answering the question 
-    @app.before_request
+    #@app.before_request #================== enforce vibe commented out
     def enforce_daily_vibe():
         if not current_user.is_authenticated:
             return

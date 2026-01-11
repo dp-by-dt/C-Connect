@@ -1240,7 +1240,11 @@ the file structure:
 ### Vibe page updates
 - don't put vibe question daily (admin only)
 - ghost tape disabled
--
+
+- csrf tokens added in the admin control page of vibe create
+- put vibe context in the `campus-board` page in the `route` and the `board.html` file
+- added a helping `_vibe_widget.html` template for the vibe card on the campus-board page
+- UI upgraded for the _vibe_widget
 
 
 

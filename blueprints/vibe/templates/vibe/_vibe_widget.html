@@ -1,0 +1,314 @@
+<!-- ==================== VIBE WIDGET STYLES ==================== -->
+<style>
+/* ===== Main Widget Container ===== */
+.vibe-widget {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-xs);
+    transition: all var(--transition-base);
+}
+
+.vibe-widget:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== Header ===== */
+.vibe-widget__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.vibe-widget__icon {
+    font-size: 1.5rem;
+}
+
+.vibe-widget__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ===== Inactive State ===== */
+.vibe-widget__inactive {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin: 0;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+/* ===== Input Mode ===== */
+.vibe-widget__question {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.875rem 0;
+    line-height: 1.4;
+}
+
+.vibe-widget__options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.vibe-widget__option {
+    position: relative;
+}
+
+.vibe-widget__option-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.vibe-widget__option-label {
+    display: block;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.vibe-widget__option-label:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-tertiary);
+}
+
+.vibe-widget__option-input:checked + .vibe-widget__option-label {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.vibe-widget__submit {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.vibe-widget__submit:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.vibe-widget__submit:active {
+    transform: translateY(0);
+}
+
+/* ===== Result Mode ===== */
+.vibe-widget__stats {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.vibe-widget__stats i {
+    font-size: 0.875rem;
+}
+
+.vibe-widget__results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.vibe-widget__result-item {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+/* Dominant choice styling */
+.vibe-widget__result-item--dominant {
+    background: linear-gradient(135deg, rgba(26, 77, 46, 0.12), rgba(47, 122, 74, 0.08));
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 700;
+    position: relative;
+    padding-left: 2rem;
+}
+
+/* Badge showing "Campus choice" */
+.vibe-widget__result-item--dominant::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 25%;
+    box-shadow: 0 0 8px var(--primary-color);
+}
+
+.vibe-widget__result-item--dominant::after {
+    content: 'Campus Choice';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.vibe-widget {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .vibe-widget {
+        padding: 0.875rem;
+    }
+
+    .vibe-widget__title {
+        font-size: 1rem;
+    }
+
+    .vibe-widget__question {
+        font-size: 1rem;
+    }
+
+    .vibe-widget__option-label {
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+    }
+
+    /* Stack badge on mobile */
+    .vibe-widget__result-item--dominant {
+        padding-left: 1.75rem;
+    }
+
+    .vibe-widget__result-item--dominant::after {
+        font-size: 0.85rem;
+        right: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .vibe-widget {
+        padding: 0.75rem;
+    }
+
+    /* Hide badge text on very small screens, keep indicator dot */
+    .vibe-widget__result-item--dominant::after {
+        display: none;
+    }
+}
+</style>
+
+<!-- ==================== VIBE WIDGET HTML ==================== -->
+<div class="vibe-widget glass-effect">
+    <!-- Header -->
+    <div class="vibe-widget__header">
+        <span class="vibe-widget__icon">🫧</span>
+        <h4 class="vibe-widget__title">Campus Vibe</h4>
+    </div>
+
+    {% if vibe.mode == "inactive" %}
+        <!-- Inactive State -->
+        <p class="vibe-widget__inactive">No active vibe today</p>
+
+    {% elif vibe.mode == "input" %}
+        <!-- Input Mode: User hasn't responded yet -->
+        <p class="vibe-widget__question">{{ vibe.question.question_text }}</p>
+
+        <form method="POST" action="{{ url_for('vibe.respond_vibe') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Options as custom radio buttons -->
+            <div class="vibe-widget__options">
+                {% for opt in vibe.options %}
+                <div class="vibe-widget__option">
+                    <input 
+                        type="radio" 
+                        name="choice" 
+                        value="{{ loop.index0 }}" 
+                        id="vibe-opt-{{ loop.index0 }}"
+                        class="vibe-widget__option-input"
+                        required>
+                    <label 
+                        for="vibe-opt-{{ loop.index0 }}"
+                        class="vibe-widget__option-label">
+                        {{ opt }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="vibe-widget__submit">
+                Submit
+            </button>
+        </form>
+
+    {% elif vibe.mode == "result" %}
+        <!-- Result Mode: Show results after user responded -->
+        <p class="vibe-widget__question">{{ vibe.question.question_text }}</p>
+
+        <!-- Response count -->
+        <p class="vibe-widget__stats">
+            <i class="bi bi-people"></i>
+            <span>{{ vibe.state.total_responses }} responses</span>
+        </p>
+
+        <!-- Results list with dominant choice highlighted -->
+        <div class="vibe-widget__results">
+            {% for opt in vibe.options %}
+            <div class="vibe-widget__result-item {% if loop.index0 == vibe.state.dominant_choice %}vibe-widget__result-item--dominant{% endif %}">
+                {{ opt }}
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
