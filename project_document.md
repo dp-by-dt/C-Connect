@@ -1231,6 +1231,38 @@ the file structure:
 - Tested it OK
 
 
+### Admin Control Panel
+- Implemented
+- For: vibe q&o,
+
+
+
+### Vibe page updates
+- don't put vibe question daily (admin only)
+- ghost tape disabled
+-
+
+
+
+#### Manual user addition in the db
+(in flask shell)
+flask shell
+
+    from extensions import db
+    from models import User
+
+    admin = User(
+        id=12,
+        username="name",
+        email="name@gmail.com"
+    )
+
+    admin.set_password("change_this_password")
+    db.session.add(admin)
+    db.session.commit()
+
+
+
 -----------------------
 ### Sequence right now:
 1. Must do now:

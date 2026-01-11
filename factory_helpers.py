@@ -9,6 +9,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from flask_limiter.util import get_remote_address
+from flask_login import current_user
+from config import ADMIN_USER_ID
 
 from models import ProfileVisit, Message, CampusBoardPost
 
@@ -114,6 +116,15 @@ def register_errorhandlers(app):
 def to_ist(utc_dt):
     ist = pytz.timezone('Asia/Kolkata')
     return utc_dt.replace(tzinfo=pytz.utc).astimezone(ist)
+
+
+#======== Admin control panel ========
+def is_admin():
+    return (
+        current_user.is_authenticated and 
+        current_user.id == ADMIN_USER_ID
+    )
+
 
 
 

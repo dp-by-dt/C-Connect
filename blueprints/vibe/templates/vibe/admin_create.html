@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<h3>Create Today's Vibe</h3>
+
+<form method="POST">
+  <div>
+    <label>Question</label><br>
+    <input name="question" style="width:100%;" required>
+  </div>
+
+  <div style="margin-top:10px;">
+    <label>Options (comma separated)</label><br>
+    <input name="options" placeholder="Great, Okay, Low" style="width:100%;" required>
+  </div>
+
+  <button style="margin-top:10px;">Create Vibe</button>
+</form>
+{% endblock %}

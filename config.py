@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+#admin control panel
+ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID", 314159))  #default admin id if not set in env
 
 
 class Config:
@@ -12,6 +14,7 @@ class Config:
     # SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'database.db')}")
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'database.db')}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
     #for forget password
     SECURITY_PASSWORD_SALT = os.getenv("SECURITY_PASSWORD_SALT")

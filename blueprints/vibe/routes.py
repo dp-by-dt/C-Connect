@@ -2,8 +2,9 @@ import json
 import random
 from datetime import date, datetime, timezone
 
-from flask import render_template, redirect, url_for, request, flash
+from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
+from factory_helpers import is_admin
 
 from extensions import db
 from . import vibe_bp
@@ -18,25 +19,27 @@ from models import (
 
 # ----- helper functions -----------------
 
-def get_or_create_today_question():
+def get_today_question():
     today = date.today()
+    return VibeQuestion.query.filter_by(active_date=today).first()
 
-    question = VibeQuestion.query.filter_by(active_date=today).first()
-    if question:
-        return question
+#--------- Not auto creating question every day now ----------
+    # question = VibeQuestion.query.filter_by(active_date=today).first()
+    # if question:
+    #     return question
 
-    # 🔹 v1 default question (can rotate later)
-    options = ["Easy", "Meh", "Disaster"]
+    # # v1 default question (can rotate later)
+    # options = ["Easy", "Meh", "Disaster"]
 
-    question = VibeQuestion(
-        question_text="How bad was today's exam?",
-        options_json=json.dumps(options),
-        active_date=today
-    )
+    # question = VibeQuestion(
+    #     question_text="How bad was today's exam?",
+    #     options_json=json.dumps(options),
+    #     active_date=today
+    # )
 
-    db.session.add(question)
-    db.session.commit()
-    return question
+    # db.session.add(question)
+    # db.session.commit()
+    # return question
 
 
 def has_user_voted(question_id):
@@ -87,18 +90,81 @@ def update_daily_state(question):
 
 
 
+# ==================== ADMIN PANEL =======================
+
+@vibe_bp.route("/admin/create", methods=["GET"])
+@login_required
+def admin_create_vibe_form():
+    if not is_admin():
+        abort(403)
+
+    return render_template("vibe/admin_create.html")
+
+
+
+
+
+@vibe_bp.route("/admin/create", methods=["POST"])
+@login_required
+def admin_create_vibe():
+    if not is_admin():
+        abort(403)
+
+    today = date.today()
+
+    existing = VibeQuestion.query.filter_by(active_date=today).first()
+    if existing:
+        flash("Vibe already exists for today.", "warning")
+        return redirect(url_for("vibe.daily_vibe"))
+
+    question_text = request.form.get("question", "").strip()
+    options_raw = request.form.get("options", "").strip()
+
+    if not question_text or not options_raw:
+        flash("Question and options required.", "error")
+        return redirect(url_for("vibe.admin_create_vibe_form"))
+
+    options = [o.strip() for o in options_raw.split(",") if o.strip()]
+    if len(options) < 2:
+        flash("At least two options required.", "error")
+        return redirect(url_for("vibe.admin_create_vibe_form"))
+
+    question = VibeQuestion(
+        question_text=question_text,
+        options_json=json.dumps(options),
+        active_date=today
+    )
+
+    db.session.add(question)
+    db.session.commit()
+
+    flash("Vibe created for today.", "success")
+    return redirect(url_for("vibe.daily_vibe"))
+
+
+
+
+
 
 
 # -------- Routes --------------
 @vibe_bp.route("/")
 @login_required
 def daily_vibe():
-    question = get_or_create_today_question()
-    options = json.loads(question.options_json)
+    question = get_today_question()
 
+    # No vibe today
+    if not question:
+        return render_template(
+            "vibe/daily_vibe.html",
+            mode="inactive"
+        )
+    
+
+    options = json.loads(question.options_json)
     user_response = has_user_voted(question.id)
 
-    # 🚪 INPUT VIEW (locked)
+    # INPUT VIEW (locked)
     if not user_response:
         return render_template(
             "vibe/daily_vibe.html",
@@ -107,26 +173,28 @@ def daily_vibe():
             options=options
         )
 
-    # 📊 RESULT VIEW
+    # RESULT VIEW
     state = VibeDailyState.query.get(question.active_date)
 
-    # Ghost Tape: last 100 → sample 20
-    recent_lines = (
-        VibeResponse.query
-        .filter(
-            VibeResponse.question_id == question.id,
-            VibeResponse.is_hidden.is_(False),
-            VibeResponse.anonymous_text.isnot(None)
-        )
-        .order_by(VibeResponse.created_at.desc())
-        .limit(100)
-        .all()
-    )
 
-    ghost_tape = random.sample(
-        recent_lines,
-        min(len(recent_lines), 20)
-    )
+    #=========== Ghost tape right now disabled ===========
+    # # Ghost Tape: last 100 → sample 20
+    # recent_lines = (
+    #     VibeResponse.query
+    #     .filter(
+    #         VibeResponse.question_id == question.id,
+    #         VibeResponse.is_hidden.is_(False),
+    #         VibeResponse.anonymous_text.isnot(None)
+    #     )
+    #     .order_by(VibeResponse.created_at.desc())
+    #     .limit(100)
+    #     .all()
+    # )
+
+    # ghost_tape = random.sample(
+    #     recent_lines,
+    #     min(len(recent_lines), 20)
+    # )
 
     return render_template(
         "vibe/daily_vibe.html",
@@ -134,7 +202,7 @@ def daily_vibe():
         question=question,
         options=options,
         state=state,
-        ghost_tape=ghost_tape,
+        #ghost_tape=ghost_tape,
         user_response=user_response
     )
 
@@ -142,7 +210,12 @@ def daily_vibe():
 @vibe_bp.route("/respond", methods=["POST"])
 @login_required
 def respond_vibe():
-    question = get_or_create_today_question()
+    question = get_today_question()
+
+    #if no question today
+    if not question:
+        flash("No active vibe today.", "warning")
+        return redirect(url_for("vibe.daily_vibe"))
 
     # Prevent double vote
     if has_user_voted(question.id):
@@ -221,7 +294,7 @@ def vanish_response(response_id):
 @vibe_bp.route("/add-text", methods=["POST"])
 @login_required
 def add_anonymous_text():
-    question = get_or_create_today_question()
+    question = get_today_question()
 
     response = VibeResponse.query.filter_by(
         question_id=question.id,
