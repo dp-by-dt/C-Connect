@@ -1283,6 +1283,11 @@ flask shell
 
 
 
+### Daily notificatoin for campus board events
+
+- notif creation form `notification/services.py` at campus_board page triggering (from 9am)
+- 
+
 
 
 

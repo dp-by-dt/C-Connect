@@ -26,6 +26,11 @@ def mark_read(notif_id):
 
     notif.is_read = True
     db.session.commit()
+
+    # campus daily notification → go to campus board
+    if notif.type == "campus_daily":
+        return redirect(url_for("campus_board_bp.campus_board_page"))
+    
     return redirect(url_for('notifications.notifications_list'))
 
 

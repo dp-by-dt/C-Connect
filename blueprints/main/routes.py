@@ -15,6 +15,8 @@ from utils.profile_completion import calculate_profile_completion
 
 from datetime import datetime, timezone
 
+from blueprints.notifications.service import create_daily_campus_notification_for_user
+
 
 
 #------------ Helper functions ---------
@@ -65,6 +67,9 @@ def contact():
 @login_required  # Restricts access to logged-in users only
 def dashboard():
     user_id = current_user.id
+
+    #send out notification if there is any event
+    create_daily_campus_notification_for_user(current_user)
 
     # count accepted connections (either side)
     accepted_count = db.session.query(Connection).filter(
