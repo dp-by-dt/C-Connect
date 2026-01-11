@@ -1279,6 +1279,8 @@ flask shell
 - Showing image in in teh feed post if there is an image
 - Set image preview when post image is uploaded. 
 
+- Uploads in `static/posts` folder
+
 
 
 

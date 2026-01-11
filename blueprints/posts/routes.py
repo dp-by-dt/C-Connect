@@ -5,15 +5,18 @@ from extensions import db
 from models import Post, PostLike
 from models import Notification
 
-from PIL import Image
 import os
-import uuid
+from datetime import datetime, timezone
+from PIL import Image
+from werkzeug.utils import secure_filename
+
 
 
 #============== Helper functions ============
 
 #---------- post image upload crop helper ----------
-def save_post_image(file):
+def save_post_image(file, user_id):
+    # Open image
     img = Image.open(file)
     width, height = img.size
 
@@ -25,16 +28,23 @@ def save_post_image(file):
     bottom = top + min_dim
 
     img = img.crop((left, top, right, bottom))
-    img = img.resize((600, 600))  # fixed size, good for feed
+    img = img.resize((600, 600))
 
-    filename = f"{uuid.uuid4().hex}.jpg"
-    upload_dir = os.path.join(current_app.root_path, current_app.config["UPLOAD_FOLDER"])
+    # Build readable filename
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    filename = f"post_img{user_id}_{timestamp}.jpg"
+
+    # Upload directory: static/uploads/posts
+    upload_root = current_app.config["UPLOAD_FOLDER"]
+    upload_dir = os.path.join(upload_root, "posts")
     os.makedirs(upload_dir, exist_ok=True)
 
+    # Save file
     filepath = os.path.join(upload_dir, filename)
     img.save(filepath, format="JPEG", quality=85)
 
-    return f"{current_app.config['UPLOAD_FOLDER']}/{filename}"
+    # Return path relative to /static
+    return f"uploads/posts/{filename}"
 
 
 
@@ -53,7 +63,7 @@ def create_post():
     image_path = None
     if image and image.filename:
         try:
-            image_path = save_post_image(image)
+            image_path = save_post_image(image, current_user.id)
         except Exception:
             flash("Invalid image file", "error")
             return redirect(request.referrer or url_for("posts.feed"))
