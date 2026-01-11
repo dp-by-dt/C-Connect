@@ -357,6 +357,152 @@ body {
         padding: 1.25rem;
     }
 }
+
+
+/* ===== Image Upload Section ===== */
+.post-image-upload {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.image-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.image-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.image-upload-label:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.image-upload-label i {
+    font-size: 1rem;
+}
+
+.image-upload-input {
+    display: none;
+}
+
+.image-filename {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===== Image Preview ===== */
+.image-preview-container {
+    margin-top: 0.75rem;
+    display: none;
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.image-preview-container.show {
+    display: block;
+    animation: fadeInScale 0.3s ease;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.image-preview {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: var(--radius-md);
+}
+
+.image-preview-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.image-preview-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: var(--radius-full);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+}
+
+.image-preview-btn--remove:hover {
+    background: var(--danger-color);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .image-upload-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .image-upload-label {
+        justify-content: center;
+    }
+
+    .image-filename {
+        text-align: center;
+    }
+
+    .image-preview {
+        height: 250px;
+        object-fit: cover;
+        object-position: center;
+    }
+}
+
+
+
 </style>
 {% endblock %}
 
@@ -374,37 +520,83 @@ body {
         </div>
     </div>
 
-    <!-- Create Post Section -->
+
+    <!-- ==================== CREATE POST SECTION ==================== -->
     <div class="create-post-card">
+        <!-- Profile Picture -->
         <div class="profile-pic">
             {% if profile_picture_cache[current_user.id] %}
-                <img src="{{ profile_picture_cache[current_user.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%;">
+                <img src="{{ profile_picture_cache[current_user.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
             {% else %}
                 {{ current_user.username[0].upper() }}
             {% endif %}
-
         </div>
-        <form method="POST" action="{{ url_for('posts.create_post') }}" class="create-post-form">
+
+        <!-- Create Post Form -->
+        <form method="POST" 
+            action="{{ url_for('posts.create_post') }}" 
+            enctype="multipart/form-data"
+            class="create-post-form"
+            id="createPostForm">
+
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Text Content -->
             <textarea 
                 name="content" 
                 class="post-textarea" 
                 placeholder="share something..."
                 required
             ></textarea>
+
+            <!-- Image Upload Section -->
+            <div class="post-image-upload">
+                <div class="image-upload-wrapper">
+                    <!-- Custom File Input Button -->
+                    <label for="imageUpload" class="image-upload-label">
+                        <i class="bi bi-image"></i>
+                        <span>Add Image</span>
+                    </label>
+                    <input 
+                        type="file"
+                        name="image"
+                        id="imageUpload"
+                        accept="image/*"
+                        class="image-upload-input"
+                        onchange="handleImageUpload(event)">
+                    
+                    <!-- Filename Display -->
+                    <span class="image-filename" id="imageFilename"></span>
+                </div>
+
+                <!-- Image Preview -->
+                <div class="image-preview-container" id="imagePreviewContainer">
+                    <img src="" alt="Preview" class="image-preview" id="imagePreview">
+                    <div class="image-preview-overlay">
+                        <!-- Remove Image Button -->
+                        <button 
+                            type="button" 
+                            class="image-preview-btn image-preview-btn--remove"
+                            onclick="removeImage()"
+                            title="Remove image">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Actions -->
             <div class="post-actions">
                 <button type="submit" class="share-btn">
-                    <!-- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                        <polyline points="16 6 12 2 8 6"></polyline>
-                        <line x1="12" y1="2" x2="12" y2="15"></line>
-                    </svg> -->
                     <i class="bi bi-send"></i>
                     Share
                 </button>
             </div>
         </form>
     </div>
+
+
+
 
     <!-- Posts List -->
     {% for post in posts %}
@@ -415,7 +607,7 @@ body {
                 <div class="profile-pic user-avatar">
                     {% set username = post.user %}
                     {% if profile_picture_cache[username.id] %}
-                        <img src="{{ profile_picture_cache[username.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%;">
+                        <img src="{{ profile_picture_cache[username.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                     {% else %}
                         {{ current_user.username[0].upper() }}
                     {% endif %}
@@ -430,12 +622,14 @@ body {
 
         <p class="post-content-text">{{ post.content }}</p>
 
-        <!-- Image Placeholder (for future implementation) -->
-        {% if post.image %}
-            <div class="post-image-placeholder">
-                Image if any
-            </div>
+        <!-- Image Placeholder (if image uploaded) -->
+        {% if post.image_path %}
+        <div class="post-image">
+            <img src="{{ url_for('static', filename=post.image_path.replace('static/', '')) }}"
+                style="width:100%; max-width:500px; border-radius:8px; margin-bottom: 1rem;">
+        </div>
         {% endif %}
+
 
         <!-- Post Footer Actions -->
         <div class="post-footer">
@@ -481,4 +675,68 @@ body {
         {% endif %}
     </div>
 </div>
+
+
+
+
+<!-- ==================== IMAGE UPLOAD JAVASCRIPT ==================== -->
+<script>
+/**
+ * Handle image file selection and preview
+ */
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    const filenameDisplay = document.getElementById('imageFilename');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('imagePreview');
+
+    if (file) {
+        // Display filename
+        filenameDisplay.textContent = file.name;
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.add('show');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // No file selected
+        filenameDisplay.textContent = '';
+        previewContainer.classList.remove('show');
+    }
+}
+
+/**
+ * Remove selected image and clear preview
+ */
+function removeImage() {
+    const fileInput = document.getElementById('imageUpload');
+    const filenameDisplay = document.getElementById('imageFilename');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('imagePreview');
+
+    // Clear file input
+    fileInput.value = '';
+    
+    // Clear preview
+    previewImage.src = '';
+    previewContainer.classList.remove('show');
+    
+    // Clear filename
+    filenameDisplay.textContent = '';
+}
+
+/**
+ * Optional: Clear form after successful submission
+ * Call this after your form submission is successful
+ */
+function clearCreatePostForm() {
+    const form = document.getElementById('createPostForm');
+    form.reset();
+    removeImage();
+}
+</script>
+
 {% endblock %}

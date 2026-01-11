@@ -1267,6 +1267,31 @@ flask shell
 
 
 
+### Adding images in the posts section
+
+- Added nullable column in the table
+- Migratedt the table using:
+    flask db migrate -m "message"
+    flask db upgrade
+- Helper function to crop uploaded image in the `posts/routes.py`
+- Edited create_post route to handle the uploading of image
+- Add image uploading button in the feed html page
+- Showing image in in teh feed post if there is an image
+- Set image preview when post image is uploaded. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -----------------------
 ### Sequence right now:
 1. Must do now:

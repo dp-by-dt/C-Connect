@@ -117,6 +117,9 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     content = db.Column(db.Text, nullable=False)
+
+    image_path = db.Column(db.String(255), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=db.func.now(), index=True)
 
     user = db.relationship("User", backref="posts", lazy=True)

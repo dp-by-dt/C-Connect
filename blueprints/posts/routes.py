@@ -1,30 +1,74 @@
 from . import posts_bp
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import Post, PostLike
 from models import Notification
 
+from PIL import Image
+import os
+import uuid
 
 
+#============== Helper functions ============
+
+#---------- post image upload crop helper ----------
+def save_post_image(file):
+    img = Image.open(file)
+    width, height = img.size
+
+    # Center crop to square
+    min_dim = min(width, height)
+    left = (width - min_dim) // 2
+    top = (height - min_dim) // 2
+    right = left + min_dim
+    bottom = top + min_dim
+
+    img = img.crop((left, top, right, bottom))
+    img = img.resize((600, 600))  # fixed size, good for feed
+
+    filename = f"{uuid.uuid4().hex}.jpg"
+    upload_dir = os.path.join(current_app.root_path, current_app.config["UPLOAD_FOLDER"])
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filepath = os.path.join(upload_dir, filename)
+    img.save(filepath, format="JPEG", quality=85)
+
+    return f"{current_app.config['UPLOAD_FOLDER']}/{filename}"
+
+
+
+
+# =========== routes ==================
 @posts_bp.route("/create", methods=["POST"])
 @login_required
 def create_post():
     content = request.form.get("content", "").strip()
+    image = request.files.get("image")
 
-    if not content:
+    if not content and not image:
         flash("Post cannot be empty", "error")
         return redirect(request.referrer or url_for("posts.feed"))
 
+    image_path = None
+    if image and image.filename:
+        try:
+            image_path = save_post_image(image)
+        except Exception:
+            flash("Invalid image file", "error")
+            return redirect(request.referrer or url_for("posts.feed"))
+
     post = Post(
         user_id=current_user.id,
-        content=content
+        content=content,
+        image_path=image_path
     )
 
     db.session.add(post)
     db.session.commit()
 
     return redirect(url_for("posts.feed"))
+
 
 
 
