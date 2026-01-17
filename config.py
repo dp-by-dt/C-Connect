@@ -38,11 +38,12 @@ class Config:
 
     SESSION_COOKIE_SECURE = False  # Ensures cookies are sent over HTTPS only... keep False for local dev, set True for production
     SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)  # Session lifetime
     REMEMBER_COOKIE_DURATION = timedelta(days=30)  # Duration for "Remember Me" cookie
-    PERMANENT_SESSION_LIFETIME = timedelta(days=30)  # Session lifetime
-
+    
     #setting multiple config classes for different environments
-    DEBUG = True  #DevelopmentConfig.. Set to False in production
+    DEBUG = False  #DevelopmentConfig.. Set to False in production
+    TESTING = False
     #production config (debug flase, session cookie secure true, etc) can be added later
     # Notifications expiry hours
     NOTIFICATION_EXPIRY_HOURS = int(os.environ.get("NOTIFICATION_EXPIRY_HOURS", 24))
@@ -52,7 +53,7 @@ class Config:
 #now adding developmentConfig, productionconfig, testingconfig
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    DEBUG = False
     SESSION_COOKIE_SECURE = False  # In development, can be False
 
 class ProductionConfig(Config):

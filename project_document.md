@@ -1291,13 +1291,226 @@ flask shell
 
 
 
+## Pre-Release Checklist
+
+### 1. Authentication & Session Management
+*Login – Happy Path*
+
+    Anand (user19)'s profile pic not showing (the image on the db somehow got deleted, that only giving console error) We need to give a fallback option there to show the user first letter in that case
+    In mobile screen, the side menu not working
+
+no other error error there, all other steps completes succesfully
+
+*Login – Failure Path*
+
+    Invalid password (and also for email) shows invalid email or password error
+    rate limit is now set to 5 per minute. When the limit crosses, it show on a plane page that limit exceeded and says 5 per 1 minute (so should we add a custom file for that when somewhere the limit is crossed?)
+all other seems fine 
+
+*Logout*
+
+    Logout button works but the confirmation window is primitive (just broswer pop up like)
+    session cleared server-side:
+        confirmed by seeing the cookie on the dev-application-cookies
+        Also with a debug_auth route module
+
+            @auth.route('/debug-auth')  # added temporarily for testing only
+            @limiter.exempt
+            def debug_auth():
+                return {
+                    'is_authenticated': current_user.is_authenticated,
+                    'user_id': getattr(current_user, 'id', None),
+                    'session_has_user': '_user_id' in session,
+                    'session_keys': list(session.keys())
+                }
+
+    all other things okay
+
+*Back Button After Logout*
+
+    Press browser back → but some pages are loading (only after a few back clicks/reloads something the page get blocked, but saying that "you must login to access the page)
+    So i guess that is what cached content visible, isn't it? 
+
+
+*Session Persistence*
+    working properly
+
+*Session Expiry / Timeout*
+
+    for testing put: PERMANENT_SESSION_LIFETIME = timedelta(minutes=2)     and it is logging out properly. But no message saying session expired.
+    But the time seems to vary a little bit:
+        PERMANENT_SESSION_LIFETIME = timedelta(minutes=2)  # Session lifetime
+        REMEMBER_COOKIE_DURATION = timedelta(minutes=5)  # Duration for "Remember Me" cookie
+    The above code and 'with remmeber me' option went for like 7 minutes. 
+    also 'without remember' me it is going for like 3 minutes and 40 seconds. 
+    (i don't know if it is expected and okay)
+
+
+
+### campus board (primary loop)
+
+*Create Post/Event*
+
+    Post making button/action button should be more accessible 
+    The expiry time of the evetn is not shown in local time (i already have a to_ist() function in the factory_helpers file)
+    ❕One thing to change is, now the time duration set for the event is only on hours. I would like days (as default with the limitation of days we have set, like only a maximum of 7 days or so) and hours
+    other things good
+
+*Auto-Expiry*
+    auto expiry seems working. No older events are shown. Since they are not shown, users can't delete or like them
+
+*Likes*
+    all working expected
+
+*Delete Post*
+
+    deletion of the post gives a primitive browser's confirmation window
+    Owner can delete
+    others seems fine
+
+*Empty Board State*
+
+    if no vibe, currently showing empty section (we need to hide it)
+    if no events, it is showing empty events. That is good. 
+
+*Board with Many Posts*
+    working
+
+*Board Access Without Active Posts*
+    That too seems fine, like when board events is empty, the cta brings them to the empty events page.
+
+
+
+### Vibe (Embedded Widget)
+
+*No-Vibe Day*
+    When no-vibe, we should not display that section at all. Right now it is saying no vibe (and it's quite annoying)
+    Need to change that
+
+*Admin Creates Vibe*
+    yeah, now only admin can create. But for the admin controls, admin also should see the today's vibe if there exist, be able to edit(optional for now) and delete it (anyway it would automatically disappear after 24 hours) and it would also show the time of vibe posting, how many have answered in total and how many have answered each option too. 
+    
+    Other things are surely working properly
+    But since we are not showing the ghost tape currently, there is no point in giving an option to users to add anonymous text. We should remove it.(also no need for the response count either, i guess)
+    
+*Voting*
+    working good
+
+*Results*
+
+    Results visible after in the campus board page (good)
+    Percentages of vote is not showing right now. It would be good (but no need to show the total votes)
+
+*Abuse / Edge*
+
+    Double-click vote does not double-submit(since the page is re-loading once that is clicked)
+    Since i don't see any way to directly access option using url, POST manually hasn't been tested (maybe because it is not an a different page, but on the /vibe page itself)
 
 
 
 
+### Social Feed
+
+*Posting*
+    only 10 recent posts are shown in the user profile (we need to add more, infinite scroll would be perfect, i guess)
+
+    all other normal things working
+
+*Image Upload – Success*
+    all good
+
+*Image Upload – Failure*
+
+    problem: some images get rotated when posting (but not all images)
+
+    Large file rejected gracefully
+    Wrong file type rejected (but only get rejected after clicking post, not while uploading)
+    Clear error shown
+    No broken image placeholder (not seen yet)
+
+*Likes*
+
+    liking is reloading the page to the top, not on where the liking is done (but wanted where the liking is done, isn't that the standard UX)
+    Also in the table 'post' we need to add one more column for the number of likes given to a post
+
+    Seems to have no race-condition glitches
+
+    And all other things working
+    
+
+*Delete*
+
+    deleted post's images are not getting deleted, but it should be (need to add that feature)
+
+
+*Pagination*
+
+    pagination normal behaviour is porper. 
+    But some modifications:
+        user's now can visit empty pages (like 100), but want to put that to the last page available
+        There should be an option to go to the first page (if it is a page other than one or two; in two there is already a previous page navigation button)
+        The search bar on the page is not working (we could re-use the logic we did in the discover/search page)
 
 
 
+### Notifications
+
+*Triggering*
+
+    currently no tirggering when dashboard/feed is visited by others (do we even need that?)
+    seems good (maybe)
+
+*Idempotency*
+
+    Refresh does NOT duplicate
+
+    Same day → only one notification from the campus board (not sure yet)
+    Next day → new notification allowed
+
+*CTA*
+
+    CTA navigates correctly (but the button still saying 'mark as read', which is kind of misleading). Also if the whole notification is clickable, would be better UX. That is navigates to correct page (weather board or to user profile or posts etc)
+    No broken route (seems not)
+    Back navigation seems to be safe
+
+*Cleanup*
+
+    Old notifications do not pile endlessly (properly getting deleted)
+    notification spam (need to check that).. actually if two people liked a post, the post creator is getting two seperate notification, which would pile up/spam i guess. Need to avoid that
+
+
+
+### Deployment specific manual checks
+
+*Environment*
+
+    .env variables loaded
+    DEBUG = False
+    python -c "from config import Config; print(f'DEBUG: {Config.DEBUG}'); print(f'SECRET_KEY exists: {bool(Config.SECRET_KEY)}')"
+
+    Secret key present
+    Database URL correct
+
+*Static & Media*
+    all good
+
+*Stability*
+    everything seems to be good.
+
+
+*Chaos/abuse testing*
+    when js is disabled:
+        darkmode not working
+        search page is blank
+        campus board event form is not getting submitted, no events are showing
+        side menu or profile menu is now showing/poping up
+        login page is working
+
+    and other seems are seemingly fine (for now)
+
+
+! Critical error: ✅Solved -
+    when one campus event exist, and the user checks the dashboard there are a loop of campus board notification coming repeatedly
 
 -----------------------
 ### Sequence right now:

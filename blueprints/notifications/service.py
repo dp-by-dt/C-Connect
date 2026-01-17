@@ -49,7 +49,7 @@ def create_daily_campus_notification_for_user(user):
     # 1. Check if user already has today's campus notification
     existing = Notification.query.filter(
         Notification.user_id == user.id,
-        Notification.type == "campus_daily",
+        Notification.type == "campus_daily_event",
         Notification.created_at >= datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
     ).first()
 

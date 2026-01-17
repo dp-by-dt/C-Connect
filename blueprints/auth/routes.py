@@ -459,3 +459,18 @@ def ping():
     return "OK"
 
 
+
+
+
+# ============ Debugging ==============
+
+#---- session expiry -----------
+@auth.route('/debug-session')
+def debug_session():
+    return {
+        'is_authenticated': current_user.is_authenticated,
+        'session_permanent': getattr(session, 'permanent', False),
+        'session_lifetime': app.permanent_session_lifetime.total_seconds() if session.permanent else None,
+        'expires_at': session.get('_permanent_session_expiry') if session.permanent else None
+    }
+
