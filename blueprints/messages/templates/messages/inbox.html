@@ -480,7 +480,7 @@
                     <!-- checking if the user has profile picture -->
                     {% set profile_picture = profile.query.filter_by(user_id=user.id).first().profile_picture %}
                     {% if profile_picture %}
-                        <img src="{{ profile_picture }}" alt="{{ user.username }}">
+                        <img src="{{ profile_picture }}" alt="{{ user.username }}" onerror="this.style.display='none'">
                     {% else %}
                         {{ user.username[0]|upper }}
                     {% endif %}

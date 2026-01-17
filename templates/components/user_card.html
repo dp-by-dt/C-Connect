@@ -238,7 +238,8 @@
         {% if user.profile and user.profile.profile_picture %}
             <img src="{{ user.profile.profile_picture }}" 
                  alt="{{ user.username }}" 
-                 class="user-card__image">
+                 class="user-card__image"
+                 onerror="this.style.display='none'">
         {% else %}
             <!-- Fallback: Gradient with initial -->
             <!-- TODO: Later replace with random image from database -->

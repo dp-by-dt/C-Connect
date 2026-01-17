@@ -42,8 +42,8 @@ class Config:
     REMEMBER_COOKIE_DURATION = timedelta(days=30)  # Duration for "Remember Me" cookie
     
     #setting multiple config classes for different environments
-    DEBUG = False  #DevelopmentConfig.. Set to False in production
-    TESTING = False
+    DEBUG = True  #DevelopmentConfig.. Set to False in production
+    TESTING = True
     #production config (debug flase, session cookie secure true, etc) can be added later
     # Notifications expiry hours
     NOTIFICATION_EXPIRY_HOURS = int(os.environ.get("NOTIFICATION_EXPIRY_HOURS", 24))
@@ -53,7 +53,7 @@ class Config:
 #now adding developmentConfig, productionconfig, testingconfig
 
 class DevelopmentConfig(Config):
-    DEBUG = False
+    DEBUG = True
     SESSION_COOKIE_SECURE = False  # In development, can be False
 
 class ProductionConfig(Config):

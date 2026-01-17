@@ -1512,6 +1512,47 @@ all other seems fine
 ! Critical error: ✅Solved -
     when one campus event exist, and the user checks the dashboard there are a loop of campus board notification coming repeatedly
 
+
+
+
+### Bugs and Imporvements
+
+1. user image (for anand) need fallback ✅Added `onerror="this.style.display='none'"`
+2. Mobile side manu
+3. limit exeed error page
+4. logout & deletion confirmation window
+5. back button even after logging out
+6. cta for post making
+7. event expirty time in ist
+8. event duration setting in hours now
+9. if now vibe, hide that section from campus board
+10. more admin features
+11. remove option to add anonymous vibe text
+12. vibe vote percentage would be good
+13. only 10 recent post shown in a user's profile
+14. in current user profile, posts are not shown
+15. images rotated while posting feed
+16. wrong file formats only rejected when submitting
+17. liking should not reloading to top (in feeds)
+18. deleted posts's images are not deleted from folder
+19. proper pagination blocks in posts/feed page
+20. notification cta for event misleading
+21. notification span for post liking
+22. JS disabled features
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -----------------------
 ### Sequence right now:
 1. Must do now:

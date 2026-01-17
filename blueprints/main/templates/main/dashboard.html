@@ -819,8 +819,8 @@
         <div class="dashboard__welcome-main">
             <div class="dashboard__avatar">
                 <!-- TODO: Add profile picture support -->
-                {% if profile_pic%}
-                    <img src="{{ profile_pic }}" alt="{{ username }}">
+                {% if profile_pic %}
+                    <img src="{{ profile_pic }}" alt="{{ username[0]|upper }}" onerror="this.style.display='none'">
                 {% else %}
                     {{ username[0]|upper }}
                 {% endif %}
