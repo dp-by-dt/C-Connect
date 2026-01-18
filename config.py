@@ -38,8 +38,8 @@ class Config:
 
     SESSION_COOKIE_SECURE = False  # Ensures cookies are sent over HTTPS only... keep False for local dev, set True for production
     SESSION_COOKIE_HTTPONLY = True  # Prevents JavaScript access to session cookie
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)  # Session lifetime
-    REMEMBER_COOKIE_DURATION = timedelta(days=30)  # Duration for "Remember Me" cookie
+    PERMANENT_SESSION_LIFETIME = timedelta(days=2)  # server session lifetime
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)  # Duration for "Remember Me" cookie (browser cookie)
     
     #setting multiple config classes for different environments
     DEBUG = True  #DevelopmentConfig.. Set to False in production

@@ -1521,7 +1521,7 @@ all other seems fine
 2. Mobile side manu ✅used `z-index:2001` to `.mobile-menu__content` class in `global.css`
 3. limit exeed error page ✅error page `429.html` added & registered (in `factory_helpers`)
 4. logout & deletion confirmation window
-5. back button even after logging out
+5. back button even after logging out ✅added `add_no_cache_headers` in factory helpers (prevents storing cache for auth pages). it is selective cache storing
 6. cta for post making
 7. event expirty time in ist
 8. event duration setting in hours now
@@ -1539,6 +1539,7 @@ all other seems fine
 20. notification cta for event misleading
 21. notification span for post liking
 22. JS disabled features
+23. session expired flash message ✅`unauthorized_handler` in factory_helpers
 
 
 

@@ -1,6 +1,6 @@
 # File for registering blueprints, extensions, error handlers etc. These would get initialized in app.py
 
-from flask import render_template
+from flask import render_template, request, flash, redirect, url_for
 from extensions import db, login_manager, csrf, migrate, limiter
 import pytz
 from datetime import datetime, timezone, timedelta
@@ -46,6 +46,30 @@ def register_extensions(app):
     migrate.init_app(app, db)
     limiter.init_app(app=app)#rate limiter
     # Add other extensions here as needed
+
+
+    # ===== FLASH MESSAGE ON SESSION EXPIRY =====
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        flash("Session expired. Please log in again.", "info")
+        return redirect(url_for("auth.login"))
+
+
+    # removes the page cached after logging out (denies back button presses)
+    @app.after_request
+    def add_no_cache_headers(response):
+        if current_user.is_authenticated: # Auth pages: NO CACHE (security)
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        elif request.endpoint and 'static' in request.endpoint:
+            # Static files: Long cache
+            response.headers["Cache-Control"] = "public, max-age=15768000" #stored 6 months
+        else:
+            # Public pages: Short cache
+            response.headers["Cache-Control"] = "public, max-age=300"
+        return response
+
 
 
 
