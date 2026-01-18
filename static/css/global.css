@@ -734,10 +734,10 @@ h6 { font-size: 0.9375rem; }
     background: var(--bg-primary); /* Changed from glass-bg */
     border-right: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    transform: translateX(-100%);
-    transition: transform var(--transition-smooth);
+    transform: translateX(-100%);  /* Hidden */
     display: flex;
     flex-direction: column;
+    z-index: 2001
 }
 
 .mobile-menu.is-open .mobile-menu__content {
