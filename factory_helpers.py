@@ -104,6 +104,10 @@ def register_errorhandlers(app):
     @app.errorhandler(404)
     def not_found_error(error):
         return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(429) #rate limit errors
+    def rate_limit(error):
+        return render_template("errors/429.html"), 429
 
     @app.errorhandler(500)
     def internal_error(error):

@@ -1519,7 +1519,7 @@ all other seems fine
 
 1. user image (for anand) need fallback ✅Added `onerror="this.style.display='none'"`
 2. Mobile side manu ✅used `z-index:2001` to `.mobile-menu__content` class in `global.css`
-3. limit exeed error page
+3. limit exeed error page ✅error page `429.html` added & registered (in `factory_helpers`)
 4. logout & deletion confirmation window
 5. back button even after logging out
 6. cta for post making

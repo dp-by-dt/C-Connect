@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Too Many Requests{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="error-wrapper">
+    <div class="error-container">
+        <div class="error-icon error-icon--wobble">⏰</div>
+        <h1 class="error-code error-code--warning">429</h1>
+        <h2 class="error-title">Too Many Requests</h2>
+        <p class="error-message">
+            You're sending requests too quickly! Please wait a moment before trying again.
+        </p>
+        <div class="error-hint">
+            <i class="bi bi-clock"></i>
+            <span>Try again in a few seconds</span>
+        </div>
+        <div class="error-actions">
+            <a href="{{ url_for('main.home') }}" class="error-btn error-btn-primary">
+                <i class="bi bi-house"></i>
+                Back to Home
+            </a>
+            <a href="{{ request.referrer or url_for('main.dashboard') or url_for('main.home') }}" class="error-btn error-btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                {{ 'Go Back' if request.referrer else 'Dashboard' }}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
