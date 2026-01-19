@@ -1523,7 +1523,7 @@ all other seems fine
 4. logout & deletion confirmation window
 5. back button even after logging out ✅added `add_no_cache_headers` in factory helpers (prevents storing cache for auth pages). it is selective cache storing
 6. cta for post making
-7. event expirty time in ist
+7. event expirty time in ist ✅put to ist using `to_ist()`
 8. event duration setting in hours now
 9. if now vibe, hide that section from campus board
 10. more admin features
@@ -1540,6 +1540,31 @@ all other seems fine
 21. notification span for post liking
 22. JS disabled features
 23. session expired flash message ✅`unauthorized_handler` in factory_helpers
+
+
+
+
+
+FOR CHATGPT
+1. Added onerror="this.style.display='none'" for fallback
+2. Added z-index to the hamburger menu 
+3. 429.html page added
+4. that function added as:
+    @app.after_request
+    def add_no_cache_headers(response):
+        if current_user.is_authenticated: # Auth pages: NO CACHE (security)
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        elif request.endpoint and 'static' in request.endpoint:
+            # Static files: Long cache
+            response.headers["Cache-Control"] = "public, max-age=15768000" #stored 6 months
+        else:
+            # Public pages: Short cache
+            response.headers["Cache-Control"] = "public, max-age=300"
+        return response 
+(tell me if something of this is unwanted or breaking the logic/flow kind, then i can remove that)
+5. session expired flash message added in factory_helpers too
 
 
 

@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 
 from extensions import db, csrf
 from models import CampusBoardPost, CampusBoardLike
-from factory_helpers import cleanup_expired_posts
+from factory_helpers import cleanup_expired_posts, to_ist
 
 from datetime import date
 import json
@@ -119,7 +119,8 @@ def list_posts():
             "content": p.content,
             "department": p.department,
             "location": p.location,
-            "expires_at": p.expires_at.isoformat(),
+            "expires_at": to_ist(p.expires_at).strftime('%d %b %Y, %I:%M %p'),
+            "expires_at_raw": p.expires_at.isoformat(),  # For JS countdown
             "likes": p.likes_count,
             "is_owner": p.user_id == current_user.id
         }

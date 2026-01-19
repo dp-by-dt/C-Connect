@@ -142,6 +142,7 @@ def register_errorhandlers(app):
 
 # convert utc to ist
 def to_ist(utc_dt):
+    """ usage: to_ist(utc_time_var).strftime('%d %b %Y, %I:%M %p')"""
     ist = pytz.timezone('Asia/Kolkata')
     return utc_dt.replace(tzinfo=pytz.utc).astimezone(ist)
 
