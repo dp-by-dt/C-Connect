@@ -1527,7 +1527,7 @@ all other seems fine
 6. cta for post making
 7. event expirty time in ist ✅put to ist using `to_ist()`
 8. event duration setting in hours now
-9. if now vibe, hide that section from campus board
+9. if now vibe, hide that section from campus board ✅used vibe.mode==inactive (to find if there is vibe)
 10. more admin features
 11. remove option to add anonymous vibe text
 12. vibe vote percentage would be good

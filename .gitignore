@@ -16,3 +16,8 @@ instance/
 
 # Ignore uploaded files
 static/uploads/
+
+
+
+# the documents helping for learning (eq for sql)
+docs/

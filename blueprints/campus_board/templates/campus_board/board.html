@@ -455,7 +455,7 @@
 
 
     <!-- Vibe section (moved here form independed page)-->
-    {% if vibe %}
+    {% if vibe.mode!='inactive' %}
         {% include "vibe/_vibe_widget.html" %}
     {% endif %}
 
