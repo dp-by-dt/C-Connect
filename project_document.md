@@ -1520,7 +1520,9 @@ all other seems fine
 1. user image (for anand) need fallback ✅Added `onerror="this.style.display='none'"`
 2. Mobile side manu ✅used `z-index:2001` to `.mobile-menu__content` class in `global.css`
 3. limit exeed error page ✅error page `429.html` added & registered (in `factory_helpers`)
-4. logout & deletion confirmation window
+4. logout & deletion confirmation window ✅ `_confirmation_modal.html` as a template, which would be called for confirmation window, along with the message and it returns success or cancel output
+    Usage: <button onclick="showConfirm('Log Out', 'End your current session?', function(){window.location.href='/auth/logout'});">Logout</button>
+    (or can be used in as a JS funciton too)
 5. back button even after logging out ✅added `add_no_cache_headers` in factory helpers (prevents storing cache for auth pages). it is selective cache storing
 6. cta for post making
 7. event expirty time in ist ✅put to ist using `to_ist()`
@@ -1565,6 +1567,8 @@ FOR CHATGPT
         return response 
 (tell me if something of this is unwanted or breaking the logic/flow kind, then i can remove that)
 5. session expired flash message added in factory_helpers too
+6. event expirty time set to ist using: to_ist(p.expires_at).strftime('%d %b %Y, %I:%M %p')
+7. 
 
 
 

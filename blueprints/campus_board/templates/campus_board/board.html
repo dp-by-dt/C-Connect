@@ -692,18 +692,19 @@ function toggleLike(id) {
 
 // Delete post
 function deletePost(id) {
-    if (!confirm("Are you sure you want to delete this post?")) {
-        return;
-    }
-
-    fetch(`/campus-board/delete/${id}`, { 
-        method: "DELETE" 
-    })
-    .then(() => fetchPosts())
-    .catch(error => {
-        console.error('Error deleting post:', error);
-    });
+    showConfirm(
+        "Delete Post", 
+        "This campus post will be permanently deleted and cannot be recovered.",
+        function() {
+            fetch(`/campus-board/delete/${id}`, { method: "DELETE" })
+                .then(() => fetchPosts())
+                .catch(console.error);
+        }
+    );
 }
+
+
+
 
 // Escape HTML to prevent XSS
 function escapeHtml(text) {

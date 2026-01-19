@@ -335,7 +335,8 @@
                         </div>
                         <button 
                             class="btn btn-danger-outline btn-sm"
-                            onclick="alert('Account deletion is not yet available. Please contact support.')">
+                            onclick="showConfirm('Account deletion', 'Account deletion is not yet available. Please contact support.', function(){window.location.href='/contact'});">
+
                             Delete Account
                         </button>
                     </div>
