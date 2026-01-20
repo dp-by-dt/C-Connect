@@ -1535,7 +1535,7 @@ all other seems fine
 14. in current user profile, posts are not shown
 15. images rotated while posting feed ✅used imageops.exif_transpose to solve this
 16. wrong file formats only rejected when submitting
-17. liking should not reloading to top (in feeds)
+17. liking should not reloading to top (in feeds) ✅put an article id for the content which is liked and scrolls to that and user `referrer` in the `routes`
 18. deleted posts's images are not deleted from folder
 19. proper pagination blocks in posts/feed page
 20. notification cta for event misleading

@@ -165,7 +165,10 @@ def toggle_like(post_id):
             db.session.add(notif)
 
     db.session.commit()
-    return redirect(request.referrer or url_for("posts.feed"))
+
+    # Add #post-{post_id} to referrer
+    referrer = request.referrer #scrolls to the position
+    return redirect(f"{referrer}#post-{post_id}" if referrer else url_for("posts.feed"))
 
 
 
@@ -183,4 +186,24 @@ def delete_post(post_id):
     db.session.commit()
 
     flash("Post deleted", "success")
-    return redirect(request.referrer or url_for("posts.feed"))
+
+    # Smart redirect to nearby post
+    referrer_or_url = request.referrer or url_for("posts.feed") #scrolls to the position
+
+    # Try scroll to PREVIOUS post
+    prev_id = post_id - 1
+    if Post.query.get(prev_id):
+        return redirect(f"{referrer_or_url}#post-{prev_id}")
+    
+    # Try scroll to NEXT post  
+    next_id = post_id + 1
+    if Post.query.get(next_id):
+        return redirect(f"{referrer_or_url}#post-{next_id}")
+    
+    # Fallback: Original position or feed
+    return redirect(referrer_or_url)
+
+    #return redirect(f"{referrer}#post-{post_id-1}" if referrer else url_for("posts.feed"))
+
+
+

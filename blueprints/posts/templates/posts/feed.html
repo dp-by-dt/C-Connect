@@ -600,69 +600,72 @@ body {
 
     <!-- Posts List -->
     {% for post in posts %}
-    <div class="post-card">
-        <div class="post-header-section">
-            <a href="{{ url_for('main.view_user_profile', user_id=post.user.id) }}" style="text-decoration: none;">
-            <div class="post-author-info">
-                <div class="profile-pic user-avatar">
-                    {% set username = post.user %}
-                    {% if profile_picture_cache[username.id] %}
-                        <img src="{{ profile_picture_cache[username.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                    {% else %}
-                        {{ current_user.username[0].upper() }}
-                    {% endif %}
+    <article id="post-{{ post.id }}" class="post" style="scroll-margin-top: 15rem;">
+        <div class="post-card">
+            <div class="post-header-section">
+                <a href="{{ url_for('main.view_user_profile', user_id=post.user.id) }}" style="text-decoration: none;">
+                <div class="post-author-info">
+                    <div class="profile-pic user-avatar">
+                        {% set username = post.user %}
+                        {% if profile_picture_cache[username.id] %}
+                            <img src="{{ profile_picture_cache[username.id] }}" alt="Profile Picture" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            {{ current_user.username[0].upper() }}
+                        {% endif %}
+                    </div>
+                    <div class="post-author-details">
+                        <h4>{{ post.user.username }}</h4>
+                        <p class="post-timestamp">{{ to_ist(post.created_at).strftime("%d %b %H:%M") }}</p>
+                    </div>
                 </div>
-                <div class="post-author-details">
-                    <h4>{{ post.user.username }}</h4>
-                    <p class="post-timestamp">{{ to_ist(post.created_at).strftime("%d %b %H:%M") }}</p>
-                </div>
-            </div>
-            </a>
-        </div>
-
-        <p class="post-content-text">{{ post.content }}</p>
-
-        <!-- Image Placeholder (if image uploaded) -->
-        {% if post.image_path %}
-        <div class="post-image">
-            <img src="{{ url_for('static', filename=post.image_path.replace('static/', '')) }}"
-                style="width:100%; max-width:500px; border-radius:8px; margin-bottom: 1rem;">
-        </div>
-        {% endif %}
-
-
-        <!-- Post Footer Actions -->
-        <div class="post-footer">
-            <!-- Like Button -->
-            <form method="POST" action="{{ url_for('posts.toggle_like', post_id=post.id) }}" class="like-form">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="like-btn {% if post.id in liked_post_ids %}liked{% endif %}">
-                    {% if post.id in liked_post_ids %}
-                        ❤️
-                    {% else %}
-                        🤍
-                    {% endif %}
-                    Like
-                </button>
-                <span class="like-count">{{ post.likes|length }}</span>
-            </form>
-
-            <!-- Comment Placeholder (disabled for now) -->
-            <div class="comment-placeholder" title="Coming soon">
-                💬 Comment
+                </a>
             </div>
 
-            <!-- Delete Button (only for post owner) -->
-            {% if post.user_id == current_user.id %}
-            <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}" style="margin-left: auto;" id="deleteForm{{ post.id }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="delete-btn" onclick="event.preventDefault(); showConfirm('Delete Post', 'Are you sure?', function(){ document.getElementById('deleteForm{{ post.id }}').submit(); })">
-                    🗑️ Delete
-                </button>
-            </form>
+            <p class="post-content-text">{{ post.content }}</p>
+
+            <!-- Image Placeholder (if image uploaded) -->
+            {% if post.image_path %}
+            <div class="post-image">
+                <img src="{{ url_for('static', filename=post.image_path.replace('static/', '')) }}"
+                    style="width:100%; max-width:500px; border-radius:8px; margin-bottom: 1rem;">
+            </div>
             {% endif %}
+
+
+            <!-- Post Footer Actions -->
+            <div class="post-footer">
+                <!-- Like Button -->
+                <form method="POST" action="{{ url_for('posts.toggle_like', post_id=post.id) }}#post-{{ post.id }}" class="like-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="like-btn {% if post.id in liked_post_ids %}liked{% endif %}">
+                        {% if post.id in liked_post_ids %}
+                            ❤️
+                        {% else %}
+                            🤍
+                        {% endif %}
+                        Like
+                    </button>
+                    <span class="like-count">{{ post.likes|length }}</span>
+                </form>
+
+                <!-- Comment Placeholder (disabled for now) -->
+                <div class="comment-placeholder" title="Coming soon">
+                    💬 Comment
+                </div>
+
+                <!-- Delete Button (only for post owner) -->
+                {% if post.user_id == current_user.id %}
+                    <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}#post-{{ post.id }}" style="margin-left: auto;" id="deleteForm{{ post.id }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="delete-btn" onclick="event.preventDefault(); showConfirm('Delete Post', 'Are you sure?', function(){ document.getElementById('deleteForm{{ post.id }}').submit(); })">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            
         </div>
-    </div>
+    </article>
     {% endfor %}
 
     <!-- Pagination -->
