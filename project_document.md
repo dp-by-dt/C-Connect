@@ -1522,7 +1522,7 @@ all other seems fine
 3. limit exeed error page ✅error page `429.html` added & registered (in `factory_helpers`)
 4. logout & deletion confirmation window ✅ `_confirmation_modal.html` as a template, which would be called for confirmation window, along with the message and it returns success or cancel output
     Usage: <button onclick="showConfirm('Log Out', 'End your current session?', function(){window.location.href='/auth/logout'});">Logout</button>
-    (or can be used in as a JS funciton too)
+    (or can be used in as a JS funciton too) 
 5. back button even after logging out ✅added `add_no_cache_headers` in factory helpers (prevents storing cache for auth pages). it is selective cache storing
 6. cta for post making
 7. event expirty time in ist ✅put to ist using `to_ist()`
@@ -1533,7 +1533,7 @@ all other seems fine
 12. vibe vote percentage would be good
 13. only 10 recent post shown in a user's profile
 14. in current user profile, posts are not shown
-15. images rotated while posting feed
+15. images rotated while posting feed ✅used imageops.exif_transpose to solve this
 16. wrong file formats only rejected when submitting
 17. liking should not reloading to top (in feeds)
 18. deleted posts's images are not deleted from folder
@@ -1543,6 +1543,8 @@ all other seems fine
 22. JS disabled features
 23. session expired flash message ✅`unauthorized_handler` in factory_helpers
 
+In posts section
+24. userimage only loaded if the first post loaded is user's own 
 
 
 
@@ -1568,7 +1570,87 @@ FOR CHATGPT
 (tell me if something of this is unwanted or breaking the logic/flow kind, then i can remove that)
 5. session expired flash message added in factory_helpers too
 6. event expirty time set to ist using: to_ist(p.expires_at).strftime('%d %b %Y, %I:%M %p')
-7. 
+7. added a _confirmation_modal.html file in the components which would independently act as template for the confirmation messages. 
+The file code is as below: 
+<!-- 🔥 SELF-CONTAINED CONFIRMATION MODAL - Zero dependencies! -->
+<style>
+.confirm-modal { 
+    display: none; position: fixed; inset: 0; z-index: 9999; 
+    align-items: center; justify-content: center; backdrop-filter: blur(10px);
+}
+.confirm-modal.show { display: flex; animation: fadeIn 0.2s ease; }
+.confirm-modal__overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.confirm-modal__content { 
+    background: var(--glass-bg, rgba(255,255,255,0.95)); 
+    backdrop-filter: blur(20px); border: 1px solid var(--glass-border, #e5e7eb); 
+    border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; 
+    margin: 1rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+.confirm-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+.confirm-message { margin-bottom: 1.5rem; line-height: 1.6; }
+.confirm-actions { display: flex; gap: 1rem; justify-content: flex-end; }
+.confirm-btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+.confirm-cancel { background: var(--bg-hover, #f3f4f6); color: var(--text-primary, #111); }
+.confirm-confirm { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+</style>
+
+<div class="confirm-modal" id="confirmModal">
+    <div class="confirm-modal__overlay" onclick="closeConfirm()"></div>
+    <div class="confirm-modal__content">
+        <h3 class="confirm-title" id="confirmTitle">Confirm</h3>
+        <p class="confirm-message" id="confirmMessage">Are you sure?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn confirm-cancel" onclick="closeConfirm()">Cancel</button>
+            <button class="confirm-btn confirm-confirm" id="confirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let confirmCallback = null;
+
+// 🔥 PUBLIC API - Call from anywhere!
+function showConfirm(title, message, callback) {
+    confirmCallback = callback;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeConfirm() {
+    document.getElementById('confirmModal').classList.remove('show');
+    document.body.style.overflow = '';
+    confirmCallback = null;
+}
+
+// Confirm button click
+document.getElementById('confirmBtn').onclick = function() {
+    if (confirmCallback) {
+        confirmCallback();
+        closeConfirm();
+    }
+};
+
+// ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('confirmModal').classList.contains('show')) {
+        closeConfirm();
+    }
+});
+</script>
+
+
+It is now being used for events deletion, account deletion alert and logout
+
+
+
+
+8. Added the vibe.mode option to check if vibe is inactive and only display the vibe section if it is not empty. 
+
+9. admin control is skipped for now then
+10. vote percentage now calculated right now (but i think won't that be quite easy?). But anyway skipping for now
+
 
 
 

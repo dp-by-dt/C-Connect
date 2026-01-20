@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from PIL import Image
 from werkzeug.utils import secure_filename
 
+from PIL import Image, ImageOps
+
 
 
 #============== Helper functions ============
@@ -18,6 +20,8 @@ from werkzeug.utils import secure_filename
 def save_post_image(file, user_id):
     # Open image
     img = Image.open(file)
+    #Apply EXIF orientation FIRST
+    img = ImageOps.exif_transpose(img)
     width, height = img.size
 
     # Center crop to square
