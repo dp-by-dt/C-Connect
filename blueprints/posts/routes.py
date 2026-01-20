@@ -97,6 +97,12 @@ def feed():
         .paginate(page=page, per_page=10, error_out=False)
     )
 
+    # Clamp to last page if invalid page number 
+    if not pagination.items and page > 1:
+        pagination = Post.query.order_by(Post.created_at.desc()).paginate(
+            page=pagination.pages or 1, per_page=10, error_out=False
+        )
+
     posts = pagination.items
 
     #passing profile picture of the user who's the post is

@@ -1537,7 +1537,7 @@ all other seems fine
 16. wrong file formats only rejected when submitting
 17. liking should not reloading to top (in feeds) ✅put an article id for the content which is liked and scrolls to that and user `referrer` in the `routes`
 18. deleted posts's images are not deleted from folder
-19. proper pagination blocks in posts/feed page
+19. proper pagination blocks in posts/feed page ✅clamps to the first or last page if page number is invaild (`routes`)---- Also added a go to first page button if the page is greater than 2
 20. notification cta for event misleading
 21. notification span for post liking
 22. JS disabled features
@@ -1650,6 +1650,40 @@ It is now being used for events deletion, account deletion alert and logout
 
 9. admin control is skipped for now then
 10. vote percentage now calculated right now (but i think won't that be quite easy?). But anyway skipping for now
+
+
+-----------------------------
+
+Social Feed
+1. Image rotation solved using ImageOps.exif_transpose
+2. Scroll is fixed for liking and deletion of posts using an article tag with post id and using referrer in the routes as:
+
+    referrer_or_url = request.referrer or url_for("posts.feed") #scrolls to the position
+
+    # Try scroll to PREVIOUS post
+    prev_id = post_id - 1
+    if Post.query.get(prev_id):
+        return redirect(f"{referrer_or_url}#post-{prev_id}")
+    
+    # Try scroll to NEXT post  
+    next_id = post_id + 1
+    if Post.query.get(next_id):
+        return redirect(f"{referrer_or_url}#post-{next_id}")
+    
+    # Fallback: Original position or feed
+    return redirect(referrer_or_url)
+
+
+
+3. That i guess we can do together. What i am hoping to do about that is, if a post image id deleted we can mark it as about to be deleted and list that into a new table or so, where we would keep a 20 or 30 day time period for it. After that day we would delete those permanently. like a recycle bin (but we won't be recycling it, just deleting later. Say for security reasons). So occasionally, we would run a check on this table and if some files listed there is expired, we would delete that and logged in the detials in the log file too. How about that? 
+
+4. To prevetn allowing invalid page numbers added the following section too in the pagination logic:
+    # Clamp to last page if invalid page number 
+    if not pagination.items and page > 1:
+        pagination = Post.query.order_by(Post.created_at.desc()).paginate(
+            page=pagination.pages or 1, per_page=10, error_out=False
+        )
+
 
 
 

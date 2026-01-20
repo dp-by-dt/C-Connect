@@ -670,6 +670,11 @@ body {
 
     <!-- Pagination -->
     <div class="pagination">
+        <!-- 🔥 FIRST PAGE BUTTON (NEW) -->
+        {% if pagination.page > 2 %}
+            <a href="{{ url_for('posts.feed', page=1) }}" class="page-link">First</a>
+        {% endif %}
+
         {% if pagination.has_prev %}
             <a href="{{ url_for('posts.feed', page=pagination.prev_num) }}" class="page-link">← Prev</a>
         {% endif %}
