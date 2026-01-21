@@ -65,7 +65,9 @@ def connections_send(target_id):
         create_notification(
             user_id=target_id,
             sender_id=current_user.id,
-            message=f"{current_user.username} sent you a connection request"
+            message=f"{current_user.username} sent you a connection request",
+            type='connect_request',
+            rate_limit=False #send notificaiton always
         )
     else:
         flash(msg, 'info')
@@ -84,7 +86,9 @@ def connections_accept(conn_id):
         create_notification(
             user_id=conn.user_id,
             sender_id=current_user.id,
-            message=f"{current_user.username} accepted your connection request"
+            type='connect_accept',
+            message=f"{current_user.username} accepted your connection request",
+            rate_limit=False #send notificaiton always
         )
 
     return redirect(request.referrer or url_for('connections.connections_home'))
@@ -101,7 +105,9 @@ def connections_reject(conn_id):
         create_notification(
             user_id=conn.user_id,
             sender_id=current_user.id,
-            message=f"{current_user.username} rejected your connection request"
+            type='connect_reject',
+            message=f"{current_user.username} rejected your connection request",
+            rate_limit=True #keep liimit
         )
 
     return redirect(request.referrer or url_for('connections.connections_home'))
@@ -118,7 +124,9 @@ def connections_cancel(conn_id):
             create_notification(
                 user_id=conn.target_user_id,
                 sender_id=current_user.id,
-                message=f"{current_user.username} cancelled their connection request"
+                type='connect_cancel',
+                message=f"{current_user.username} cancelled their connection request",
+                rate_limit=True #limit
             )
         
         # Return JSON - NO REDIRECT
@@ -144,7 +152,9 @@ def connections_disconnect(conn_id):
         create_notification(
             user_id=other_user,
             sender_id=current_user.id,
-            message=f"{current_user.username} removed you from their connections"
+            type='connect_disconnect',
+            message=f"{current_user.username} removed you from their connections",
+            rate_limit=True #
         )
 
     return redirect(request.referrer or url_for('connections.connections_home'))

@@ -1539,13 +1539,13 @@ all other seems fine
 18. deleted posts's images are not deleted from folder
 19. proper pagination blocks in posts/feed page ✅clamps to the first or last page if page number is invaild (`routes`)---- Also added a go to first page button if the page is greater than 2
 20. notification cta for event misleading
-21. notification span for post liking
+21. notification span for post liking ✅set a limit of 3 unread notifications which will be sent if posts are liked (in the route `toggle_like`). Now it can be customized if the limit need to be set or not (in individual usage) as `rate_limit=True`. Later can add summarized notification
 22. JS disabled features
 23. session expired flash message ✅`unauthorized_handler` in factory_helpers
 
 In posts section
 24. userimage only loaded if the first post loaded is user's own 
-
+25. notification navigates to the relevant page
 
 
 

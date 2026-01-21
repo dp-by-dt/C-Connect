@@ -11,6 +11,7 @@ from PIL import Image
 from werkzeug.utils import secure_filename
 
 from PIL import Image, ImageOps
+from blueprints.notifications.service import create_notification
 
 
 
@@ -160,15 +161,14 @@ def toggle_like(post_id):
         db.session.add(PostLike(post_id=post_id, user_id=current_user.id))
 
         # create notification for like
-        if post.user_id != current_user.id:
-            notif = Notification(
-                user_id=post.user_id,
-                sender_id=current_user.id,
-                message=f"{current_user.username} liked your post",
-                type='post_like',
-                ref_id=post.id
-            )
-            db.session.add(notif)
+        create_notification(
+            user_id=post.user_id,
+            sender_id=current_user.id,
+            message=f"{current_user.username} liked your post",
+            type='post_like',
+            ref_id=post.id,           # Prevents duplicate likes on same post
+            rate_limit=True           # Default - applies limits
+        )
 
     db.session.commit()
 

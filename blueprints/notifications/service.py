@@ -5,16 +5,60 @@ from flask import current_app
 
 
 #notification for connections
-def create_notification(user_id, sender_id, message):
+def create_notification(user_id, sender_id, message, type='general', ref_id=None, rate_limit=True, max_unread_per_type=3):
+    """
+    Smart notification with optional rate limiting:
+    - rate_limit=False → Send ALWAYS (connection requests)
+    - rate_limit=True → Skip duplicates + max limit (post likes)
+    """
+    if user_id == sender_id:
+        return None  # No self-notifications
+    
+    #SKIP RATE LIMITING? Send immediately!
+    if not rate_limit:
+        notif = Notification(
+            user_id=user_id, sender_id=sender_id, message=message,
+            type=type, ref_id=ref_id or None, is_read=False
+        )
+        db.session.add(notif)
+        db.session.commit()
+        return notif
+    
+    #RATE LIMITED: Apply smart checks
+    # 1. Check if unread notification exists for THIS (sender, type, ref_id)
+    existing_conditions = {
+        'user_id': user_id, 'sender_id': sender_id, 'type': type, 'is_read': False
+    }
+    if ref_id:
+        existing_conditions['ref_id'] = ref_id
+    
+    existing_notif = Notification.query.filter_by(**existing_conditions).first()
+    if existing_notif:
+        return existing_notif  # Skip duplicate
+    
+    # 2. Check total unread count for this type
+    unread_count = Notification.query.filter_by(
+        user_id=user_id, type=type, is_read=False
+    ).count()
+    
+    if unread_count >= max_unread_per_type:
+        return None  # Skip rate limit
+    
+    # 3. Create new notification
     notif = Notification(
-        user_id=user_id,
-        type='connect',
-        sender_id=sender_id,
-        message=message
-    )
+            user_id=user_id, 
+            sender_id=sender_id, 
+            message=message,
+            type=type, 
+            ref_id=ref_id or None, 
+            is_read=False
+        )
+
+
     db.session.add(notif)
     db.session.commit()
     return notif
+
 
 
 
