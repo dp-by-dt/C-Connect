@@ -1524,7 +1524,7 @@ all other seems fine
     Usage: <button onclick="showConfirm('Log Out', 'End your current session?', function(){window.location.href='/auth/logout'});">Logout</button>
     (or can be used in as a JS funciton too) 
 5. back button even after logging out ✅added `add_no_cache_headers` in factory helpers (prevents storing cache for auth pages). it is selective cache storing
-6. cta for post making
+6. cta for post making ✅added (but can be improved later)
 7. event expirty time in ist ✅put to ist using `to_ist()`
 8. event duration setting in hours now
 9. if now vibe, hide that section from campus board ✅used vibe.mode==inactive (to find if there is vibe)
@@ -1540,151 +1540,27 @@ all other seems fine
 19. proper pagination blocks in posts/feed page ✅clamps to the first or last page if page number is invaild (`routes`)---- Also added a go to first page button if the page is greater than 2
 20. notification cta for event misleading
 21. notification span for post liking ✅set a limit of 3 unread notifications which will be sent if posts are liked (in the route `toggle_like`). Now it can be customized if the limit need to be set or not (in individual usage) as `rate_limit=True`. Later can add summarized notification
-22. JS disabled features
+22. JS disabled features ⚠️added danger message if JS is disabled
 23. session expired flash message ✅`unauthorized_handler` in factory_helpers
 
 In posts section
 24. userimage only loaded if the first post loaded is user's own 
 25. notification navigates to the relevant page
+26. In the notifications, right now, if there are important notifications came later, they gets ignored. 
+🔴 Issue
+Unread count per type alone may block important later notifications.
 
+Example:
+3 unread like notifications
+Then a different important notification of same type
+It gets dropped
 
+✅ Minimal Improvement (Still Safe)
+Instead of total unread per type, scope it tighter:
 
-FOR CHATGPT
-1. Added onerror="this.style.display='none'" for fallback
-2. Added z-index to the hamburger menu 
-3. 429.html page added
-4. that function added as:
-    @app.after_request
-    def add_no_cache_headers(response):
-        if current_user.is_authenticated: # Auth pages: NO CACHE (security)
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-        elif request.endpoint and 'static' in request.endpoint:
-            # Static files: Long cache
-            response.headers["Cache-Control"] = "public, max-age=15768000" #stored 6 months
-        else:
-            # Public pages: Short cache
-            response.headers["Cache-Control"] = "public, max-age=300"
-        return response 
-(tell me if something of this is unwanted or breaking the logic/flow kind, then i can remove that)
-5. session expired flash message added in factory_helpers too
-6. event expirty time set to ist using: to_ist(p.expires_at).strftime('%d %b %Y, %I:%M %p')
-7. added a _confirmation_modal.html file in the components which would independently act as template for the confirmation messages. 
-The file code is as below: 
-<!-- 🔥 SELF-CONTAINED CONFIRMATION MODAL - Zero dependencies! -->
-<style>
-.confirm-modal { 
-    display: none; position: fixed; inset: 0; z-index: 9999; 
-    align-items: center; justify-content: center; backdrop-filter: blur(10px);
-}
-.confirm-modal.show { display: flex; animation: fadeIn 0.2s ease; }
-.confirm-modal__overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
-.confirm-modal__content { 
-    background: var(--glass-bg, rgba(255,255,255,0.95)); 
-    backdrop-filter: blur(20px); border: 1px solid var(--glass-border, #e5e7eb); 
-    border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; 
-    margin: 1rem; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-}
-.confirm-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
-.confirm-message { margin-bottom: 1.5rem; line-height: 1.6; }
-.confirm-actions { display: flex; gap: 1rem; justify-content: flex-end; }
-.confirm-btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
-.confirm-cancel { background: var(--bg-hover, #f3f4f6); color: var(--text-primary, #111); }
-.confirm-confirm { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-</style>
-
-<div class="confirm-modal" id="confirmModal">
-    <div class="confirm-modal__overlay" onclick="closeConfirm()"></div>
-    <div class="confirm-modal__content">
-        <h3 class="confirm-title" id="confirmTitle">Confirm</h3>
-        <p class="confirm-message" id="confirmMessage">Are you sure?</p>
-        <div class="confirm-actions">
-            <button class="confirm-btn confirm-cancel" onclick="closeConfirm()">Cancel</button>
-            <button class="confirm-btn confirm-confirm" id="confirmBtn">Confirm</button>
-        </div>
-    </div>
-</div>
-
-<script>
-let confirmCallback = null;
-
-// 🔥 PUBLIC API - Call from anywhere!
-function showConfirm(title, message, callback) {
-    confirmCallback = callback;
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    document.getElementById('confirmModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeConfirm() {
-    document.getElementById('confirmModal').classList.remove('show');
-    document.body.style.overflow = '';
-    confirmCallback = null;
-}
-
-// Confirm button click
-document.getElementById('confirmBtn').onclick = function() {
-    if (confirmCallback) {
-        confirmCallback();
-        closeConfirm();
-    }
-};
-
-// ESC key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('confirmModal').classList.contains('show')) {
-        closeConfirm();
-    }
-});
-</script>
-
-
-It is now being used for events deletion, account deletion alert and logout
-
-
-
-
-8. Added the vibe.mode option to check if vibe is inactive and only display the vibe section if it is not empty. 
-
-9. admin control is skipped for now then
-10. vote percentage now calculated right now (but i think won't that be quite easy?). But anyway skipping for now
-
-
------------------------------
-
-Social Feed
-1. Image rotation solved using ImageOps.exif_transpose
-2. Scroll is fixed for liking and deletion of posts using an article tag with post id and using referrer in the routes as:
-
-    referrer_or_url = request.referrer or url_for("posts.feed") #scrolls to the position
-
-    # Try scroll to PREVIOUS post
-    prev_id = post_id - 1
-    if Post.query.get(prev_id):
-        return redirect(f"{referrer_or_url}#post-{prev_id}")
-    
-    # Try scroll to NEXT post  
-    next_id = post_id + 1
-    if Post.query.get(next_id):
-        return redirect(f"{referrer_or_url}#post-{next_id}")
-    
-    # Fallback: Original position or feed
-    return redirect(referrer_or_url)
-
-
-
-3. That i guess we can do together. What i am hoping to do about that is, if a post image id deleted we can mark it as about to be deleted and list that into a new table or so, where we would keep a 20 or 30 day time period for it. After that day we would delete those permanently. like a recycle bin (but we won't be recycling it, just deleting later. Say for security reasons). So occasionally, we would run a check on this table and if some files listed there is expired, we would delete that and logged in the detials in the log file too. How about that? 
-
-4. To prevetn allowing invalid page numbers added the following section too in the pagination logic:
-    # Clamp to last page if invalid page number 
-    if not pagination.items and page > 1:
-        pagination = Post.query.order_by(Post.created_at.desc()).paginate(
-            page=pagination.pages or 1, per_page=10, error_out=False
-        )
-
-
+Per (type, ref_id)
+OR
+Per (type, day)
 
 
 

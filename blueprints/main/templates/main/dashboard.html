@@ -809,6 +809,106 @@
         padding: 1.5rem;
     }
 }
+
+
+
+/* CTA Hero section for campus board */
+/* 🔥 HERO ACTION BUTTONS */
+/* 🔥 STATS SECTION ACTIONS */
+.dashboard__stats-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* PRIMARY BUTTON (Campus Board) - Secondary style + Primary hover */
+.dashboard__stat-hero-primary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.125rem 1.25rem;
+    background: transparent;
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+}
+
+.dashboard__stat-hero-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+}
+
+.dashboard__stat-hero-primary:hover::before {
+    left: 100%;
+}
+
+.dashboard__stat-hero-primary:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard__stat-hero-primary i {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* SECONDARY BUTTON (New Post) */
+.dashboard__stat-hero-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-hover);
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    flex: 1;
+}
+
+.dashboard__stat-hero-secondary:hover {
+    background: var(--primary-color);
+    color: white !important;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard__stats-actions {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    
+    .dashboard__stat-hero-primary,
+    .dashboard__stat-hero-secondary {
+        padding: 1rem;
+        font-size: 0.9rem;
+        flex: 1;
+    }
+}
+
+
 </style>
 {% endblock %}
 
@@ -835,28 +935,36 @@
 
         <!-- ========== STATS GRID ========== -->
         <section class="dashboard__stats">
-            <!-- Connections -->
-             <div class="dashboard__stats-top">
+            <!-- Top Row: Connections + Posts Count -->
+            <div class="dashboard__stats-top">
                 <a href="{{ url_for('connections.connections_home') }}" class="dashboard__stat-simple">
                     <strong class="dashboard__stat-value">{{ stats.connections }}</strong>
                     <span class="dashboard__stat-label">Connections</span>
                 </a>
                 
-                <!-- Posts -->
                 <a href="{{ url_for('posts.feed') }}" class="dashboard__stat-simple">
                     <strong class="dashboard__stat-value">{{ posts|length }}</strong>
                     <span class="dashboard__stat-label">Posts</span>
                 </a>
             </div>
             
-            <!-- Messages (Placeholder) -->
-            <!-- TODO: Add actual message count when messaging feature is complete -->
-            <!-- Messages BUTTON (full width) -->
-            <a href="/messages/" class="dashboard__stat-messages-btn user-card__action-btn--pending">
-                <i class="bi bi-send-fill me-2"></i>
-                Messages
-            </a>
+            <!-- Campus Board (Primary) + Posts (Secondary) -->
+            <div class="dashboard__stats-actions">
+                <!-- PRIMARY: Campus Board -->
+                <a href="/campus-board" class="dashboard__stat-hero-primary">
+                    <i class="bi bi-building"></i>
+                    <span>Campus Board</span>
+                </a>
+                
+                <!-- SECONDARY: Create Post -->
+                <a href="{{ url_for('posts.feed') }}" class="dashboard__stat-hero-secondary">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>New Post</span>
+                </a>
+            </div>
         </section>
+
+
 
     </section>
 
@@ -899,20 +1007,6 @@
     </a>
 </div>
 {% endif %}
-
-
-    <!-- ================ CTA primary ===================-->
-     <div class="dashboard__quick-actions">
-        <a href="{{ url_for('posts.feed') }}" class="btn btn-primary-custom">
-            <i class="bi bi-pencil-square"></i>
-            Create a post
-        </a>
-
-        <a href="{{ url_for('vibe.daily_vibe') }}" class="btn btn-outline-custom">
-            <i class="bi bi-lightning"></i>
-            Answer today’s vibe
-        </a>
-    </div>
 
 
 

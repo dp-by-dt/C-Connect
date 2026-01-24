@@ -58,7 +58,7 @@ def register_extensions(app):
     # removes the page cached after logging out (denies back button presses)
     @app.after_request
     def add_no_cache_headers(response):
-        if current_user.is_authenticated: # Auth pages: NO CACHE (security)
+        if current_user.is_authenticated and request.method == "GET": # Auth pages: NO CACHE (security) & GET for not caching POST
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"

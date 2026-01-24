@@ -13,6 +13,8 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps
 from blueprints.notifications.service import create_notification
 
+from services.file_service import FileService
+
 
 
 #============== Helper functions ============
@@ -187,6 +189,16 @@ def delete_post(post_id):
     if post.user_id != current_user.id:
         flash("Unauthorized action", "error")
         return redirect(url_for("posts.feed"))
+    
+    #for deleting the posts images from db
+    file_service = FileService()
+    if post.image_path:
+        print(f"image_path = {post.image_path}")
+        success = file_service.delete_post_image(post.image_path)
+        print("success deletion")
+        if not success:
+            print("failed deletion")
+            current_app.logger.warning(f"Failed to delete image: {post.image_path}")
 
     db.session.delete(post)
     db.session.commit()

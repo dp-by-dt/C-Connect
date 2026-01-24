@@ -37,6 +37,7 @@ let confirmCallback = null;
 
 // 🔥 PUBLIC API - Call from anywhere!
 function showConfirm(title, message, callback) {
+    if (document.getElementById('confirmModal').classList.contains('show')) return; // double action doing protection
     confirmCallback = callback;
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;

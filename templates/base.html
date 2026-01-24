@@ -130,6 +130,7 @@
                 <i class="bi bi-chevron-right"></i>
             </button>
         </aside>
+        
 
         <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
         <nav class="bottom-nav glass-effect">
@@ -223,6 +224,7 @@
             </div>
         </header>
 
+        
         <!-- ========== MOBILE SIDEBAR MENU ========== -->
         <div class="mobile-menu" id="mobileMenu">
             <div class="mobile-menu__content glass-effect">
@@ -317,6 +319,33 @@
 
     {% endif %}
 
+
+
+    <!-- After topbar closing tag, before flash messages -->
+    <noscript>
+        <div class="no-js-banner" style="
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626; 
+            border: 1px solid #fca5a5; 
+            border-radius: var(--radius-md);
+            padding: 1rem; 
+            margin: 1rem;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            z-index: 1000;
+            width: 76%;
+            margin-left: 6%;
+            margin-top: .55%;
+            align-content: center;
+        ">
+            ⚠️ JavaScript is disabled. Some features may not work. Turn on JavaScript in browser settings
+        </div>
+    </noscript>
+
+
+
     <!-- ==================== FLASH MESSAGES ==================== -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -333,6 +362,8 @@
             </div>
         {% endif %}
     {% endwith %}
+
+
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <main class="main-content">
