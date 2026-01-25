@@ -1566,7 +1566,21 @@ Per (type, day)
 
 
 
+---------------------------------
+Remaining bugs:
 
+1. Event duration exipiry time is in hours now (later we can add more options) 
+2. more admin features 
+3. remove option to add anonymous vibe text (since it is not being displayed anywhere in our logic).
+4. vibe vote percentage would be nice 
+5. In a user's profile, only 10 latest posts are shown 
+6. In current user's profile only posts placeholder is shown, not actual post (but all placeholders for all posts are shown) ✅working along with liking and deletion buttons
+7. deleted posts' images are still not getting deleted from the folder. 
+8. cta in notification is not proper text (it is saying mark as read, but actaylly leading to the events page) 
+9. Need to add such leading cta buttons in all notifications as per requried. Like if a person followed, lead to the profile of that user or if some one liked a post, lead to that post or the user 
+10. Js disabled features (but can wait for later) 
+11. In posts page, user image is only loaded if the first post is the user's own post 
+12. And the problem you suggested which is, if an imporatn notification came later it gets ignored
 
 
 

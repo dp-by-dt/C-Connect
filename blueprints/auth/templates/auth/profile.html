@@ -555,6 +555,231 @@
     }
 }
 
+
+
+
+/* ===== Posts Section ===== */
+.post-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);  /* Smaller radius */
+    overflow: visible;
+    margin-bottom: 1rem;  /* Tight spacing */
+    transition: all var(--transition-base);
+    max-width: 420px;  /* 20% smaller */
+    box-shadow: var(--shadow-xs);
+    font-size: 0.9rem;  /* Slightly smaller base */
+}
+
+.post-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 🔥 TIGHT PADDING EVERYWHERE */
+.post-card__header {
+    padding: 0.625rem 0.875rem;  /* Much tighter */
+}
+
+.post-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.post-card__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.post-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.post-card__time {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.post-card__content {
+    padding: 1rem;
+    line-height: 1.55;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+/* 🔥 IMAGE CONTAINER - Responsive */
+.post-card__image {
+    padding: 0 1rem 1rem;  /* Match content padding */
+    display: flex;
+    justify-content: center;  /* Center image */
+}
+
+/* 🔥 COMPACT BUTTONS - SIDE BY SIDE */
+.post-card__footer {
+    padding: 0.625rem 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+/* 🔥 RESPONSIVE BUTTONS */
+.like-btn, .delete-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex: 1;  /* Equal width */
+    height: 34px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.like-btn .like-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.like-count {
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+.like-btn.liked {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.like-btn:hover, .delete-btn:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-1px);
+}
+
+.delete-btn {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+}
+
+.delete-btn:hover {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+/* PERFECT MOBILE */
+@media (max-width: 768px) {
+    .post-card__avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    
+    .post-card {
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .post-card__image {
+        padding: 0 0.75rem 0.75rem;
+    }
+    
+    .post-card__footer {
+        flex-direction: row !important;  /* SIDE BY SIDE */
+        gap: 0.4rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .like-btn, .delete-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.8rem;
+        height: 32px;
+        flex: 1;  /* Equal width */
+    }
+}
+
+/* Empty state */
+.user-profile-posts__empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-secondary);
+}
+
+.user-profile-posts__empty i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.4;
+}
+
+
+/* Mobile */
+@media (max-width: 768px) {
+    .post-card__footer {
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
+    .like-btn {
+        justify-content: center;
+    }
+}
+
+
+/* 🔥 SMALL MOBILE - Still side by side */
+@media (max-width: 480px) {
+    .like-btn, .delete-btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.78rem;
+        gap: 0.2rem;
+        height: 30px;
+    }
+    
+    .like-btn .like-icon {
+        font-size: 0.9rem;
+    }
+}
+
+
+
+/* medium Mobile */
+@media (max-width: 768px) {
+    
+    .post-card__avatar,
+    .request-item__avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 1.125rem;
+    }
+    
+}
+
 /* Small Mobile */
 @media (max-width: 480px) {
     .profile-card__stats {
@@ -727,25 +952,84 @@
             {# Posts Grid #}
             {# TODO: Backend Integration #}
             {# Replace with: {% if user.posts %} ... {% for post in user.posts %} #}
-            {% if posts and posts|length > 0 %}
-                <div class="profile-posts__grid">
-                    {% for post in posts %}
-                        <div class="profile-posts__placeholder">
-                            <span>Post #{{ post.id }}</span>
-                            {# TODO: Backend Integration to show posts.content #}
-                        </div>
-                    {% endfor %}
+
+            
+
+
+            <!-- ========== POSTS SECTION ========== -->
+ 
+{% if posts %}
+<div class="user-profile-posts__list">
+    {% for post in posts %}
+    <article id="post-{{ post.id }}" class="post-card" style="scroll-margin-top: 100px;">
+        <!-- Compact Header -->
+        <header class="post-card__header">
+            <div class="post-card__meta">
+                <div class="post-card__avatar">
+                    {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture }}" alt="{{ user.username }}" onerror="this.style.display='none'">
+                    {% else %}
+                    {{ user.username[0]|upper }}
+                    {% endif %}
                 </div>
-            {% else %}
-                {# Empty State #}
-                <div class="profile-posts__empty">
-                    <div class="profile-posts__empty-icon">
-                        <i class="bi bi-inbox"></i>
-                    </div>
-                    <p class="profile-posts__empty-text">No posts yet</p>
-                    <p class="profile-posts__empty-subtext">Start sharing your thoughts and moments with the community!</p>
+                <div class="post-card__time">
+                    {{ to_ist(post.created_at).strftime("%d %b, %I:%M %p") }}
                 </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        {% if post.content %}
+        <div class="post-card__content">{{ post.content }}</div>
+        {% endif %}
+
+        <!-- 🔥 PERFECT IMAGE RATIO (Your reference style) -->
+        {% if post.image_path %}
+        <div class="post-card__image">
+            <img src="{{ url_for('static', filename=post.image_path) }}" 
+                 alt="Post image" 
+                 style="width:100%; max-width:500px; border-radius:8px; margin-bottom: 1rem;"
+                 loading="lazy">
+        </div>
+        {% endif %}
+
+        <!-- Compact Footer -->
+        <footer class="post-card__footer">
+            <form method="POST" 
+                  action="{{ url_for('posts.toggle_like', post_id=post.id) }}#post-{{ post.id }}"
+                  class="like-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="like-btn {{ 'liked' if post.id in liked_post_ids else '' }}">
+                    <span class="like-icon">
+                        {% if post.id in liked_post_ids %}❤️{% else %}🤍{% endif %}
+                    </span>
+                    <span class="like-count">{{ post.likes|length if post.likes else 0 }}</span>
+                </button>
+            </form>
+
+            {% if current_user.id == user.id %}
+            <form method="POST" 
+                  action="{{ url_for('posts.delete_post', post_id=post.id) }}#post-{{ post.id }}"
+                  class="delete-form" id="deleteForm{{ post.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="delete-btn"
+                        onclick="event.preventDefault(); showConfirm('Delete Post', 'Move to recycle bin?', function(){ document.getElementById('deleteForm{{ post.id }}').submit(); })">
+                    🗑️
+                </button>
+            </form>
             {% endif %}
+        </footer>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="user-profile-posts__empty">
+    <i class="bi bi-inbox"></i>
+    <p style="margin: 0;">No posts yet</p>
+</div>
+{% endif %}
+
+
         </div>
     </main>
 </div>

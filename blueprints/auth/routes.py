@@ -297,7 +297,7 @@ def profile():
     user_id = current_user.id
     # provide posts of the current user from posts table
     # from Post, fetch all the posts for user_id == user.id
-    posts = Post.query.filter_by(user_id=user_id).all()
+    posts = Post.query.filter_by(user_id=user_id).order_by(Post.created_at.desc()).all()
 
     # count accepted connections (either side)
     accepted_count = db.session.query(Connection).filter(
