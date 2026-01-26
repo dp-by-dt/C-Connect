@@ -1544,7 +1544,7 @@ all other seems fine
 23. session expired flash message ✅`unauthorized_handler` in factory_helpers
 
 In posts section
-24. userimage only loaded if the first post loaded is user's own 
+24. userimage only loaded if the first post loaded is user's own ✅solved by adding current user profile in the `profile_picture_cache` dict
 25. notification navigates to the relevant page
 26. In the notifications, right now, if there are important notifications came later, they gets ignored. 
 🔴 Issue
@@ -1575,7 +1575,7 @@ Remaining bugs:
 4. vibe vote percentage would be nice 
 5. In a user's profile, only 10 latest posts are shown 
 6. In current user's profile only posts placeholder is shown, not actual post (but all placeholders for all posts are shown) ✅working along with liking and deletion buttons
-7. deleted posts' images are still not getting deleted from the folder. 
+7. deleted posts' images are still not getting deleted from the folder. ✅ upload folder path is now normalised (uses `UPLOAD_FOLDER` as the base of path). Deleted post image moved to `recyclebin` folder. Can do Manual deletion
 8. cta in notification is not proper text (it is saying mark as read, but actaylly leading to the events page) 
 9. Need to add such leading cta buttons in all notifications as per requried. Like if a person followed, lead to the profile of that user or if some one liked a post, lead to that post or the user 
 10. Js disabled features (but can wait for later) 

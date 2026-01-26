@@ -13,9 +13,19 @@ class FileService:
         """Delete image w/ recycle bin support"""
         if not image_path:
             return True
-            
+        
+        logger.warning(f"Incoming image_path: {image_path}")
+
         upload_folder = current_app.config['UPLOAD_FOLDER']  # current_app HERE
-        full_path = os.path.join(upload_folder, image_path)
+
+        # Normalize image_path
+        normalized_path = image_path
+
+        # Strip leading 'uploads/' if present
+        if image_path.startswith("uploads/"):
+            normalized_path = image_path[len("uploads/"):]
+
+        full_path = os.path.join(upload_folder, normalized_path)
         recycle_bin = os.path.join(upload_folder, 'recycle_bin')
         os.makedirs(recycle_bin, exist_ok=True)
         

@@ -113,12 +113,17 @@ def feed():
     #that is take the user_id of the owner of the post, 
     user_ids = [post.user_id for post in posts]
     profile_picture_cache = {}
+
     # lookup in the profile table for the "profile_picture" for that user_id
     from models import Profile
     profiles = Profile.query.filter(Profile.user_id.in_(user_ids)).all()
     for profile in profiles:
         profile_picture_cache[profile.user_id] = profile.profile_picture
 
+
+    # adding current user profile picture to profile_pic_cache
+    if current_user.id not in profile_picture_cache:
+        profile_picture_cache[current_user.id] = current_user.profile.profile_picture
     #profile_picture = profile.query.filter_by(user_id=user.id).first().profile_picture
     
     
@@ -194,6 +199,9 @@ def delete_post(post_id):
     file_service = FileService()
     if post.image_path:
         print(f"image_path = {post.image_path}")
+        current_app.logger.warning(f"IMAGE_PATH (DB): {post.image_path}")
+        current_app.logger.warning(f"UPLOAD_FOLDER: {current_app.config['UPLOAD_FOLDER']}")
+
         success = file_service.delete_post_image(post.image_path)
         print("success deletion")
         if not success:
