@@ -1584,6 +1584,41 @@ Remaining bugs:
 
 
 
+----------------------------------
+
+
+### Before Pre-Launch Modifications
+
+
+**🔴 Tier 1 — “This breaks the app illusion” (Highest priority)**
+    Global footer in base.html ✅
+    Oversized cards everywhere (discover, connections, notifications)
+    Dashboard buttons not visible on mobile ✅
+    Campus Board: “Create event” dominating the page
+    Inbox: unread state unclear
+    Notifications page feels like a form, not a feed
+
+**🟠 Tier 2 — “Feels clumsy, not broken”**
+    Like count display too verbose
+    Search bar on feed not working (this might touch backend → careful)
+    Cards not linking to profiles consistently
+    Message timestamps too loud / wrong timezone
+    Mark-as-read buttons everywhere
+
+**🟡 Tier 3 — “Polish & delight”**
+    Theme / color tuning
+    CTA microcopy
+    Icon refinements
+    Animation softness
+    Empty-state visuals
+
+
+
+1. Removed the footer section from `base.html` 
+2. Modified the styles of the /dashboard page
+
+
+
 
 
 
