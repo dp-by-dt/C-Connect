@@ -1013,7 +1013,7 @@
                   class="delete-form" id="deleteForm{{ post.id }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="delete-btn"
-                        onclick="event.preventDefault(); showConfirm('Delete Post', 'Move to recycle bin?', function(){ document.getElementById('deleteForm{{ post.id }}').submit(); })">
+                        onclick="event.preventDefault(); showConfirm('Delete Post', 'Delete Post?', function(){ document.getElementById('deleteForm{{ post.id }}').submit(); })">
                     🗑️
                 </button>
             </form>

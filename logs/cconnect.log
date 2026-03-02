@@ -6027,3 +6027,19 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2026-01-26 09:28:12,305 [INFO] app: Cleaned up 0 old notifications.
 2026-01-26 09:28:54,824 [WARNING] app: IMAGE_PATH (DB): uploads/posts/post_img19_20260126035822.jpg
 2026-01-26 09:28:54,824 [WARNING] app: UPLOAD_FOLDER: static/uploads
+2026-01-27 22:18:14,885 [INFO] app: Cleaned up 6 old notifications.
+2026-01-27 22:18:14,900 [INFO] app: ProfileVisit cleanup removed 2 rows
+2026-02-21 23:47:14,232 [INFO] app: Cleaned up 2 old notifications.
+2026-02-21 23:47:14,246 [INFO] app: ProfileVisit cleanup removed 13 rows
+2026-02-21 23:51:13,827 [WARNING] app: IMAGE_PATH (DB): static/uploads/d1130126e6de4bffa043e6eb2fef640b.jpg
+2026-02-21 23:51:13,828 [WARNING] app: UPLOAD_FOLDER: static/uploads
+2026-02-22 00:32:17,532 [INFO] app: Cleaned up 0 old notifications.
+2026-02-28 23:54:00,543 [INFO] app: Cleaned up 4 old notifications.
+2026-02-28 23:54:00,553 [INFO] app: Cleaned up 4 old notifications.
+2026-02-28 23:54:00,571 [INFO] app: ProfileVisit cleanup removed 2 rows
+2026-03-01 00:38:06,304 [INFO] app: Cleaned up 0 old notifications.
+2026-03-01 06:57:21,547 [INFO] app: Cleaned up 0 old notifications.
+2026-03-01 15:26:40,304 [INFO] app: Cleaned up 0 old notifications.
+2026-03-01 20:01:30,664 [INFO] app: Cleaned up 0 old notifications.
+2026-03-02 01:05:01,682 [INFO] app: Cleaned up 4 old notifications.
+2026-03-02 08:40:43,384 [INFO] app: Cleaned up 8 old notifications.

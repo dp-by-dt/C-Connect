@@ -1582,13 +1582,14 @@ Remaining bugs:
 11. In posts page, user image is only loaded if the first post is the user's own post 
 12. And the problem you suggested which is, if an imporatn notification came later it gets ignored
 
+(THE SAME IS ORDERED BASED ON PRIORITY BELOW)
 
 
 ----------------------------------
 
 
 ### Before Pre-Launch Modifications
-
+(MOST OF THESE WILL BE SOLVED IN UI UPGRADE...)
 
 **🔴 Tier 1 — “This breaks the app illusion” (Highest priority)**
     Global footer in base.html ✅
@@ -1616,6 +1617,23 @@ Remaining bugs:
 
 1. Removed the footer section from `base.html` 
 2. Modified the styles of the /dashboard page
+
+
+
+----------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1690,7 +1708,7 @@ Later modifications
 -------
 Later features 
 0. Download your profile card
-1. forget password
+1. forget password ✅
 1. Delete uploaded images (user profile) if it is not the one currently used by the user (saves space, if that is a thing!)
 3. Stories
 4. Games
