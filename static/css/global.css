@@ -16,101 +16,273 @@
 
 
 
-/* ==================== CSS VARIABLES(NEw purple based) ==================== */
-/* ====== Old vars added in the css_cheatsheet.md file */
+/* ==================== CSS VARIABLES — C-Connect Design System ==================== */
+/* Built for the new UI/UX redesign. Green-primary, multi-accent, mobile-first.     */
+/* Typography: Syne (headings/labels) + DM Sans (body). Light mode default.         */
+
 :root {
-    /* ===== Brand Colors - Elegant Indigo/Purple Theme ===== */
-    --primary-color: #6366f1;           /* Indigo */
-    --primary-hover: #4f46e5;           /* Deeper Indigo */
-    --primary-light: #818cf8;           /* Light Indigo */
-    --accent-color: #8b5cf6;            /* Purple */
-    --accent-bright: #7c3aed;           /* Vibrant Purple CTA */
-    
-    /* ===== Backgrounds (Light Mode) ===== */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --bg-tertiary: #f1f3f5;
-    --bg-hover: #e9ecef;
-    --bg-gradient-start: #f8f9fa;
-    --bg-gradient-end: #f1f3f5;
-    
-    /* ===== Glass Effect ===== */
-    --glass-bg: rgba(255, 255, 255, 0.9);
-    --glass-border: rgba(99, 102, 241, 0.12);
-    --glass-shadow: rgba(99, 102, 241, 0.08);
-    
-    /* ===== Text Colors ===== */
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a5568;
-    --text-tertiary: #718096;
-    --text-muted: #a0aec0;
-    
-    /* ===== Semantic Colors ===== */
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --info-color: #3b82f6;
-    
-    /* ===== Borders & Shadows ===== */
-    --border-color: #e5e7eb;
-    --border-subtle: rgba(229, 231, 235, 0.5);
-    
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-    --radius-full: 50%;
-    
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-    
-    /* ===== Transitions ===== */
-    --transition-fast: 150ms ease;
-    --transition-base: 250ms ease;
-    --transition-smooth: 350ms ease;
-    
-    /* ===== Layout Dimensions ===== */
-    --sidebar-width: 260px;
-    --sidebar-collapsed: 80px;
-    --topbar-height: 72px;
-    --bottom-nav-height: 68px;
+
+    /* ===================================================
+       BRAND — Primary Green
+       Used for: main CTAs, nav active state, links,
+       connect buttons, success actions, brand identity
+    =================================================== */
+    --primary-color:        #2d7a3a;   /* Forest green — main brand */
+    --primary-hover:        #3a9e4a;   /* Lighter green — hover state */
+    --primary-light:        #4db860;   /* Even lighter — active press */
+    --primary-dim:          rgba(45, 122, 58, 0.09);   /* Tinted bg / chips */
+    --primary-glow:         rgba(45, 122, 58, 0.20);   /* Box-shadow glow */
+    --primary-border:       rgba(45, 122, 58, 0.18);   /* Subtle border tint */
+
+
+    /* ===================================================
+       ACCENT 1 — Indigo
+       Used for: messages, identity/profile fields,
+       edit actions, profile completion, links
+    =================================================== */
+    --indigo-color:         #4f5fcc;
+    --indigo-hover:         #6270e0;
+    --indigo-dim:           rgba(79, 95, 204, 0.09);
+    --indigo-glow:          rgba(79, 95, 204, 0.18);
+    --indigo-border:        rgba(79, 95, 204, 0.18);
+
+
+    /* ===================================================
+       ACCENT 2 — Amber
+       Used for: academic info (dept, year), campus board
+       events, warnings, "coming soon" badges
+    =================================================== */
+    --amber-color:          #d97706;
+    --amber-hover:          #b45309;
+    --amber-dim:            rgba(217, 119, 6, 0.09);
+    --amber-glow:           rgba(217, 119, 6, 0.18);
+    --amber-border:         rgba(217, 119, 6, 0.18);
+
+
+    /* ===================================================
+       ACCENT 3 — Coral
+       Used for: errors, likes, danger actions,
+       unread indicators, cancel/remove actions
+    =================================================== */
+    --coral-color:          #e05c5c;
+    --coral-hover:          #c94f4f;
+    --coral-dim:            rgba(224, 92, 92, 0.09);
+    --coral-glow:           rgba(224, 92, 92, 0.18);
+    --coral-border:         rgba(224, 92, 92, 0.18);
+
+
+    /* ===================================================
+       ACCENT 4 — Teal
+       Used for: connections, people suggestions,
+       mutual connections, online status
+    =================================================== */
+    --teal-color:           #0d8a8a;
+    --teal-hover:           #0a6e6e;
+    --teal-dim:             rgba(13, 138, 138, 0.09);
+    --teal-glow:            rgba(13, 138, 138, 0.18);
+    --teal-border:          rgba(13, 138, 138, 0.18);
+
+
+    /* ===================================================
+       SEMANTIC ALIASES
+       Map to accents above — use these for intent-based
+       situations rather than colour-specific names
+    =================================================== */
+    --success-color:        var(--primary-color);   /* Green = success */
+    --danger-color:         var(--coral-color);     /* Coral = danger/error */
+    --warning-color:        var(--amber-color);     /* Amber = warning */
+    --info-color:           var(--indigo-color);    /* Indigo = info/neutral action */
+
+
+    /* ===================================================
+       BACKGROUNDS — Light Mode
+    =================================================== */
+    --bg-primary:           #f5f7f5;   /* Page base — very slightly green-tinted white */
+    --bg-secondary:         #ffffff;   /* Card/surface — pure white */
+    --bg-tertiary:          #eef1ee;   /* Recessed areas, input fields */
+    --bg-hover:             #e8ebe8;   /* Row/item hover state */
+
+    --bg-gradient-start:    #f5f7f5;
+    --bg-gradient-end:      #eef1ee;
+
+    /* Hero banner (used on profile, dashboard hero card) */
+    --bg-banner:            linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+
+
+    /* ===================================================
+       GLASS / FROSTED EFFECTS
+       Used for sticky topbars, bottom nav, modals
+    =================================================== */
+    --glass-bg:             rgba(255, 255, 255, 0.93);
+    --glass-border:         rgba(0, 0, 0, 0.07);
+    --glass-shadow:         rgba(0, 0, 0, 0.055);
+
+
+    /* ===================================================
+       TEXT — Light Mode
+    =================================================== */
+    --text-primary:         #111a12;   /* Near-black with green undertone */
+    --text-secondary:       #3a4e3b;   /* Medium — subheadings, labels */
+    --text-tertiary:        #5c6e5d;   /* Lighter body text */
+    --text-muted:           #8fa08f;   /* Placeholders, timestamps, hints */
+
+
+    /* ===================================================
+       BORDERS
+    =================================================== */
+    --border-color:         rgba(0, 0, 0, 0.07);    /* Default hairline */
+    --border-subtle:        rgba(0, 0, 0, 0.12);    /* Slightly more visible */
+    --border-strong:        rgba(0, 0, 0, 0.20);    /* Focused inputs, emphasis */
+
+
+    /* ===================================================
+       BORDER RADIUS
+    =================================================== */
+    --radius-xs:            8px;
+    --radius-sm:            12px;
+    --radius-md:            18px;
+    --radius-lg:            22px;
+    --radius-xl:            28px;
+    --radius-full:          9999px;   /* Pills, toggles, avatars */
+
+
+    /* ===================================================
+       SHADOWS
+    =================================================== */
+    --shadow-xs:            0 1px 4px  rgba(0, 0, 0, 0.04);
+    --shadow-sm:            0 2px 10px rgba(0, 0, 0, 0.055);
+    --shadow-md:            0 5px 22px rgba(0, 0, 0, 0.09);
+    --shadow-lg:            0 10px 36px rgba(0, 0, 0, 0.13);
+
+    /* Coloured glow shadows — match to element accent */
+    --shadow-green:         0 4px 18px rgba(45, 122, 58, 0.22);
+    --shadow-indigo:        0 4px 18px rgba(79, 95, 204, 0.22);
+    --shadow-amber:         0 4px 18px rgba(217, 119, 6, 0.22);
+    --shadow-coral:         0 4px 18px rgba(224, 92, 92, 0.22);
+    --shadow-teal:          0 4px 18px rgba(13, 138, 138, 0.22);
+
+
+    /* ===================================================
+       TYPOGRAPHY
+    =================================================== */
+    --font-display:         'Syne', sans-serif;    /* Headings, labels, buttons, nav */
+    --font-body:            'DM Sans', sans-serif; /* Body text, inputs, captions */
+
+    --text-xs:              10px;
+    --text-sm:              12px;
+    --text-base:            14px;
+    --text-md:              16px;
+    --text-lg:              20px;
+    --text-xl:              24px;
+    --text-2xl:             28px;
+    --text-3xl:             32px;
+
+
+    /* ===================================================
+       TRANSITIONS
+    =================================================== */
+    --transition-fast:      150ms ease;
+    --transition-base:      220ms ease;
+    --transition-smooth:    350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce:    300ms cubic-bezier(0.34, 1.56, 0.64, 1);  /* For like/pop animations */
+
+
+    /* ===================================================
+       LAYOUT DIMENSIONS
+    =================================================== */
+    --sidebar-width:        260px;
+    --sidebar-collapsed:    80px;
+    --topbar-height:        60px;       /* Slim topbar for mobile */
+    --bottom-nav-height:    72px;       /* Nav + safe area padding */
+    --max-mobile-width:     390px;      /* Phone shell max-width */
+    --content-padding:      18px;       /* Standard horizontal page padding */
 }
 
-/* ===== Dark Theme ===== */
+
+/* ===================================================
+   DARK THEME — .theme-dark
+   Applied via JS toggle (Settings > Dark Mode).
+   All values tuned to match the light palette's
+   intent — green stays primary, accents stay warm.
+=================================================== */
 .theme-dark {
-    --primary-color: #818cf8;
-    --primary-hover: #a5b4fc;
-    --primary-light: #c7d2fe;
-    --accent-color: #a78bfa;
-    --accent-bright: #c4b5fd;
-    
-    --bg-primary: #0f1419;
-    --bg-secondary: #1a1f2e;
-    --bg-tertiary: #232936;
-    --bg-hover: #2d3748;
-    --bg-gradient-start: #0f1419;
-    --bg-gradient-end: #232936;
-    
-    --glass-bg: rgba(26, 31, 46, 0.95);
-    --glass-border: rgba(129, 140, 248, 0.18);
-    --glass-shadow: rgba(0, 0, 0, 0.5);
-    
-    --text-primary: #f7fafc;
-    --text-secondary: #cbd5e0;
-    --text-tertiary: #a0aec0;
-    --text-muted: #718096;
-    
-    --border-color: #2d3748;
-    --border-subtle: rgba(45, 55, 72, 0.5);
-    
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-}
 
+    /* Brand green shifts lighter for dark bg contrast */
+    --primary-color:        #4db860;
+    --primary-hover:        #5dd670;
+    --primary-light:        #7ee896;
+    --primary-dim:          rgba(77, 184, 96, 0.12);
+    --primary-glow:         rgba(77, 184, 96, 0.22);
+    --primary-border:       rgba(77, 184, 96, 0.22);
+
+    --indigo-color:         #818cf8;
+    --indigo-hover:         #a5b4fc;
+    --indigo-dim:           rgba(129, 140, 248, 0.12);
+    --indigo-glow:          rgba(129, 140, 248, 0.22);
+    --indigo-border:        rgba(129, 140, 248, 0.22);
+
+    --amber-color:          #fbbf24;
+    --amber-hover:          #f59e0b;
+    --amber-dim:            rgba(251, 191, 36, 0.12);
+    --amber-glow:           rgba(251, 191, 36, 0.22);
+    --amber-border:         rgba(251, 191, 36, 0.22);
+
+    --coral-color:          #f87171;
+    --coral-hover:          #ef4444;
+    --coral-dim:            rgba(248, 113, 113, 0.12);
+    --coral-glow:           rgba(248, 113, 113, 0.22);
+    --coral-border:         rgba(248, 113, 113, 0.22);
+
+    --teal-color:           #2dd4bf;
+    --teal-hover:           #14b8a6;
+    --teal-dim:             rgba(45, 212, 191, 0.12);
+    --teal-glow:            rgba(45, 212, 191, 0.22);
+    --teal-border:          rgba(45, 212, 191, 0.22);
+
+    /* Semantic — auto-follow accent updates above */
+    --success-color:        var(--primary-color);
+    --danger-color:         var(--coral-color);
+    --warning-color:        var(--amber-color);
+    --info-color:           var(--indigo-color);
+
+    /* Backgrounds */
+    --bg-primary:           #0d0f0e;   /* Deep near-black with green cast */
+    --bg-secondary:         #161a16;   /* Card/surface */
+    --bg-tertiary:          #1e231e;   /* Recessed/input fields */
+    --bg-hover:             #252b25;   /* Hover state */
+
+    --bg-gradient-start:    #0d0f0e;
+    --bg-gradient-end:      #1e231e;
+    --bg-banner:            linear-gradient(135deg, #060b0d, #0d1a20, #162830);
+
+    /* Glass */
+    --glass-bg:             rgba(22, 26, 22, 0.94);
+    --glass-border:         rgba(255, 255, 255, 0.06);
+    --glass-shadow:         rgba(0, 0, 0, 0.40);
+
+    /* Text */
+    --text-primary:         #eef2ee;
+    --text-secondary:       #b8ccb9;
+    --text-tertiary:        #8aa08b;
+    --text-muted:           #5a705b;
+
+    /* Borders */
+    --border-color:         rgba(255, 255, 255, 0.07);
+    --border-subtle:        rgba(255, 255, 255, 0.11);
+    --border-strong:        rgba(255, 255, 255, 0.20);
+
+    /* Shadows */
+    --shadow-xs:            0 1px 4px  rgba(0, 0, 0, 0.30);
+    --shadow-sm:            0 2px 10px rgba(0, 0, 0, 0.40);
+    --shadow-md:            0 5px 22px rgba(0, 0, 0, 0.55);
+    --shadow-lg:            0 10px 36px rgba(0, 0, 0, 0.70);
+
+    --shadow-green:         0 4px 18px rgba(77, 184, 96, 0.28);
+    --shadow-indigo:        0 4px 18px rgba(129, 140, 248, 0.28);
+    --shadow-amber:         0 4px 18px rgba(251, 191, 36, 0.28);
+    --shadow-coral:         0 4px 18px rgba(248, 113, 113, 0.28);
+    --shadow-teal:          0 4px 18px rgba(45, 212, 191, 0.28);
+}
 
 
 

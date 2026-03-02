@@ -1623,11 +1623,11 @@ Remaining bugs:
 ----------------------------------------------
 
 
+## UI/UX Improvement Version-5
 
-
-
-
-
+#### Prelim edits:
+    - Defined new color palette in `global.css` file
+    - Loaded proper fonts in the `base` file
 
 
 
