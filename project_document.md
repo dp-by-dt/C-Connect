@@ -1629,6 +1629,9 @@ Remaining bugs:
     - Defined new color palette in `global.css` file
     - Loaded proper fonts in the `base` file
 
+#### Login page:
+    - modified to accomodate new design
+
 
 
 
