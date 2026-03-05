@@ -1632,6 +1632,14 @@ Remaining bugs:
 #### Login page:
     - modified to accomodate new design
 
+#### Signup page:
+    - Added the new layout 
+    - There are some problems (currently not addressing)
+    - The signup page is inactive (new users can't signup)
+
+#### Dashboard:
+
+
 
 
 

@@ -33,6 +33,7 @@ class SignupForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), password_complexity])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    terms = BooleanField('Terms', validators=[DataRequired()])
     submit = SubmitField('Sign Up')
 
 
