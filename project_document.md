@@ -1643,7 +1643,11 @@ Remaining bugs:
     - Feed and explore loading is not connected (needs extension from the backend side)
     - No integration from `base.html` level
     
-
+#### Feed/Posts:
+    - UI upgraded successfully - existing backend properly integrated
+    - But some features need improvement (like using AJAX, add post button etc.)
+    - Need to add some features (eg: comments, tags, filtering, share)
+    - Works fine for beta testing
 
 
 
