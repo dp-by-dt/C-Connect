@@ -3,69 +3,257 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block extra_css %}
-<style>
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f5f7f5;
+            --surface: #fff;
+            --border: rgba(0, 0, 0, 0.07);
+            --border2: rgba(0, 0, 0, 0.12);
+            --green: #2d7a3a;
+            --green-l: #3a9e4a;
+            --green-dim: rgba(45, 122, 58, 0.09);
+            --green-glow: rgba(45, 122, 58, 0.2);
+            --indigo: #4f5fcc;
+            --indigo-l: #6270e0;
+            --indigo-dim: rgba(79, 95, 204, 0.09);
+            --indigo-glow: rgba(79, 95, 204, 0.18);
+            --amber: #d97706;
+            --amber-dim: rgba(217, 119, 6, 0.09);
+            --coral: #e05c5c;
+            --coral-dim: rgba(224, 92, 92, 0.09);
+            --teal: #0d8a8a;
+            --teal-dim: rgba(13, 138, 138, 0.09);
+            --txt: #111a12;
+            --txt2: #3a4e3b;
+            --muted: #8fa08f;
+            --sh-sm: 0 2px 10px rgba(0, 0, 0, 0.055);
+            --sh-md: 0 5px 22px rgba(0, 0, 0, 0.09);
+            --r-sm: 12px;
+            --r-md: 18px;
+            --r-lg: 22px;
+        }
+
+        html,
+        body {
+            background: var(--bg);
+            color: var(--txt);
+            font-family: "DM Sans", sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .phone {
+            max-width: 390px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        /* TOPBAR */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 120;
+            background: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 18px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .brand-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.18);
+            animation: pulse 2.4s ease infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 2px rgba(45, 122, 58, 0.18);
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(45, 122, 58, 0.06);
+            }
+        }
+
+        .brand-name {
+            font-family: "Syne", sans-serif;
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.4px;
+            color: var(--txt);
+        }
+
+        .brand-name span {
+            color: var(--green);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            border: 1px solid var(--border2);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.18s;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--green-dim);
+            border-color: var(--green);
+        }
+
+        .icon-btn svg {
+            width: 17px;
+            height: 17px;
+            stroke: var(--txt2);
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 7px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--coral);
+            border: 1.5px solid var(--surface);
+        }
+
+        /* SCROLL */
+        .scroll-body {
+            padding: 16px 18px 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* HERO */
+        .hero-card {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--sh-sm);
+            animation: riseUp 0.4s ease both;
+        }
+
+        .hero-banner {
+            height: 80px;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hb-s {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+        }
+
+        .hbs1 {
+            width: 140px;
+            height: 140px;
+            background: var(--green-l);
+            top: -50px;
+            right: -30px;
+        }
+
+        .hbs2 {
+            width: 90px;
+            height: 90px;
+            background: var(--indigo);
+            bottom: -30px;
+            left: -10px;
+        }
+
+        .hbs3 {
+            width: 60px;
+            height: 60px;
+            background: var(--amber);
+            top: 10px;
+            left: 42%;
+            opacity: 0.1;
+        }
+
+        .hb-dim {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.2));
+        }
+
+        .hero-body {
+            padding: 0 18px 18px;
+        }
+
+        .hero-av-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .hero-av-wrap {
+            position: relative;
+            margin-top: -26px;
+        }
+
+        .hero-av-glow {
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
+            border-radius: 50%;
+            background: conic-gradient(var(--green) 0deg,
+                    var(--indigo) 90deg,
+                    var(--amber) 180deg,
+                    var(--coral) 270deg,
+                    var(--green) 360deg);
+            animation: spinRing 5s linear infinite;
+            opacity: 0.6;
+            z-index: 0;
+        }
 
 
-/* ==================== DASHBOARD LAYOUT ==================== */
-.dashboard {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 1rem 4rem;
-    animation: fadeIn 0.6s ease;
-}
-
-@keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-}
-
-/* ==================== WELCOME SECTION ==================== */
-.dashboard__welcome {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Decorative gradient overlay */
-.dashboard__welcome::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    opacity: 0.05;
-    z-index: 0;
-}
-
-.dashboard__welcome > * {
-    position: relative;
-    z-index: 1;
-}
-
-.dashboard__welcome-main {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-}
-
+        
 .dashboard__avatar {
     width: 64px;
     height: 64px;
@@ -93,836 +281,1240 @@
     border-radius: var(--radius-lg);
 }
 
-.dashboard__user-info {
-    flex: 1;
-    min-width: 0;
-}
 
-.dashboard__greeting {
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-}
-
-.dashboard__username {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 0.25rem 0;
-}
-
-.dashboard__email {
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-    margin: 0;
-}
-
-/* ==================== STATS SECTION ==================== */
-.dashboard__stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-}
-
-/* Top row: Connections + Posts side-by-side */
-.dashboard__stats-top {
-    display: flex;
-    gap: 0.5rem;
-}
-
-/* Simple stat cards */
-.dashboard__stat-simple {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    padding: 0.875rem 0.625rem;
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    transition: all var(--transition-base);
-    background: transparent;
-}
-
-.dashboard__stat-simple:hover {
-    background: var(--bg-hover);
-    transform: translateY(-2px);
-}
-
-.dashboard__stat-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1;
-}
-
-.dashboard__stat-label {
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-align: center;
-}
-
-/* Messages button removed - keeping structure for backward compatibility */
-.dashboard__stat-messages-btn {
-    display: none;
-}
-
-/* Action buttons container */
-.dashboard__stats-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-/* Primary CTA button (Campus Board) */
-.dashboard__stat-hero-primary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-    border-radius: var(--radius-lg);
-    font-weight: 700;
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: all var(--transition-base);
-    position: relative;
-    overflow: hidden;
-    height: 52px;
-}
-
-.dashboard__stat-hero-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.6s;
-}
-
-.dashboard__stat-hero-primary:hover::before {
-    left: 100%;
-}
-
-.dashboard__stat-hero-primary:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.dashboard__stat-hero-primary i {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-}
-
-/* Secondary button (New Post) */
-.dashboard__stat-hero-secondary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: all var(--transition-base);
-    height: 52px;
-}
-
-.dashboard__stat-hero-secondary:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
-.dashboard__stat-hero-secondary i {
-    font-size: 1.125rem;
-    flex-shrink: 0;
-}
-
-/* ==================== PROFILE COMPLETION SECTION ==================== */
-.dashboard__completion {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    position: relative;
-    overflow: hidden;
-    transition: all var(--transition-base);
-}
-
-.dashboard__completion:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-color);
-}
-
-.dashboard__completion::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(26, 77, 46, 0.08) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.dashboard__completion-content {
-    flex: 1;
-    position: relative;
-    z-index: 1;
-}
-
-.dashboard__completion-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.dashboard__completion-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
-.dashboard__completion-title i {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-}
-
-.dashboard__completion-percent {
-    font-size: 1.25rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Progress Bar */
-.dashboard__progress-bar {
-    height: 10px;
-    background: var(--bg-tertiary);
-    border-radius: 5px;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.dashboard__progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-    border-radius: 5px;
-    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.dashboard__progress-fill::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 200%; }
-}
-
-/* Checklist */
-.dashboard__completion-checklist {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.dashboard__completion-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.875rem;
-    background: var(--bg-hover);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-}
-
-.dashboard__completion-item:hover {
-    background: var(--bg-tertiary);
-    border-color: var(--primary-color);
-    transform: translateX(4px);
-}
-
-.dashboard__completion-item-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.dashboard__completion-item-icon i {
-    font-size: 0.625rem;
-    color: var(--primary-color);
-}
-
-.dashboard__completion-item-text {
-    flex: 1;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-/* Edit Profile Button */
-.dashboard__completion-btn {
-    width: 100%;
-    padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all var(--transition-base);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    z-index: 1;
-}
-
-.dashboard__completion-btn i {
-    font-size: 1.125rem;
-}
-
-.dashboard__completion-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-}
-
-.dashboard__completion-btn:active {
-    transform: translateY(-1px);
-}
-
-/* ==================== SECTION HEADERS ==================== */
-.dashboard__section {
-    margin-bottom: 2.5rem;
-}
-
-.dashboard__section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-}
-
-.dashboard__section-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-}
-
-.dashboard__section-title i {
-    color: var(--primary-color);
-    font-size: 1.375rem;
-}
-
-.dashboard__section-action {
-    font-size: 0.875rem;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    transition: all var(--transition-fast);
-}
-
-.dashboard__section-action:hover {
-    gap: 0.625rem;
-    color: var(--primary-hover);
-}
-
-.dashboard__section-action i {
-    font-size: 1rem;
-}
-
-/* ==================== FEED PREVIEW / EMPTY STATE ==================== */
-.dashboard__feed-empty {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius-xl);
-    padding: 2.5rem 1.5rem;
-    text-align: center;
-    transition: all var(--transition-base);
-}
-
-.dashboard__feed-empty:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-hover);
-}
-
-.dashboard__feed-empty-icon {
-    font-size: 3.5rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-.dashboard__feed-empty-text {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
-
-.dashboard__feed-empty-subtext {
-    font-size: 0.9375rem;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-}
-
-.dashboard__feed-empty-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.75rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    text-decoration: none;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-sm);
-}
-
-.dashboard__feed-empty-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-/* ==================== SUGGESTIONS ROW ==================== */
-.dashboard__suggestions {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-.dashboard__suggestions::-webkit-scrollbar {
-    height: 6px;
-}
-
-.dashboard__suggestions::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.dashboard__suggestions::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.dashboard__suggestion-card {
-    min-width: 240px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-base);
-}
-
-.dashboard__suggestion-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-color);
-}
-
-.dashboard__suggestion-placeholder {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.9375rem;
-    line-height: 1.6;
-}
-
-.dashboard__suggestion-icon {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-/* ==================== TABLET & DESKTOP ==================== */
 @media (min-width: 768px) {
-    .dashboard {
-        padding-bottom: 4rem;
-    }
-
-    .dashboard__welcome {
-        flex-direction: row;
-        align-items: center;
-        padding: 2rem;
-        gap: 1.5rem;
-    }
-
-    .dashboard__welcome-main {
-        flex: 1;
-    }
-
-    .dashboard__avatar {
+        .dashboard__avatar {
         width: 120px;
         height: 120px;
         font-size: 2rem;
     }
-
-    .dashboard__username {
-        font-size: 1.5rem;
-    }
-
-    .dashboard__email {
-        font-size: 0.9375rem;
-    }
-
-    .dashboard__stats {
-        max-width: 350px;
-        align-self: flex-start;
-    }
-
-    .dashboard__stat-value {
-        font-size: 2rem;
-    }
-
-    .dashboard__stat-hero-primary,
-    .dashboard__stat-hero-secondary {
-        font-size: 0.95rem;
-    }
-
-    .dashboard__completion {
-        flex-direction: row;
-        padding: 2rem;
-        align-items: stretch;
-    }
-
-    .dashboard__completion-btn {
-        width: auto;
-        flex-direction: column;
-        padding: 1rem 1.5rem;
-        white-space: nowrap;
-    }
-
-    .dashboard__completion-btn i {
-        font-size: 1.5rem;
-    }
-
-    .dashboard__completion-percent {
-        font-size: 1.5rem;
-    }
-
-    .dashboard__completion-title {
-        font-size: 1.0625rem;
-    }
-
-    .dashboard__completion-item {
-        padding: 0.625rem 1rem;
-        font-size: 0.9375rem;
-    }
-
-    .dashboard__feed-empty {
-        padding: 3rem 2rem;
-    }
-
-    .dashboard__suggestion-card {
-        min-width: 280px;
-    }
 }
 
-/* ==================== MOBILE ADJUSTMENTS ==================== */
-@media (max-width: 767px) {
-    .dashboard {
-        padding-bottom: calc(var(--bottom-nav-height, 60px) + 1rem);
-    }
-}
+        @keyframes spinRing {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-/* Ultra-small mobile */
-@media (max-width: 480px) {
-    .dashboard__stats-top {
-        gap: 0.375rem;
-    }
+        .hero-av {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid var(--surface);
+            background: var(--green-dim);
+            position: relative;
+            z-index: 1;
+            box-shadow: var(--sh-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Syne", sans-serif;
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--green);
+            overflow: hidden;
+        }
 
-    .dashboard__stat-simple {
-        padding: 0.75rem 0.5rem;
-    }
+        .hero-av-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+            /* Scales perfectly */
+            border-radius: inherit;
+        }
 
-    .dashboard__stat-value {
-        font-size: 1.375rem;
-    }
+        .hero-av-letter {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
 
-    .dashboard__stat-label {
-        font-size: 0.75rem;
-    }
+        .hero-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 99px;
+            background: var(--green-dim);
+            border: 1px solid rgba(45, 122, 58, 0.15);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--green);
+            font-family: "Syne", sans-serif;
+            margin-bottom: 4px;
+        }
 
-    .dashboard__stat-hero-primary,
-    .dashboard__stat-hero-secondary {
-        padding: 0.875rem 1rem;
-        font-size: 0.85rem;
-        height: 48px;
-        gap: 0.5rem;
-    }
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s ease infinite;
+        }
 
-    .dashboard__completion {
-        padding: 1.25rem;
-    }
-}
+        .hero-greeting {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
 
+        .hero-name {
+            font-family: "Syne", sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--txt);
+            letter-spacing: -0.3px;
+            line-height: 1.1;
+        }
 
-</style>
+        .hero-email {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border-radius: var(--r-sm);
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 10px 8px;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+
+        .stat-item:hover {
+            background: var(--bg);
+        }
+
+        .stat-num {
+            font-family: "Syne", sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--txt);
+            line-height: 1;
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ha-btn {
+            flex: 1;
+            height: 42px;
+            border-radius: var(--r-sm);
+            border: none;
+            cursor: pointer;
+            font-family: "Syne", sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s;
+        }
+
+        .ha-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .ha-board {
+            background: var(--bg);
+            color: var(--txt2);
+            border: 1.5px solid var(--border2);
+        }
+
+        .ha-board:hover {
+            background: var(--amber-dim);
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .ha-post {
+            background: var(--green);
+            color: #fff;
+            box-shadow: 0 3px 12px var(--green-glow);
+        }
+
+        .ha-post:hover {
+            background: var(--green-l);
+            transform: translateY(-1px);
+        }
+
+        /* PROFILE COMPLETION */
+        .completion-card {
+            background: var(--surface);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            padding: 15px 16px;
+            box-shadow: var(--sh-sm);
+            animation: riseUp 0.4s ease 0.07s both;
+        }
+
+        .cc-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .cc-title {
+            font-family: "Syne", sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--txt);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .cc-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            background: var(--indigo-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cc-icon svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--indigo);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .cc-pct {
+            font-family: "Syne", sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--indigo);
+        }
+
+        .cc-bar-bg {
+            height: 5px;
+            border-radius: 99px;
+            background: var(--indigo-dim);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .cc-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--indigo), var(--indigo-l));
+            width: 25%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px var(--indigo-glow);
+        }
+
+        .cc-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 13px;
+        }
+
+        .cc-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 11px;
+            border-radius: var(--r-sm);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .cc-item:hover {
+            border-color: var(--indigo);
+            background: var(--indigo-dim);
+        }
+
+        .cc-item.done {
+            opacity: 0.5;
+        }
+
+        .cc-item.done .cc-item-text {
+            text-decoration: line-through;
+        }
+
+        .cc-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border2);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            transition: all 0.18s;
+        }
+
+        .cc-item.done .cc-check {
+            background: var(--green);
+            border-color: var(--green);
+            box-shadow: 0 1px 6px var(--green-glow);
+        }
+
+        .cc-check svg {
+            width: 10px;
+            height: 10px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            opacity: 0;
+            transition: opacity 0.18s;
+        }
+
+        .cc-item.done .cc-check svg {
+            opacity: 1;
+        }
+
+        .cc-item-text {
+            font-size: 12.5px;
+            color: var(--txt2);
+            line-height: 1.35;
+        }
+
+        .cc-cta {
+            width: 100%;
+            height: 38px;
+            border-radius: 10px;
+            border: none;
+            background: var(--indigo);
+            color: #fff;
+            font-family: "Syne", sans-serif;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px var(--indigo-glow);
+        }
+
+        .cc-cta svg {
+            width: 13px;
+            height: 13px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+        }
+
+        .cc-cta:hover {
+            background: var(--indigo-l);
+            transform: translateY(-1px);
+        }
+
+        /* VIBE */
+        .vibe-banner {
+            background: linear-gradient(135deg, var(--green), var(--green-l));
+            border-radius: var(--r-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 3px 14px var(--green-glow);
+            animation: riseUp 0.4s ease 0.11s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vibe-banner::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            right: -30px;
+            top: -30px;
+        }
+
+        .vibe-banner:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px var(--green-glow);
+        }
+
+        .vibe-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .vibe-text {
+            flex: 1;
+        }
+
+        .vibe-title {
+            font-family: "Syne", sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .vibe-sub {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-top: 2px;
+        }
+
+        .vibe-arrow {
+            width: 18px;
+            height: 18px;
+            stroke: rgba(255, 255, 255, 0.8);
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            flex-shrink: 0;
+        }
+
+        /* SECTION HEADER */
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 11px;
+        }
+
+        .section-title {
+            font-family: "Syne", sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--txt);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .sti {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sti svg {
+            width: 13px;
+            height: 13px;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+        }
+
+        .sti-teal {
+            background: var(--teal-dim);
+        }
+
+        .sti-teal svg {
+            stroke: var(--teal);
+        }
+
+        .sti-indigo {
+            background: var(--indigo-dim);
+        }
+
+        .sti-indigo svg {
+            stroke: var(--indigo);
+        }
+
+        .section-link {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--green);
+            font-family: "Syne", sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: color 0.18s;
+        }
+
+        .section-link svg {
+            width: 13px;
+            height: 13px;
+            stroke: var(--green);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .section-link:hover {
+            color: var(--green-l);
+        }
+
+        /* PEOPLE */
+        .people-section {
+            animation: riseUp 0.4s ease 0.14s both;
+        }
+
+        .people-strip {
+            display: flex;
+            gap: 11px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+        }
+
+        .people-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .people-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            padding: 14px 12px 12px;
+            min-width: 96px;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--sh-sm);
+        }
+
+        .people-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--sh-md);
+        }
+
+        .pc-av {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Syne", sans-serif;
+            font-weight: 800;
+            font-size: 17px;
+            border: 2px solid var(--surface);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .av-green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .av-indigo {
+            background: var(--indigo-dim);
+            color: var(--indigo);
+        }
+
+        .av-amber {
+            background: var(--amber-dim);
+            color: var(--amber);
+        }
+
+        .av-coral {
+            background: var(--coral-dim);
+            color: var(--coral);
+        }
+
+        .av-teal {
+            background: var(--teal-dim);
+            color: var(--teal);
+        }
+
+        .pc-name {
+            font-family: "Syne", sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--txt);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80px;
+        }
+
+        .pc-dept {
+            font-size: 10px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .pc-connect {
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 99px;
+            border: none;
+            background: var(--green);
+            color: #fff;
+            font-family: "Syne", sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s;
+            box-shadow: 0 1px 6px var(--green-glow);
+        }
+
+        .pc-connect:hover {
+            background: var(--green-l);
+            transform: scale(1.04);
+        }
+
+        .pc-connect.sent {
+            background: var(--border2);
+            color: var(--muted);
+            box-shadow: none;
+            cursor: default;
+        }
+
+        /* FEED */
+        .feed-section {
+            animation: riseUp 0.4s ease 0.18s both;
+        }
+
+        .feed-card {
+            background: var(--surface);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--sh-sm);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .feed-card:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--sh-md);
+        }
+
+        .feed-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .feed-card:nth-child(1) {
+            border-left: 3px solid var(--green);
+        }
+
+        .feed-card:nth-child(2) {
+            border-left: 3px solid var(--indigo);
+        }
+
+        .feed-card:nth-child(3) {
+            border-left: 3px solid var(--amber);
+        }
+
+        .fc-header {
+            padding: 11px 14px 8px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .fc-av {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Syne", sans-serif;
+            font-weight: 800;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .fc-meta {
+            flex: 1;
+        }
+
+        .fc-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--txt);
+            font-family: "Syne", sans-serif;
+        }
+
+        .fc-time {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .fc-body {
+            padding: 0 14px 10px;
+            font-size: 13px;
+            color: var(--txt2);
+            line-height: 1.55;
+        }
+
+        .fc-footer {
+            padding: 8px 14px 11px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .fc-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            color: var(--muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .fc-action svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+        }
+
+        .fc-action:hover {
+            color: var(--coral);
+        }
+
+        .fc-action.liked {
+            color: var(--coral);
+        }
+
+        /* NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 390px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(24px);
+            border-top: 1px solid var(--border);
+            padding: 10px 10px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 200;
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.055);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 10px;
+            transition: all 0.18s;
+            flex: 1;
+        }
+
+        .nav-icon svg {
+            width: 21px;
+            height: 21px;
+            stroke: var(--muted);
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 0.2px;
+        }
+
+        .nav-item.active .nav-icon svg {
+            stroke: var(--green);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .nav-fab {
+            width: 50px;
+            height: 50px;
+            background: var(--green);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 16px var(--green-glow);
+            transition: all 0.18s;
+            flex-shrink: 0;
+            margin-top: -5px;
+        }
+
+        .nav-fab:hover {
+            background: var(--green-l);
+            transform: scale(1.07);
+        }
+
+        .nav-fab svg {
+            width: 21px;
+            height: 21px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+        }
+
+        @keyframes riseUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="dashboard">
-    <!-- ========== WELCOME SECTION ========== -->
-    <section class="dashboard__welcome">
-        <div class="dashboard__welcome-main">
-            <div class="welcome_msg">
-                <p class="dashboard__greeting">Welcome back,</p>
-            </div>
-            <div class="dashboard__avatar">
-                {% if profile_pic %}
-                    <img src="{{ profile_pic }}" alt="{{ username[0]|upper }}" onerror="this.style.display='none'">
-                {% else %}
-                    {{ username[0]|upper }}
-                {% endif %}
-            </div>
-            
-            <div class="dashboard__user-info" style="flex: 1;">
-                <h1 class="dashboard__username">{{ username }}</h1>
-                <p class="dashboard__email">{{ current_user.email }}</p>
-            </div>
-        </div>
-
-        <!-- ========== STATS GRID ========== -->
-        <section class="dashboard__stats">
-            <!-- Top Row: Connections + Posts Count -->
-            <div class="dashboard__stats-top">
-                <a href="{{ url_for('connections.connections_home') }}" class="dashboard__stat-simple">
-                    <strong class="dashboard__stat-value">{{ stats.connections }}</strong>
-                    <span class="dashboard__stat-label">Connections</span>
-                </a>
-                
-                <a href="{{ url_for('posts.feed') }}" class="dashboard__stat-simple">
-                    <strong class="dashboard__stat-value">{{ posts|length }}</strong>
-                    <span class="dashboard__stat-label">Posts</span>
-                </a>
-            </div>
-            
-            <!-- Campus Board (Primary) + Posts (Secondary) -->
-            <div class="dashboard__stats-actions">
-                <!-- PRIMARY: Campus Board -->
-                <a href="/campus-board" class="dashboard__stat-hero-primary">
-                    <i class="bi bi-building"></i>
-                    <span>Campus Board</span>
-                </a>
-                
-                <!-- SECONDARY: Create Post -->
-                <a href="{{ url_for('posts.feed') }}" class="dashboard__stat-hero-secondary">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>New Post</span>
-                </a>
-            </div>
-        </section>
-
-
-
-    </section>
-
-
-    
-<!-- ========== PROFILE COMPLETION (REPLACE ENTIRE SECTION) ========== -->
-{% if profile_completion.percentage < 100 %}
-<div class="dashboard__completion">
-    <div class="dashboard__completion-content">
-        <div class="dashboard__completion-header">
-            <div class="dashboard__completion-title">
-                <i class="bi bi-check-circle-fill"></i>
-                <span>Profile Completion</span>
-            </div>
-            <span class="dashboard__completion-percent">
-                {{ profile_completion.percentage }}%
-            </span>
-        </div>
-        
-        <div class="dashboard__progress-bar">
-            <div class="dashboard__progress-fill" id="progressFill"></div>
-        </div>
-        
-        {% if profile_completion.missing %}
-        <div class="dashboard__completion-checklist">
-            {% for item in profile_completion.missing %}
-            <div class="dashboard__completion-item">
-                <div class="dashboard__completion-item-icon">
+    <div class="phone">
+        <div class="scroll-body">
+            <!-- HERO -->
+            <div class="hero-card">
+                <div class="hero-banner">
+                    <div class="hb-s hbs1"></div>
+                    <div class="hb-s hbs2"></div>
+                    <div class="hb-s hbs3"></div>
+                    <div class="hb-dim"></div>
                 </div>
-                <span class="dashboard__completion-item-text">Complete {{ item }}</span>
+                <div class="hero-body">
+                    <div class="hero-av -row">
+                        <div class="hero-av-wrap">
+                            <div class="hero-av-glow"></div>
+                            <div class="dashboard__avatar">
+                                {% if profile_pic %}
+                                <!-- FIXED: Object-fit + constrained sizing -->
+                                <img src="{{ profile_pic }}" alt="{{ username[0]|upper }}" class="hero-av-img" onerror="
+											this.style.display = 'none';
+											this.nextElementSibling.style.display = 'block';
+										" />
+                                <!-- Fallback initial (hidden) -->
+                                <span class="hero-av-letter" style="display: none">{{ username[0]|upper }}</span>
+                                {% else %}
+                                <span class="hero-av-letter">{{ username[0]|upper }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- <div class="hero-badge"><div class="hero-badge-dot"></div>Online</div> -->
+                    </div>
+                    <div class="hero-greeting">Welcome back,</div>
+                    <div class="hero-name">{{ username | upper }}</div>
+                    <div class="hero-email"> {{current_user.email }} </div>
+
+                    <div class="stats-row">
+                        <a class="stat-item" href="{{ url_for('connections.connections_home') }}">
+                            <span class="stat-num">{{ stats.connections }}</span>
+                            <span class="stat-lbl">Connections</span>
+                        </a>
+
+                        <a class="stat-item" href="{{ url_for('posts.feed') }}">
+                            <span class="stat-num">{{ posts | length }}</span>
+                            <span class="stat-lbl">Posts</span>
+                        </a>
+
+                        <div class="stat-item">
+                            <span class="stat-num">5</span>
+                            <span class="stat-lbl">Interests</span>
+                        </div>
+                    </div>
+
+
+                    <!-- Campus Board (Primary) + Posts (Secondary) -->
+                    <div class="hero-actions">
+                        <a class="ha-btn ha-board" href="/campus-board">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                            <span>Campus Board</span>
+                        </a>
+                        <a class="ha-btn ha-post" href="{{ url_for('posts.feed') }}">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            <span>New Post</span>
+                        </a>
+                    </div>
+                </div>
             </div>
+
+            <!-- PROFILE COMPLETION -->
+            <div class="completion-card">
+                <div class="cc-top">
+                    <div class="cc-title">
+                        <div class="cc-icon"><svg viewBox="0 0 24 24">
+                                <polyline points="9 11 12 14 22 4" />
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                            </svg>
+                        </div>
+                        Profile Completion
+                    </div>
+                    <span class="cc-pct" id="ccPct">25%</span>
+                </div>
+                <div class="cc-bar-bg">
+                    <div class="cc-bar-fill" id="ccFill"></div>
+                </div>
+                <div class="cc-items">
+                    <div class="cc-item done" onclick="toggleItem(this)">
+                        <div class="cc-check"><svg viewBox="0 0 10 10">
+                                <polyline points="2 5 4 7 8 3" />
+                            </svg>
+                        </div>
+                        <span class="cc-item-text">Add a profile photo</span>
+                    </div>
+                    <div class="cc-item" onclick="toggleItem(this)">
+                        <div class="cc-check"><svg viewBox="0 0 10 10">
+                                <polyline points="2 5 4 7 8 3" />
+                            </svg></div>
+                        <span class="cc-item-text">Write a bio (at least 10 characters)</span>
+                    </div>
+                    <div class="cc-item" onclick="toggleItem(this)">
+                        <div class="cc-check"><svg viewBox="0 0 10 10">
+                                <polyline points="2 5 4 7 8 3" />
+                            </svg></div>
+                        <span class="cc-item-text">Add department and year of study</span>
+                    </div>
+                    <div class="cc-item" onclick="toggleItem(this)">
+                        <div class="cc-check"><svg viewBox="0 0 10 10">
+                                <polyline points="2 5 4 7 8 3" />
+                            </svg></div>
+                        <span class="cc-item-text">Add your campus location</span>
+                    </div>
+                </div>
+                <a class="cc-cta"
+                href="{{ url_for('auth.profile_edit') }}">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <span>Complete Your Profile</span>
+                </a>
+            </div>
+
+            <!-- CAMPUS VIBE -->
+            <a class="vibe-banner"
+            href="/campus-board">
+                <div class="vibe-icon">🌿</div>
+                <div class="vibe-text">
+                    <div class="vibe-title">Campus Vibe</div>
+                    <div class="vibe-sub">See what's happening on campus right now</div>
+                </div>
+                <svg class="vibe-arrow" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+
+            <!-- PEOPLE -->
+            <div class="people-section">
+                <div class="section-head">
+                    <div class="section-title">
+                        <div class="sti sti-teal">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                        </div>
+                        People you may know
+                    </div>
+                    <a class="section-link"
+                    href="/search">Explore
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="people-strip">
+                    {% for user in users %}
+                        <div class="people-card">
+                            <div class="pc-av av-indigo">
+                                {% if user.profile_pic %}
+                                <!-- FIXED: Object-fit + constrained sizing -->
+                                <img src="{{ user.profile_pic }}" alt="{{ user.username[0]|upper }}" class="hero-av-img" onerror="
+											this.style.display = 'none';
+											this.nextElementSibling.style.display = 'block';
+										" />
+                                <!-- Fallback initial (hidden) -->
+                                <span class="hero-av-letter" style="display: none">{{ user.username[0]|upper }}</span>
+                                {% else %}
+                                <span class="hero-av-letter">{{ user.username[0]|upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="pc-name">
+                                {{ user.username }}
+                            </div>
+                            <div class="pc-dept">CSE · 2nd yr</div>
+                            <button class="pc-connect" onclick="sendConnect(this)">+ Add</button>
+                        </div>
+                    {% endfor %}
+
+                    <div class="people-card">
+                        <div class="pc-av av-coral">P</div>
+                        <div class="pc-name">Priya K.</div>
+                        <div class="pc-dept">Design · 3rd</div>
+                        <button class="pc-connect" onclick="sendConnect(this)">+ Add</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FEED -->
+            <div class="feed-section">
+                <div class="section-head">
+                    <div class="section-title">
+                        <div class="sti sti-indigo">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 11a9 9 0 0 1 9 9" />
+                                <path d="M4 4a16 16 0 0 1 16 16" />
+                                <circle cx="5" cy="19" r="1" />
+                            </svg>
+                        </div>
+                        Your Feed
+                    </div>
+                    <a class="section-link"
+                    href="posts/posts/feed">See all
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+
+                {% for post in post %}
+                    <div class="feed-card">
+                    <div class="fc-header">
+                        <div class="fc-av" style="
+									background: var(--green-dim);
+									color: var(--green);
+									border: 1.5px solid rgba(45, 122, 58, 0.15);
+								">
+                                                            {% if profile_pic %}
+                                <!-- FIXED: Object-fit + constrained sizing -->
+                                <img src="{{ profile_pic }}" alt="{{ username[0]|upper }}" class="hero-av-img" onerror="
+											this.style.display = 'none';
+											this.nextElementSibling.style.display = 'block';
+										" />
+                                <!-- Fallback initial (hidden) -->
+                                <span class="hero-av-letter" style="display: none">{{ username[0]|upper }}</span>
+                                {% else %}
+                                <span class="hero-av-letter">{{ username[0]|upper }}</span>
+                                {% endif %}
+                        </div>
+                        <div class="fc-meta">
+                            <div class="fc-name">{{ post.user.username }}</div>
+                            <div class="fc-time">{{ post.datetime }}</div>
+                        </div>
+                    </div>
+                    <div class="fc-body">
+                        {{ post.content }}
+                    </div>
+                    <div class="fc-footer">
+                        <div class="fc-action liked" onclick="toggleLike(this)">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            1
+                        </div>
+                        <div class="fc-action" style="disabled" ><svg viewBox="0 0 24 24">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>Comment</div>
+                    </div>
+                </div>
             {% endfor %}
+
+                <div class="feed-card">
+                    <div class="fc-header">
+                        <div class="fc-av" style="
+									background: var(--coral-dim);
+									color: var(--coral);
+									border: 1.5px solid rgba(224, 92, 92, 0.15);
+								">
+                            F</div>
+                        <div class="fc-meta">
+                            <div class="fc-name">firoz</div>
+                            <div class="fc-time">Yesterday · 6:30 PM</div>
+                        </div>
+                    </div>
+                    <div class="fc-body">Did you check the campus board post about the fest? 🎉 This
+                        Friday!</div>
+                    <div class="fc-footer">
+                        <div class="fc-action" onclick="toggleLike(this)">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            5
+                        </div>
+                        <div class="fc-action"
+                        style="disabled"><svg viewBox="0 0 24 24">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>Comment</div>
+                    </div>
+                </div>
+
+                <div class="feed-card">
+                    <div class="fc-header">
+                        <div class="fc-av" style="
+									background: var(--amber-dim);
+									color: var(--amber);
+									border: 1.5px solid rgba(217, 119, 6, 0.15);
+								">
+                            R</div>
+                        <div class="fc-meta">
+                            <div class="fc-name">rakesh</div>
+                            <div class="fc-time">25 Feb · 3:15 PM</div>
+                        </div>
+                    </div>
+                    <div class="fc-body">Sometimes silence is the best answer 🌿</div>
+                    <div class="fc-footer">
+                        <div class="fc-action" onclick="toggleLike(this)">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            5
+                        </div>
+                        <div class="fc-action"><svg viewBox="0 0 24 24">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>Comment</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% endif %}
+
+        <nav class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon"><svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg></div>
+                <span class="nav-label">Discover</span>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><svg viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg></div>
+                <span class="nav-label">Connect</span>
+            </div>
+            <div class="nav-fab">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><svg viewBox="0 0 24 24">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg></div>
+                <span class="nav-label">Messages</span>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><svg viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg></div>
+                <span class="nav-label">Profile</span>
+            </div>
+        </nav>
     </div>
-    
-    <a href="{{ url_for('auth.profile') }}" class="dashboard__completion-btn">
-        <i class="bi bi-pencil-square"></i>
-        <span>Edit Profile</span>
-    </a>
-</div>
-{% endif %}
+    <script>
+        function updateCompletion() {
+            const all = document.querySelectorAll(".cc-item").length;
+            const done = document.querySelectorAll(".cc-item.done").length;
+            const pct = Math.round((done / all) * 100);
+            document.getElementById("ccPct").textContent = pct + "%";
+            document.getElementById("ccFill").style.width = pct + "%";
+        }
+        function toggleItem(el) {
+            el.classList.toggle("done");
+            updateCompletion();
+        }
+        function sendConnect(btn) {
+            if (btn.classList.contains("sent")) return;
+            btn.classList.add("sent");
+            btn.textContent = "Sent ✓";
+            btn.style.transform = "scale(1.08)";
+            setTimeout(() => (btn.style.transform = ""), 180);
+        }
+        function toggleLike(el) {
+            el.classList.toggle("liked");
+            const txt = el.childNodes[el.childNodes.length - 1];
+            const n = parseInt(txt.textContent.trim()) || 0;
+            txt.textContent =
+                " " + (el.classList.contains("liked") ? n + 1 : Math.max(0, n - 1));
+            el.style.transform = "scale(1.25)";
+            setTimeout(() => (el.style.transform = ""), 160);
+        }
+        setTimeout(() => updateCompletion(), 100);
+    </script>
 
 
-
-    <!-- ========== YOUR FEED SECTION ========== -->
-    <section class="dashboard__section">
-        <header class="dashboard__section-header">
-            <h2 class="dashboard__section-title">
-                <i class="bi bi-rss-fill"></i>
-                Your Feed
-            </h2>
-            <a href="{{ url_for('posts.feed') }}" class="dashboard__section-action">
-                Go to feed
-                <i class="bi bi-arrow-right"></i>
-            </a>
-        </header>
-
-        {% if posts %}
-            <!-- TODO: Show recent posts preview when posts exist -->
-            <div class="dashboard__feed-preview">
-                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-                    Recent activity will appear here.
-                </p>
-
-
-   
-                {# {% for post in posts %}
-                    {% with post=post%}
-                        {% include "components/posts_card.html" %}
-                    {% endwith %}
-                {% endfor %} =============== here needs attention #}
-
-            </div>
-        {% else %}
-            <!-- Empty State -->
-            <div class="dashboard__feed-empty">
-                <div class="dashboard__feed-empty-icon">
-                    <i class="bi bi-inbox"></i>
-                </div>
-                <p class="dashboard__feed-empty-text">Your feed is currently empty</p>
-                <p class="dashboard__feed-empty-subtext">Start connecting and creating to see activity here</p>
-                <a href="{{ url_for('posts.feed') }}" class="dashboard__feed-empty-btn">
-                    <i class="bi bi-plus-circle"></i>
-                    <span>Create your first post</span>
-                </a>
-            </div>
-        {% endif %}
-    </section>
-
-    <!-- ========== PEOPLE YOU MAY KNOW ========== -->
-    <section class="dashboard__section">
-        <header class="dashboard__section-header">
-            <h2 class="dashboard__section-title">
-                <i class="bi bi-person-plus-fill"></i>
-                People you may know
-            </h2>
-            <a href="{{ url_for('main.search_page') }}" class="dashboard__section-action">
-                Explore
-                <i class="bi bi-arrow-right"></i>
-            </a>
-        </header>
-
-        <!-- TODO: Add actual user suggestions when recommendation system is ready -->
-        <!-- Replace with:  if suggested_users  ...  for user in suggested_users  -->
-        <div class="dashboard__section">
-            <div class="dashboard__suggestion-card">
-                <div class="dashboard__suggestion-icon">
-                    <i class="bi bi-stars"></i>
-                </div>
-                <p class="dashboard__suggestion-placeholder">
-                    Complete your profile to unlock personalized suggestions and connect with people who share your interests.
-                </p>
-            </div>
-        </div>
-    </section>
-</div>
-
-<!-- ========== PROGRESS BAR ANIMATION ========== -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const progressFill = document.getElementById('progressFill');
-    const completionCard = document.querySelector('.dashboard__completion');
-    const completion_percentage = {{ profile_completion.percentage }};
-    
-    if (progressFill && completionCard) {
-        // Animate progress bar when it comes into view
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Small delay for better UX
-                    setTimeout(() => {
-                        progressFill.style.width = completion_percentage + '%';
-                    }, 300);
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.5 });
-        
-        observer.observe(completionCard);
-    }
-});
-</script>
 {% endblock %}

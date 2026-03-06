@@ -1638,7 +1638,11 @@ Remaining bugs:
     - The signup page is inactive (new users can't signup)
 
 #### Dashboard:
-
+    - UI upgraded
+    - Existing backend end points added (exept profile completion logic)
+    - Feed and explore loading is not connected (needs extension from the backend side)
+    - No integration from `base.html` level
+    
 
 
 
