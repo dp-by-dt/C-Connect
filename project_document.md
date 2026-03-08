@@ -1634,20 +1634,29 @@ Remaining bugs:
 
 #### Signup page:
     - Added the new layout 
-    - There are some problems (currently not addressing)
-    - The signup page is inactive (new users can't signup)
+    ❌ There are some problems (currently not addressing)
+    ❌ The signup page is inactive (new users can't signup)
 
 #### Dashboard:
     - UI upgraded
-    - Existing backend end points added (exept profile completion logic)
-    - Feed and explore loading is not connected (needs extension from the backend side)
-    - No integration from `base.html` level
+    - Existing backend end points added (❌exept profile completion logic)
+    ❌ Feed and explore loading is not connected (needs extension from the backend side)
+    ❌ No integration from `base.html` level
     
 #### Feed/Posts:
     - UI upgraded successfully - existing backend properly integrated
-    - But some features need improvement (like using AJAX, add post button etc.)
-    - Need to add some features (eg: comments, tags, filtering, share)
+    ❌ But some features need improvement (like using AJAX, add post button etc.)
+    ❌ Need to add some features (eg: comments, tags, filtering, share)
     - Works fine for beta testing
+
+#### Profile (Own)
+    - Upgraded, and backend working (mostly)
+    ❌ department, year etc. details has not been extended from backend
+    ❌ Interests tags are not dynamicly shown (start adding from db side)
+    ❌ seeing all posts from the grid's size need improvements.. And can't like/delete from there.
+    - Almost work for the beta testing
+
+
 
 
 
