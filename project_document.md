@@ -1656,6 +1656,15 @@ Remaining bugs:
     ❌ seeing all posts from the grid's size need improvements.. And can't like/delete from there.
     - Almost work for the beta testing
 
+#### Profile Edit
+    - Upgraded, but only about 80%
+    ❌ needs more imporvement in case of styling (the bottom save bar is blocking the screen)
+    ❌ profile pic not properly visible in propertion
+    ❌ Department selection saves automatically
+    ❌ study year and location can't be set. 
+    ❌ Interest tags not integrated with backend properly
+    ❌ A whole clensification needed
+
 
 
 

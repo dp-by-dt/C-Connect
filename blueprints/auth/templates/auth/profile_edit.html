@@ -1,348 +1,943 @@
+
 {% extends "base.html" %}
 
 {% block title %}Edit Profile{% endblock %}
 
 {% block extra_css %}
+
 <style>
-.edit-header {
-    padding: 2rem;
-    margin-bottom: 0;
-    border-bottom: 1px solid var(--border-color);
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.edit-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0;
-}
+  :root {
+    --bg:          #f5f7f5;
+    --surface:     #ffffff;
+    --border:      rgba(0,0,0,0.07);
+    --border2:     rgba(0,0,0,0.12);
 
-.edit-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.9375rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-}
+    --green:       #2d7a3a;
+    --green-l:     #3a9e4a;
+    --green-dim:   rgba(45,122,58,0.09);
+    --green-glow:  rgba(45,122,58,0.2);
 
-.edit-body {
-    padding: 2rem;
-}
+    --indigo:      #4f5fcc;
+    --indigo-dim:  rgba(79,95,204,0.09);
+    --indigo-glow: rgba(79,95,204,0.18);
 
-.form-section {
-    margin-bottom: 2.5rem;
-}
+    --amber:       #d97706;
+    --amber-dim:   rgba(217,119,6,0.09);
 
-.section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    --coral:       #e05c5c;
+    --coral-dim:   rgba(224,92,92,0.09);
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
+    --txt:         #111a12;
+    --txt2:        #3a4e3b;
+    --muted:       #8fa08f;
 
-.form-label {
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    font-size: 0.9375rem;
-}
+    --sh-sm:       0 2px 10px rgba(0,0,0,0.055);
+    --sh-md:       0 5px 24px rgba(0,0,0,0.09);
 
-.form-control,
-.form-select {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    padding: 0.875rem 1rem;
-    color: var(--text-primary);
-    font-size: 0.9375rem;
-    transition: all 0.2s ease;
-}
+    --r-sm:        12px;
+    --r-md:        18px;
+    --r-lg:        22px;
+  }
 
-.form-control:focus,
-.form-select:focus {
-    background: var(--bg-primary);
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    outline: none;
-}
+  html, body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
 
-textarea.form-control {
-    resize: vertical;
-    min-height: 120px;
-    line-height: 1.6;
-}
-
-.form-text {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    margin-top: 0.5rem;
-}
-
-.file-upload-wrapper {
+  .phone {
+    max-width: 390px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
     position: relative;
-}
+  }
 
-.file-upload-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    border: 2px dashed var(--border-color);
-    border-radius: var(--border-radius-md);
-    background: var(--bg-secondary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+  /* ─── TOPBAR ─── */
+  .topbar {
+    position: sticky; top: 0; z-index: 120;
+    background: rgba(255,255,255,0.93);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px 12px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
 
-.file-upload-label:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-tertiary);
-}
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
 
-.file-upload-label i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-right: 1rem;
-}
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 11px; border: 1px solid var(--border2);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: all 0.18s;
+  }
+  .back-btn:hover { background: var(--coral-dim); border-color: var(--coral); }
+  .back-btn svg { width: 17px; height: 17px; stroke: var(--txt2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-.file-upload-text {
-    text-align: left;
-}
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 20px;
+    letter-spacing: -0.3px; color: var(--txt);
+  }
 
-.file-upload-text strong {
-    display: block;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
+  .save-btn-top {
+    height: 36px; padding: 0 16px;
+    border-radius: 11px; border: none;
+    background: var(--green); color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+    box-shadow: 0 2px 10px var(--green-glow);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .save-btn-top svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+  .save-btn-top:hover { background: var(--green-l); transform: translateY(-1px); }
+  .save-btn-top.loading { opacity: 0.7; pointer-events: none; }
 
-.file-upload-text span {
-    color: var(--text-muted);
-    font-size: 0.875rem;
+/* ─── SMART SCROLL BODY ─── */
+.scroll-body {
+  padding: 0 0 140px 0;
+  min-height: calc(100vh - 140px);
 }
+  /* ─── BANNER + AVATAR HERO ─── */
+  .hero-section {
+    position: relative;
+    margin-bottom: 0;
+  }
 
-input[type="file"] {
+  .banner-area {
+    width: 100%; height: 140px;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    position: relative; overflow: hidden; cursor: pointer;
+  }
+
+  .banner-shapes { position: absolute; inset: 0; }
+  .bs { position: absolute; border-radius: 50%; opacity: 0.15; }
+  .bs1 { width: 180px; height: 180px; background: var(--green-l); top: -60px; right: -40px; }
+  .bs2 { width: 120px; height: 120px; background: var(--indigo); bottom: -30px; left: -20px; }
+  .bs3 { width: 70px; height: 70px; background: var(--amber); top: 20px; left: 42%; opacity: 0.1; }
+  .banner-dim { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.25) 100%); }
+
+  .banner-edit-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0); transition: background 0.2s;
+  }
+  .banner-area:hover .banner-edit-overlay { background: rgba(0,0,0,0.28); }
+
+  .banner-edit-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(6px);
+    border-radius: 99px;
+    font-size: 12px; color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    opacity: 0; transition: opacity 0.2s;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .banner-area:hover .banner-edit-chip { opacity: 1; }
+  .banner-edit-chip svg { width: 13px; height: 13px; stroke: rgba(255,255,255,0.9); fill: none; stroke-width: 1.8; stroke-linecap: round; }
+
+  /* avatar area below banner */
+  .avatar-area {
+    background: var(--surface);
+    padding: 0 18px 20px;
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .avatar-outer {
+    position: relative;
+    margin-top: -40px;
+  }
+
+  .avatar-glow-ring {
     position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.current-image {
-    width: 100px;
-    height: 100px;
+    top: -5px; left: -5px;
+    width: calc(100% + 10px); height: calc(100% + 10px);
     border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1rem;
-    border: 3px solid var(--border-color);
-}
+    background: conic-gradient(var(--green) 0deg, var(--indigo) 90deg, var(--amber) 180deg, var(--coral) 270deg, var(--green) 360deg);
+    animation: spinRing 5s linear infinite;
+    z-index: 0; opacity: 0.65;
+  }
 
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
+  .avatar-edit-btn {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--indigo);
+  border: 2px solid var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--indigo-glow);
+  z-index: 2;
+  transition: all 0.18s;
 }
+.avatar-edit-btn:hover { background: var(--indigo-l); transform: scale(1.1); }
 
-@media (max-width: 576px) {
-    .edit-header,
-    .edit-body {
-        padding: 1.5rem;
-    }
-    
-    .edit-title {
-        font-size: 1.5rem;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-    }
+.remove-photo-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; margin-top: 12px;
+  background: var(--coral-dim); color: var(--coral);
+  border: 1px solid rgba(224,92,92,0.2);
+  border-radius: 8px; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.18s;
 }
+.remove-photo-btn:hover { background: var(--coral); color: white; }
+
+  @keyframes spinRing { to { transform: rotate(360deg); } }
+
+  .avatar-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 4px solid var(--surface);
+    overflow: hidden;
+    background: var(--green-dim);
+    position: relative; z-index: 1;
+    box-shadow: var(--sh-md);
+  }
+  .avatar-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px;
+    color: var(--green);
+  }
+
+  .avatar-edit-btn {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--indigo); border: 2.5px solid var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 2;
+    box-shadow: 0 2px 8px var(--indigo-glow);
+    transition: all 0.18s;
+  }
+  .avatar-edit-btn:hover { background: var(--indigo); transform: scale(1.1); }
+  .avatar-edit-btn svg { width: 11px; height: 11px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+  .remove-photo-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: 9px;
+    border: 1px solid rgba(224,92,92,0.2);
+    background: transparent;
+    font-size: 12px; font-weight: 600;
+    color: var(--coral); cursor: pointer;
+    transition: all 0.18s; margin-bottom: 3px;
+    font-family: 'Syne', sans-serif;
+  }
+  .remove-photo-btn:hover { background: var(--coral-dim); }
+  .remove-photo-btn svg { width: 13px; height: 13px; stroke: var(--coral); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+  /* ─── SECTION ─── */
+  .edit-section {
+    padding: 22px 18px 0;
+    animation: riseUp 0.4s ease both;
+  }
+  .edit-section:nth-child(1) { animation-delay: 0.04s; }
+  .edit-section:nth-child(2) { animation-delay: 0.09s; }
+  .edit-section:nth-child(3) { animation-delay: 0.14s; }
+  .edit-section:nth-child(4) { animation-delay: 0.19s; }
+
+  .section-head {
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 16px;
+  }
+
+  .section-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .si-indigo { background: var(--indigo-dim); }
+  .si-amber  { background: var(--amber-dim); }
+  .si-green  { background: var(--green-dim); }
+  .si-coral  { background: var(--coral-dim); }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--txt);
+  }
+
+  .section-divider {
+    height: 1px; background: var(--border);
+    margin: 22px 18px 0;
+  }
+
+  /* ─── FIELD ─── */
+  .field { margin-bottom: 16px; }
+
+  .field-label {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+
+  .fl-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .fl-indigo { color: var(--indigo); }
+  .fl-amber  { color: var(--amber); }
+  .fl-green  { color: var(--green); }
+  .fl-muted  { color: var(--muted); }
+
+  .fl-hint {
+    font-size: 11px; color: var(--muted);
+    font-weight: 400;
+  }
+
+  .field-wrap { position: relative; display: flex; align-items: center; }
+
+  .field-icon {
+    position: absolute; left: 13px;
+    width: 15px; height: 15px;
+    fill: none; stroke-width: 1.8; stroke-linecap: round;
+    pointer-events: none; transition: stroke 0.18s;
+    z-index: 1;
+  }
+  .fi-indigo { stroke: rgba(79,95,204,0.4); }
+  .fi-amber  { stroke: rgba(217,119,6,0.4); }
+  .fi-green  { stroke: rgba(45,122,58,0.4); }
+
+  .field-input {
+    width: 100%; height: 46px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    padding: 0 14px 0 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--txt);
+    outline: none; transition: all 0.2s;
+  }
+  .field-input::placeholder { color: var(--muted); }
+  .field-input.no-icon { padding-left: 14px; }
+
+  .field-input:focus { background: var(--surface); }
+  .type-indigo .field-input:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-dim); }
+  .type-amber  .field-input:focus { border-color: var(--amber);  box-shadow: 0 0 0 3px var(--amber-dim); }
+  .type-green  .field-input:focus { border-color: var(--green);  box-shadow: 0 0 0 3px var(--green-dim); }
+
+  /* textarea */
+  .field-textarea {
+    width: 100%;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--txt);
+    outline: none; resize: none;
+    line-height: 1.6; transition: all 0.2s;
+    min-height: 88px;
+  }
+  .field-textarea::placeholder { color: var(--muted); }
+  .field-textarea:focus { background: var(--surface); border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-dim); }
+
+  .char-count {
+    text-align: right; font-size: 11px;
+    color: var(--muted); margin-top: 5px;
+    font-weight: 400;
+  }
+  .char-count.near { color: var(--amber); }
+  .char-count.over { color: var(--coral); }
+
+  /* select */
+  .field-select {
+    width: 100%; height: 46px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    padding: 0 36px 0 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--txt);
+    outline: none; appearance: none; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .field-select:focus { background: var(--surface); border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-dim); }
+  .select-chevron {
+    position: absolute; right: 13px;
+    width: 15px; height: 15px;
+    stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  /* year pills */
+  .year-row { display: flex; gap: 7px; }
+  .year-btn {
+    flex: 1; height: 40px; border-radius: 10px;
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: var(--muted); cursor: pointer; transition: all 0.18s;
+  }
+  .year-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+  .year-btn.selected { border-color: var(--amber); background: var(--amber); color: #fff; box-shadow: 0 2px 8px rgba(217,119,6,0.22); }
+
+  /* ─── INTERESTS TAG INPUT ─── */
+  .tag-input-wrap {
+    background: var(--bg);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    display: flex; flex-wrap: wrap; gap: 7px;
+    cursor: text; transition: all 0.2s; min-height: 46px;
+    align-items: flex-start;
+  }
+  .tag-input-wrap:focus-within { background: var(--surface); border-color: var(--green); box-shadow: 0 0 0 3px var(--green-dim); }
+
+  .interest-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 99px;
+    background: var(--green); color: #fff;
+    font-size: 12px; font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    animation: popIn 0.18s ease;
+    cursor: default;
+  }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+
+  .pill-remove {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+  }
+  .pill-remove:hover { background: rgba(255,255,255,0.45); }
+  .pill-remove svg { width: 8px; height: 8px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+  .tag-text-input {
+    border: none; background: transparent; outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--txt);
+    min-width: 100px; flex: 1;
+    padding: 3px 0;
+  }
+  .tag-text-input::placeholder { color: var(--muted); }
+
+  .tag-suggestions {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 8px;
+  }
+
+  .tag-suggest {
+    padding: 5px 12px; border-radius: 99px;
+    border: 1.5px solid var(--border2);
+    background: var(--surface);
+    font-size: 11px; font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    color: var(--muted); cursor: pointer;
+    transition: all 0.18s;
+  }
+  .tag-suggest:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
+  /* ─── BOTTOM SAVE STRIP ─── */
+  .save-strip {
+    position: fixed; 
+    bottom: 0;
+    left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 390px;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 12px 18px 28px;
+    display: flex; gap: 10px;
+    z-index: 200;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
+  }
+
+  .cancel-btn {
+    height: 48px; padding: 0 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--muted); cursor: pointer;
+    transition: all 0.18s; flex-shrink: 0;
+  }
+  .cancel-btn:hover { background: var(--coral-dim); border-color: var(--coral); color: var(--coral); }
+
+  .save-btn-main {
+    flex: 1; height: 48px;
+    border-radius: 14px; border: none;
+    background: var(--green); color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 3px 14px var(--green-glow);
+    letter-spacing: 0.2px;
+  }
+  .save-btn-main svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+  .save-btn-main:hover { background: var(--green-l); transform: translateY(-1px); }
+  .save-btn-main:active { transform: none; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%; display: none;
+    animation: spin 0.7s linear infinite;
+  }
+  .save-btn-main.loading .spinner { display: block; }
+  .save-btn-main.loading .btn-text { display: none; }
+  .save-btn-main.loading { pointer-events: none; opacity: 0.8; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="glass-card animate-on-scroll">
-                <!-- Header -->
-                <div class="edit-header">
-                    <h1 class="edit-title">
-                        <i class="bi bi-person-gear"></i>
-                        Edit Your Profile
-                    </h1>
-                    <p class="edit-subtitle">
-                        Update your information to help others connect with you
-                    </p>
-                </div>
 
-                <h2 class="section-title edit-body">
-                    <i class="bi bi-image"></i>
-                    Profile Picture
-                </h2>
+<form id="mainProfileForm" method="POST" enctype="multipart/form-data" action="{{ url_for('auth.profile_edit') }}">
+  {{ form.hidden_tag() }}
+  <input type="hidden" name="profile_picture_data" id="profilePictureData" value="">
+  <input type="hidden" name="has_new_photo" id="hasNewPhoto" value="0">
 
-                <!-- Option to delete profile photo -->
-                {% if profile.profile_picture %}
-                    <div class="text-center mb-3">
-                        <form method="POST" action="{{ url_for('auth.delete_profile_picture') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash me-1"></i> Remove profile picture
-                            </button>
-                        </form>
-                    </div>
-                {% endif %}
-
-                <!-- Form -->
-                <div class="edit-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        {{ form.hidden_tag() }}
-
-                        <!-- Profile Picture Section -->
-                        <div class="form-section">
-                            
-                            {% if profile.profile_picture %}
-                            <div class="text-center mb-3">
-                                <img src="{{ profile.profile_picture }}" alt="Current profile" class="current-image">
-                            </div>
-                            {% endif %}
-
-
-                            <div class="form-group">
-                                <div class="file-upload-wrapper">
-                                    <label for="profile_picture" class="file-upload-label">
-                                        <i class="bi bi-cloud-upload"></i>
-                                        <div class="file-upload-text">
-                                            <strong>Choose a profile picture</strong>
-                                            <span>PNG, JPG up to 5MB</span>
-                                        </div>
-                                    </label>
-                                    {{ form.profile_picture(class="form-control", id="profile_picture") }}
-                                </div>
-                                {% for e in form.profile_picture.errors %}
-                                <div class="invalid-feedback d-block">{{ e }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Basic Information -->
-                        <div class="form-section">
-                            <h2 class="section-title">
-                                <i class="bi bi-person-circle"></i>
-                                Basic Information
-                            </h2>
-
-                            <div class="form-group">
-                                {{ form.username.label(class="form-label") }}
-                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
-                                <div class="form-text">This is how others will see you</div>
-                                {% for e in form.username.errors %}
-                                <div class="invalid-feedback d-block">{{ e }}</div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="form-group">
-                                {{ form.bio.label(class="form-label") }}
-                                {{ form.bio(class="form-control", rows=4, placeholder="Tell us about yourself, your interests, and what you're studying...") }}
-                                <div class="form-text">Write a brief description about yourself</div>
-                            </div>
-                        </div>
-
-                        <!-- Academic Information -->
-                        <div class="form-section">
-                            <h2 class="section-title">
-                                <i class="bi bi-mortarboard"></i>
-                                Academic Information
-                            </h2>
-
-                            <div class="row">
-                                <div class="col-md-6 form-group">
-                                    {{ form.department.label(class="form-label") }}
-                                    {{ form.department(class="form-control", placeholder="e.g., Computer Science") }}
-                                </div>
-
-                                <div class="col-md-6 form-group">
-                                    {{ form.year.label(class="form-label") }}
-                                    {{ form.year(class="form-control", placeholder="e.g., 2nd Year") }}
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                {{ form.location.label(class="form-label") }}
-                                {{ form.location(class="form-control", placeholder="e.g., Campus Building A") }}
-                            </div>
-                        </div>
-
-                        <!-- Interests -->
-                        <div class="form-section">
-                            <h2 class="section-title">
-                                <i class="bi bi-stars"></i>
-                                Interests
-                            </h2>
-
-                            <div class="form-group">
-                                {{ form.interests.label(class="form-label") }}
-                                {{ form.interests(class="form-control", placeholder="e.g., Music, AI, Hiking, Photography") }}
-                                <div class="form-text">
-                                    Separate interests with commas. This helps others with similar interests find you.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="form-actions">
-                            {{ form.submit(class="btn btn-primary-custom") }}
-                            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-custom">
-                                <i class="bi bi-x-lg me-2"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+  <div class="phone">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="back-btn">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </div>
+      <span class="topbar-title">Edit Profile</span>
     </div>
+    <button class="save-btn-top" id="saveTopBtn" onclick="handleSave()">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Save
+    </button>
+  </header>
+
+  <div class="scroll-body">
+
+    <!-- BANNER + AVATAR -->
+    <div class="hero-section">
+      <div class="banner-area">
+        <div class="banner-shapes">
+          <div class="bs bs1"></div>
+          <div class="bs bs2"></div>
+          <div class="bs bs3"></div>
+        </div>
+        <div class="banner-dim"></div>
+        <div class="banner-edit-overlay">
+          <div class="banner-edit-chip">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Change cover
+          </div>
+        </div>
+      </div>
+
+<!-- AVATAR SECTION - REPLACE YOUR CURRENT ONE -->
+<div class="avatar-area">
+  <div class="avatar-outer">
+    <div class="avatar-glow-ring"></div>
+    <div class="avatar-ring">
+      <div class="avatar-placeholder" id="avatarPlaceholder">
+        {% if profile.profile_picture %}
+        <img src="{{ profile.profile_picture }}" alt="{{ current_user.username[0]|upper }}" 
+             class="hero-av-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <span class="hero-av-letter" style="display: none;">{{ current_user.username[0]|upper }}</span>
+        {% else %}
+        <span class="hero-av-letter">{{ current_user.username[0]|upper }}</span>
+        {% endif %}
+      </div>
+    </div>
+    
+
+      <input type="file" name="profile_picture" id="profilePictureInput" accept="image/*" style="display: none;">
+
+    
+    <!-- EDIT BUTTON - Triggers file input -->
+    <label for="profilePictureInput" class="avatar-edit-btn" title="Change photo">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </label>
+  </div>
+  
+  <!-- DELETE BUTTON -->
+  {% if profile.profile_picture %}
+  <form method="POST" action="{{ url_for('auth.delete_profile_picture') }}" class="delete-form">
+    {{ form.csrf_token }}
+    <button class="remove-photo-btn" type="submit">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      Remove photo
+    </button>
+  </form>
+  {% endif %}
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // File upload feedback
-    const fileInput = document.getElementById('profile_picture');
-    const fileLabel = document.querySelector('.file-upload-label');
-    
-    if (fileInput && fileLabel) {
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const fileName = this.files[0].name;
-                const fileText = fileLabel.querySelector('.file-upload-text strong');
-                fileText.textContent = fileName;
-                fileLabel.style.borderColor = 'var(--success-color)';
-                fileLabel.style.background = 'var(--bg-tertiary)';
-            }
-        });
-    }
+    </div>
 
-    // Form submission
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                window.cconnect.showLoading(submitBtn);
-            }
-        });
-    }
+    <!-- ── BASIC INFO ── -->
+    <div class="edit-section">
+      <div class="section-head">
+        <div class="section-icon si-indigo">👤</div>
+        <span class="section-title">Basic Information</span>
+      </div>
+
+      <!-- Username -->
+      <div class="field type-indigo">
+        <div class="field-label">
+          <span class="fl-text fl-indigo">Username</span>
+          <span class="fl-hint">Visible to everyone</span>
+        </div>
+        <div class="field-wrap">
+          <svg class="field-icon fi-indigo" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input class="field-input" 
+            type="text" 
+            name="username"
+            id="usernameInput"
+            value="{{ request.form.get('username', current_user.username) }}"
+            disabled
+            readonly
+            oninput="syncAvatar(this.value)">
+
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="field">
+        <div class="field-label">
+          <span class="fl-text fl-indigo">Bio</span>
+          <span class="fl-hint" id="bioCount">0 / 1000</span>
+        </div>
+          <textarea 
+            class="field-textarea" 
+            id="bioInput" 
+            name="bio"
+            placeholder="Tell everyone a little about yourself…"
+            maxlength="1000"
+            rows="3"
+            oninput="updateBioCount(this)"
+          >{{ profile.bio or '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── ACADEMIC INFO ── -->
+    <div class="edit-section">
+      <div class="section-head">
+        <div class="section-icon si-amber">🎓</div>
+        <span class="section-title">Academic Info</span>
+      </div>
+
+      <!-- Department -->
+<div class="field type-amber">
+  <div class="field-label">
+    <span class="fl-text fl-amber">Department</span>
+  </div>
+  <div class="field-wrap">
+    <svg class="field-icon fi-amber" viewBox="0 0 24 24">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+      <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+    </svg>
+    <select class="field-select" name="department" id="departmentSelect">
+      <option value="">Select department</option>
+      
+      <!-- Full list with proper selected logic -->
+      <option value="cse" {% if form.department.data == 'cse' or profile.department == 'cse' or request.form.get('department') == 'cse' %}selected{% endif %}>
+        Computer Science & Engineering
+      </option>
+      <option value="ece" {% if form.department.data == 'ece' or profile.department == 'ece' or request.form.get('department') == 'ece' %}selected{% endif %}>
+        Electronics & Communication
+      </option>
+      <option value="mech" {% if form.department.data == 'mech' or profile.department == 'mech' or request.form.get('department') == 'mech' %}selected{% endif %}>
+        Mechanical Engineering
+      </option>
+      <option value="civil" {% if form.department.data == 'civil' or profile.department == 'civil' or request.form.get('department') == 'civil' %}selected{% endif %}>
+        Civil Engineering
+      </option>
+      <option value="design" {% if form.department.data == 'design' or profile.department == 'design' or request.form.get('department') == 'design' %}selected{% endif %}>
+        Design
+      </option>
+      <option value="mba" {% if form.department.data == 'mba' or profile.department == 'mba' or request.form.get('department') == 'mba' %}selected{% endif %}>
+        MBA
+      </option>
+      <option value="malayalam" {% if form.department.data == 'malayalam' or profile.department == 'malayalam' or request.form.get('department') == 'malayalam' %}selected{% endif %}>
+        Malayalam
+      </option>
+      <option value="other" {% if form.department.data == 'other' or profile.department == 'other' or request.form.get('department') == 'other' %}selected{% endif %}>
+        Other
+      </option>
+    </select>
+    <svg class="select-chevron" viewBox="0 0 24 24">
+      <path d="M6 9l6 6 6-6"/>
+    </svg>
+  </div>
+</div>
+
+      </div>
+
+
+
+      <!-- Year of study -->
+<div class="field">
+  <div class="field-label">
+    <span class="fl-text fl-amber">Year of Study</span>
+  </div>
+  <div class="year-row">
+    <button class="year-btn {% if (form.year.data or profile.year) == '1st' %}selected{% endif %}" 
+            data-year="1st Year" onclick="selectYear(this)">1st</button>
+    <button class="year-btn {% if (form.year.data or profile.year) == '2nd' %}selected{% endif %}" 
+            data-year="2nd Year" onclick="selectYear(this)">2nd</button>
+    <button class="year-btn {% if (form.year.data or profile.year) == '3rd' %}selected{% endif %}" 
+            data-year="3rd Year" onclick="selectYear(this)">3rd</button>
+    <button class="year-btn {% if (form.year.data or profile.year) == '4th' %}selected{% endif %}" 
+            data-year="4th Year" onclick="selectYear(this)">4th</button>
+    <button class="year-btn {% if (form.year.data or profile.year) == 'final' %}selected{% endif %}" 
+            data-year="Final Year" onclick="selectYear(this)">Final</button>
+  </div>
+  <!-- HIDDEN INPUT - This sends data to backend -->
+  <input type="hidden" name="year" id="yearInput" value="{{ form.year.data or profile.year or '' }}">
+</div>
+
+
+      <!-- Location -->
+      <div class="field type-amber">
+        <div class="field-label">
+          <span class="fl-text fl-amber">Location</span>
+          <span class="fl-hint">Optional</span>
+        </div>
+        <div class="field-wrap">
+          <svg class="field-icon fi-amber" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input class="field-input" type="text" placeholder="e.g., Campus Building A">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── INTERESTS ── -->
+    <div class="edit-section" style="padding-bottom:24px">
+      <div class="section-head">
+        <div class="section-icon si-green">✦</div>
+        <span class="section-title">Interests</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="fl-text fl-green">Your interests</span>
+          <span class="fl-hint">Tap × to remove</span>
+        </div>
+
+        <!-- tag pill input -->
+        <div class="tag-input-wrap" id="tagInputWrap" onclick="focusTagInput()">
+          <div class="interest-pill" data-tag="philosophy">
+            # philosophy
+            <div class="pill-remove" onclick="removeTag(this, event)">
+              <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+            </div>
+          </div>
+          <div class="interest-pill" data-tag="yoga">
+            # yoga
+            <div class="pill-remove" onclick="removeTag(this, event)">
+              <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+            </div>
+          </div>
+          <div class="interest-pill" data-tag="writing">
+            # writing
+            <div class="pill-remove" onclick="removeTag(this, event)">
+              <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+            </div>
+          </div>
+          <div class="interest-pill" data-tag="photography">
+            # photography
+            <div class="pill-remove" onclick="removeTag(this, event)">
+              <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+            </div>
+          </div>
+          <input class="tag-text-input" id="tagInput"
+            placeholder="Type and press Enter…"
+            onkeydown="handleTagKey(event)"
+            oninput="filterSuggestions(this.value)">
+        </div>
+
+        <!-- suggestions -->
+        <div class="tag-suggestions" id="tagSuggestions">
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">📚 reading</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">🎵 music</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">💻 coding</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">🎨 design</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">⚽ sports</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">🎮 gaming</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">🍳 cooking</div>
+          <div class="tag-suggest" onclick="addSuggestedTag(this)">🔬 research</div>
+        </div>
+      </div>
+    </div>
+
+
+
+  <!-- BOTTOM SAVE STRIP -->
+  <div class="save-strip">
+    <button class="cancel-btn">Cancel</button>
+    <button class="save-btn-main" id="saveMainBtn" onclick="handleSave()">
+      <svg class="btn-text" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span class="btn-text">Save Changes</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+</div>
+</form>
+
+<script>
+  /* ── SYNC AVATAR LETTER ── */
+// Profile picture upload + preview
+document.getElementById('profilePictureInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    // Preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'hero-av-img';
+      img.style.objectFit = 'cover';
+      img.onerror = function() { 
+        this.style.display = 'none'; 
+        document.querySelector('.hero-av-letter').style.display = 'flex'; 
+      };
+      
+      const placeholder = document.getElementById('avatarPlaceholder');
+      placeholder.innerHTML = '';
+      placeholder.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+    
+    // Auto-upload (optional)
+    //document.getElementById('avatarForm').submit();
+  }
 });
+
+// Avatar sync (for username changes)
+function syncAvatar(username) {
+  const letter = username ? username[0].toUpperCase() : '?';
+  document.querySelector('.hero-av-letter').textContent = letter;
+}
+
+
+  /* ── BIO CHAR COUNT ── */
+  function updateBioCount(el) {
+    const n = el.value.length;
+    const el2 = document.getElementById('bioCount');
+    el2.textContent = n + ' / 1000';
+    el2.className = 'fl-hint' + (n >= 1000 ? ' over' : n >= 900 ? ' near' : '');
+  }
+  // init
+  updateBioCount(document.getElementById('bioInput'));
+
+  /* ── YEAR SELECT ── */
+  function selectYear(btn) {
+    // Remove selected from all buttons
+    document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('selected'));
+    
+    // Add selected to clicked button
+    btn.classList.add('selected');
+    
+    // Set hidden input value (sends to backend)
+    document.getElementById('yearInput').value = btn.dataset.year;
+  }
+
+
+  /* ── TAG PILL SYSTEM ── */
+  function focusTagInput() {
+    document.getElementById('tagInput').focus();
+  }
+
+  function handleTagKey(e) {
+    const input = e.target;
+    const val   = input.value.trim().replace(/^#\s*/, '').toLowerCase();
+
+    if ((e.key === 'Enter' || e.key === ',') && val) {
+      e.preventDefault();
+      addTag(val);
+      input.value = '';
+      filterSuggestions('');
+    }
+    // backspace on empty removes last tag
+    if (e.key === 'Backspace' && !input.value) {
+      const pills = document.querySelectorAll('.interest-pill');
+      if (pills.length) pills[pills.length - 1].remove();
+    }
+  }
+
+  function addTag(text) {
+    const wrap = document.getElementById('tagInputWrap');
+    const input = document.getElementById('tagInput');
+    // check duplicate
+    const existing = [...wrap.querySelectorAll('.interest-pill')].map(p => p.dataset.tag);
+    if (existing.includes(text)) return;
+
+    const pill = document.createElement('div');
+    pill.className = 'interest-pill';
+    pill.dataset.tag = text;
+    pill.innerHTML = `# ${text}
+      <div class="pill-remove" onclick="removeTag(this, event)">
+        <svg viewBox="0 0 10 10" width="8" height="8" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/>
+        </svg>
+      </div>`;
+    wrap.insertBefore(pill, input);
+  }
+
+  function removeTag(btn, e) {
+    e.stopPropagation();
+    btn.closest('.interest-pill').remove();
+  }
+
+  function addSuggestedTag(el) {
+    const text = el.textContent.replace(/^[^\w]*/, '').trim().toLowerCase();
+    addTag(text);
+  }
+
+  function filterSuggestions(val) {
+    const q = val.toLowerCase().trim();
+    const suggs = document.querySelectorAll('.tag-suggest');
+    suggs.forEach(s => {
+      const t = s.textContent.replace(/^[^\w]*/, '').trim().toLowerCase();
+      s.style.display = (!q || t.includes(q)) ? '' : 'none';
+    });
+  }
+
+  /* ── SAVE ── */
+  function handleSave() {
+  // Copy all form data to main form
+  const bio = document.getElementById('bioInput').value;
+  const yearBtns = document.querySelectorAll('.year-btn.selected');
+  const year = yearBtns.length ? yearBtns[0].textContent : '';
+  const interests = Array.from(document.querySelectorAll('.interest-pill'))
+    .map(p => p.dataset.tag).join(',');
+  
+  // Set hidden fields
+  document.getElementById('mainProfileForm').bio.value = bio;
+  document.getElementById('mainProfileForm').year.value = year;
+  document.getElementById('mainProfileForm').interests.value = interests;
+  
+  // Submit
+  document.getElementById('saveMainBtn').click();
+}
+
 </script>
-{% endblock %}
+
+{% endblock %} 
