@@ -1689,7 +1689,12 @@ Remaining bugs:
     ❌ The time is not proper, need to show it in ist (or delete for now)
 
 
-
+#### Chat page 
+    - Proper modification
+    - removed the nav bars of the base.html for better ux
+    - textbox focus and other things done properly
+    ❌ The delete option of a chat is not connected to the backend 
+    ⚠️ Just a problem when comes back to the chat page, the nav bars of the base.html file is getting loaded (due to cache). But not much of a problem right now
 
 
 
