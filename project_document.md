@@ -1713,7 +1713,11 @@ Remaining bugs:
     ⚠️ Need to connect the notifications with notification type
 
 
-
+#### Settings page
+    - Good now, but most of the features are set to coming soon
+    ⚠️ Hide most of the ones which are not present
+    ⚠️ Dark mode toggle not connected to the one on the nav bar (only problem in the desktop)
+    ✅ Change password giving limit error (Critical error) probably due to some backend bug with it (used to work properly before)-- (solved by modifying the route file, so that each user get's 5 req per day, not each IP address)
 
 
 

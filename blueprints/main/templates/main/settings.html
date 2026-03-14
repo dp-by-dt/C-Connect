@@ -1,362 +1,794 @@
+{# ============================================================
+   settings.html  —  Settings Page
+   Extends: base.html
+
+   Backend variables:
+     • current_user.username  — display name + avatar initial
+     • current_user.email     — shown in user strip + account row
+
+   Routes used:
+     • url_for('auth.profile')          — Edit Profile link
+     • url_for('auth.change_password')  — Change Password (GET)
+     • confirmLogout()                  — from base.html global JS
+                                          calls url_for('auth.logout')
+     • url_for('main.contact')          — Delete Account contact link
+
+   JS globals (from global.js / base.html):
+     • window.cconnect.themeManager.getTheme()    — read current theme
+     • window.cconnect.themeManager.toggleTheme() — toggle dark/light
+     • showConfirm(title, message, callback)       — confirmation modal
+     • confirmLogout(event)                        — logout with confirm
+
+   Sections:
+     Appearance  — Dark Mode toggle (wired), others TODO
+     Notifications — all toggles visual-only (TODO: backend prefs)
+     Privacy       — all visual-only (TODO: backend prefs)
+     Account       — Change Password (live), Email (display only)
+     Logout        — reuses confirmLogout() from base.html
+     Danger Zone   — Delete Account → contact for now
+                     Full "type username" modal commented out (TODO)
+============================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Settings{% endblock %}
 
+
 {% block extra_css %}
 <style>
-.settings-container {
-    padding: 2rem 0;
-}
 
-.settings-header {
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
+  /* ============================================================
+     SETTINGS PAGE — scoped styles
+     Color intent:
+       --primary / green  → active toggles, section dots, edit CTA
+       --indigo-color     → account/password actions, section labels
+       --amber-color      → notification rows, "Coming Soon" badges
+       --coral-color      → logout, danger zone, destructive actions
+       --teal-color       → privacy rows
+  ============================================================ */
 
-.settings-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
+  .settings-page {
+    padding-bottom: calc(var(--bottom-nav-height, 72px) + 32px);
+  }
 
-.settings-subtitle {
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
 
-.settings-section {
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.section-icon {
-    width: 45px;
-    height: 45px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-}
-
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.setting-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
+  /* ── USER STRIP ──────────────────────────────────────────── */
+  .settings-user-strip {
+    margin: 16px var(--content-padding) 14px;
     background: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-}
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 14px 15px;
+    display: flex; align-items: center; gap: 13px;
+    box-shadow: var(--shadow-xs);
+    text-decoration: none; color: inherit;
+    transition: box-shadow var(--transition-fast),
+                transform   var(--transition-fast);
+    animation: settings-rise 0.36s ease both;
+  }
 
-.setting-item:hover {
-    background: var(--bg-tertiary);
-    transform: translateX(4px);
-}
+  .settings-user-strip:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
 
-.setting-info {
-    flex: 1;
-}
+  /* Avatar — colored by current_user.id % 5 */
+  .settings-user-strip__av {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 18px;
+    flex-shrink: 0; user-select: none;
+  }
 
-.setting-label {
-    font-weight: 600;
+  .settings-av--0 { background: var(--primary-dim);  color: var(--primary-color); }
+  .settings-av--1 { background: var(--indigo-dim);   color: var(--indigo-color); }
+  .settings-av--2 { background: var(--amber-dim);    color: var(--amber-color); }
+  .settings-av--3 { background: var(--coral-dim);    color: var(--coral-color); }
+  .settings-av--4 { background: var(--teal-dim);     color: var(--teal-color); }
+
+  .settings-user-strip__info { flex: 1; min-width: 0; }
+
+  .settings-user-strip__name {
+    font-family: var(--font-display);
+    font-size: var(--text-base); font-weight: 700;
     color: var(--text-primary);
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-}
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
 
-.setting-description {
+  .settings-user-strip__email {
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Edit label — indigo */
+  .settings-user-strip__edit {
+    display: flex; align-items: center; gap: 4px;
+    font-family: var(--font-display);
+    font-size: var(--text-sm); font-weight: 700;
+    color: var(--indigo-color); flex-shrink: 0;
+  }
+
+  .settings-user-strip__edit svg {
+    width: 13px; height: 13px; stroke: var(--indigo-color);
+    fill: none; stroke-width: 2; stroke-linecap: round;
+  }
+
+
+  /* ── SECTION LABEL ───────────────────────────────────────── */
+  .settings-section-label {
+    padding: 18px var(--content-padding) 8px;
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
     color: var(--text-muted);
-    font-size: 0.875rem;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .settings-section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* Coral variant for Danger Zone label */
+  .settings-section-label--danger { color: var(--coral-color); }
+
+
+  /* ── SETTINGS GROUP ──────────────────────────────────────── */
+  .settings-group {
+    margin: 0 var(--content-padding) 4px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    animation: settings-rise 0.38s ease both;
+  }
+
+
+  /* ── SETTING ROW ─────────────────────────────────────────── */
+  .settings-row {
+    display: flex; align-items: center;
+    gap: 13px; padding: 13px 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+    position: relative;
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-row--clickable { cursor: pointer; }
+  .settings-row--clickable:hover { background: var(--bg-hover); }
+  .settings-row--clickable:active { background: var(--primary-dim); }
+
+  /* Disabled / Coming Soon rows */
+  .settings-row--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+
+  /* ── ROW ICON ────────────────────────────────────────────── */
+  .settings-row__icon {
+    width: 34px; height: 34px; border-radius: var(--radius-xs);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .settings-row__icon svg {
+    width: 16px; height: 16px; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Icon color variants */
+  .settings-icon--green  { background: var(--primary-dim); }
+  .settings-icon--green  svg { stroke: var(--primary-color); }
+  .settings-icon--indigo { background: var(--indigo-dim); }
+  .settings-icon--indigo svg { stroke: var(--indigo-color); }
+  .settings-icon--amber  { background: var(--amber-dim); }
+  .settings-icon--amber  svg { stroke: var(--amber-color); }
+  .settings-icon--coral  { background: var(--coral-dim); }
+  .settings-icon--coral  svg { stroke: var(--coral-color); }
+  .settings-icon--teal   { background: var(--teal-dim); }
+  .settings-icon--teal   svg { stroke: var(--teal-color); }
+
+
+  /* ── ROW TEXT ────────────────────────────────────────────── */
+  .settings-row__text { flex: 1; min-width: 0; }
+
+  .settings-row__title {
+    font-family: var(--font-body);
+    font-size: var(--text-base); font-weight: 500;
+    color: var(--text-primary); line-height: 1.2;
+  }
+
+  .settings-row__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
+    margin-top: 2px; font-weight: 400;
+  }
+
+
+  /* ── COMING SOON BADGE ───────────────────────────────────── */
+  .settings-badge--soon {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
+    color: var(--amber-color);
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    padding: 3px 8px; border-radius: var(--radius-full);
+    letter-spacing: 0.3px; flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+
+  /* ── CHEVRON ─────────────────────────────────────────────── */
+  .settings-row__chevron {
+    width: 16px; height: 16px;
+    stroke: var(--text-muted); fill: none;
+    stroke-width: 2; stroke-linecap: round;
+    flex-shrink: 0;
+  }
+
+
+  /* ── TOGGLE SWITCH ───────────────────────────────────────── */
+  /*
+    Custom toggle — does not use Bootstrap's form-check-input.
+    Mirrors the visual of the prototype but uses CSS vars
+    so dark mode works automatically.
+  */
+  .settings-toggle {
+    width: 42px; height: 24px;
+    border-radius: var(--radius-full);
+    background: var(--border-subtle);
+    position: relative; cursor: pointer; flex-shrink: 0;
+    transition: background var(--transition-base);
+    border: none; padding: 0;
+    /* accessible role */
+    appearance: none;
+  }
+
+  .settings-toggle::after {
+    content: '';
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff;
+    position: absolute; top: 3px; left: 3px;
+    transition: transform var(--transition-smooth);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  }
+
+  /* ON states — color variants */
+.settings-toggle.is-on {
+    background: var(--primary-color);
+    box-shadow: 0 1px 6px var(--primary-glow);
 }
 
-.form-check-input {
-    width: 3rem;
-    height: 1.5rem;
+.settings-toggle.is-on.is-on--indigo {
+    background: var(--indigo-color);
+    box-shadow: 0 1px 6px var(--indigo-glow);
+}
+
+  .settings-toggle.is-on::after {
+    transform: translateX(18px);
+  }
+
+
+  /* ── LOGOUT ROW ──────────────────────────────────────────── */
+  .settings-logout-group {
+    margin: 14px var(--content-padding) 4px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    animation: settings-rise 0.40s ease both;
+  }
+
+  .settings-logout-row {
+    display: flex; align-items: center;
+    gap: 13px; padding: 13px 15px;
     cursor: pointer;
-}
+    transition: background var(--transition-fast);
+  }
 
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
+  .settings-logout-row:hover { background: var(--coral-dim); }
 
-.danger-zone {
-    border: 2px solid var(--danger-color);
-    border-radius: var(--border-radius-md);
-}
+  .settings-logout-row__title {
+    font-family: var(--font-body);
+    font-size: var(--text-base); font-weight: 500;
+    color: var(--coral-color); flex: 1;
+  }
 
-.danger-zone .section-header {
-    border-bottom-color: var(--danger-color);
-}
 
-.danger-zone .section-icon {
-    background: var(--danger-color);
-}
+  /* ── DANGER ZONE ─────────────────────────────────────────── */
+  .settings-danger-group {
+    margin: 0 var(--content-padding) 4px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--coral-border);
+    overflow: hidden;
+    animation: settings-rise 0.42s ease both;
+  }
 
-.btn-danger-outline {
-    color: var(--danger-color);
-    border: 2px solid var(--danger-color);
-    background: transparent;
-}
+  .settings-danger-group__header {
+    padding: 10px 15px;
+    background: var(--coral-dim);
+    border-bottom: 1px solid var(--coral-border);
+    display: flex; align-items: center; gap: 7px;
+  }
 
-.btn-danger-outline:hover {
-    background: var(--danger-color);
-    color: white;
-}
+  .settings-danger-group__header-text {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
+    color: var(--coral-color);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
 
-.coming-soon-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    color: white;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
+  .settings-danger-group__header svg {
+    width: 14px; height: 14px; stroke: var(--coral-color);
+    fill: none; stroke-width: 2; stroke-linecap: round;
+  }
 
-@media (max-width: 768px) {
-    .settings-container {
-        padding: 1rem 0;
-    }
-    
-    .settings-header {
-        padding: 1.5rem;
-    }
-    
-    .settings-section {
-        padding: 1.5rem;
-    }
-    
-    .setting-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-}
+  .settings-danger-row {
+    display: flex; align-items: center;
+    gap: 13px; padding: 13px 15px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+
+  .settings-danger-row:hover { background: var(--coral-dim); }
+
+  .settings-danger-row__title {
+    font-family: var(--font-body);
+    font-size: var(--text-base); font-weight: 500;
+    color: var(--coral-color); flex: 1;
+  }
+
+  .settings-danger-row__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+
+  /* ── VERSION NOTE ────────────────────────────────────────── */
+  .settings-version {
+    text-align: center;
+    padding: 10px 0 20px;
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
+  }
+
+
+  /* ── ENTRY ANIMATION ─────────────────────────────────────── */
+  @keyframes settings-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
 </style>
 {% endblock %}
 
+
 {% block body %}
-<div class="settings-container">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Header -->
-                <div class="settings-header glass-card animate-on-scroll">
-                    <h1 class="settings-title">
-                        <i class="bi bi-gear me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                        Settings
-                    </h1>
-                    <p class="settings-subtitle">Manage your account preferences</p>
-                </div>
+<div class="settings-page">
 
-                <!-- Appearance Section -->
-                <div class="settings-section glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="bi bi-palette"></i>
-                        </div>
-                        <h2 class="section-title">Appearance</h2>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Dark Mode</div>
-                            <div class="setting-description">Switch between light and dark theme</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                id="darkModeToggle"
-                                role="switch"
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notifications Section -->
-                <div class="settings-section glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="bi bi-bell"></i>
-                        </div>
-                        <h2 class="section-title">Notifications</h2>
-                        <span class="coming-soon-badge ms-auto">Coming Soon</span>
-                    </div>
-
-                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
-                        <div class="setting-info">
-                            <div class="setting-label">Connection Requests</div>
-                            <div class="setting-description">Get notified when someone wants to connect</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                checked
-                                disabled
-                            >
-                        </div>
-                    </div>
-
-                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
-                        <div class="setting-info">
-                            <div class="setting-label">Messages</div>
-                            <div class="setting-description">Get notified about new messages</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                checked
-                                disabled
-                            >
-                        </div>
-                    </div>
-
-                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
-                        <div class="setting-info">
-                            <div class="setting-label">Campus Events</div>
-                            <div class="setting-description">Stay updated about campus events</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                checked
-                                disabled
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Privacy Section -->
-                <div class="settings-section glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <h2 class="section-title">Privacy</h2>
-                        <span class="coming-soon-badge ms-auto">Coming Soon</span>
-                    </div>
-
-                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
-                        <div class="setting-info">
-                            <div class="setting-label">Profile Visibility</div>
-                            <div class="setting-description">Control who can see your profile</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                checked
-                                disabled
-                            >
-                        </div>
-                    </div>
-
-                    <div class="setting-item" style="opacity: 0.6; pointer-events: none;">
-                        <div class="setting-info">
-                            <div class="setting-label">Show Email</div>
-                            <div class="setting-description">Display your email on your profile</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                disabled
-                            >
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Security Section -->
-                <div class="settings-section glass-card animate-on-scroll">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="bi bi-lock"></i>
-                        </div>
-                        <h2 class="section-title">Security</h2>
-                    </div>
-
-
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Change Password</div>
-                            <div class="setting-description">Change your current password</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <a href="{{ url_for('auth.change_password') }}" class="btn btn-primary btn-sm">
-                                Change Password
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-
-
-
-                <!-- Danger Zone -->
-                <div class="settings-section glass-card danger-zone animate-on-scroll">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
-                        <h2 class="section-title">Danger Zone</h2>
-                    </div>
-
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <div class="setting-label">Delete Account</div>
-                            <div class="setting-description">Permanently delete your account and all data</div>
-                        </div>
-                        <button 
-                            class="btn btn-danger-outline btn-sm"
-                            onclick="showConfirm('Account deletion', 'Account deletion is not yet available. Please contact support.', function(){window.location.href='/contact'});">
-
-                            Delete Account
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  {# ── USER STRIP — links to profile edit page ── #}
+  <a href="{{ url_for('auth.profile') }}"
+     class="settings-user-strip"
+     aria-label="Edit your profile">
+    <div class="settings-user-strip__av settings-av--{{ current_user.id % 5 }}">
+      {{ current_user.username[0].upper() }}
     </div>
-</div>
+    <div class="settings-user-strip__info">
+      <div class="settings-user-strip__name">{{ current_user.username }}</div>
+      <div class="settings-user-strip__email">{{ current_user.email }}</div>
+    </div>
+    <div class="settings-user-strip__edit">
+      Edit
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </div>
+  </a>
 
+
+  {# ══ APPEARANCE ══ #}
+  <div class="settings-section-label">Appearance</div>
+  <div class="settings-group animate-on-scroll">
+
+    {# Dark Mode — wired to window.cconnect.themeManager (same as old code) #}
+    <div class="settings-row">
+      <div class="settings-row__icon settings-icon--indigo" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Dark Mode</div>
+        <div class="settings-row__sub">Switch between light and dark theme</div>
+      </div>
+      <button class="settings-toggle is-on--indigo"
+              id="darkModeToggle"
+              role="switch"
+              aria-checked="false"
+              aria-label="Toggle dark mode">
+      </button>
+    </div>
+
+    {#
+      TODO: Compact View — no backend support yet.
+      Wire to a user preferences model when built.
+    #}
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--green" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Compact View</div>
+        <div class="settings-row__sub">Reduce spacing in feed</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+  </div>
+
+
+  {# ══ NOTIFICATIONS ══
+     TODO: All toggles are visual-only.
+     Wire to a UserNotificationPreferences model when built.
+     Suggested fields: notif_connections, notif_messages,
+                       notif_board, notif_likes (booleans)
+  #}
+  <div class="settings-section-label">Notifications</div>
+  <div class="settings-group animate-on-scroll">
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--green" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Connection Requests</div>
+        <div class="settings-row__sub">When someone wants to connect</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--indigo" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Messages</div>
+        <div class="settings-row__sub">New message notifications</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--amber" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Campus Board</div>
+        <div class="settings-row__sub">Board updates and new posts</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--coral" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Likes &amp; Activity</div>
+        <div class="settings-row__sub">When someone likes your post</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+  </div>
+
+
+  {# ══ PRIVACY ══
+     TODO: All items are placeholders.
+     Suggested future routes:
+       - Profile Visibility → user preference model
+       - Block List → /settings/blocked-users
+       - Online Status → user preference model
+  #}
+  <div class="settings-section-label">Privacy</div>
+  <div class="settings-group animate-on-scroll">
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--teal" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Profile Visibility</div>
+        <div class="settings-row__sub">Control who can see your profile</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--teal" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="23" y1="18" x2="16" y2="18"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Block List</div>
+        <div class="settings-row__sub">Manage blocked users</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+    <div class="settings-row settings-row--disabled" aria-disabled="true">
+      <div class="settings-row__icon settings-icon--green" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Online Status</div>
+        <div class="settings-row__sub">Show when you're active</div>
+      </div>
+      <span class="settings-badge--soon">Soon</span>
+    </div>
+
+  </div>
+
+
+  {# ══ ACCOUNT ══ #}
+  <div class="settings-section-label">Account</div>
+  <div class="settings-group animate-on-scroll">
+
+    {# Change Password — navigates to auth.change_password (same as old code) #}
+    <a href="{{ url_for('auth.change_password') }}"
+       class="settings-row settings-row--clickable"
+       style="text-decoration: none;">
+      <div class="settings-row__icon settings-icon--indigo" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Change Password</div>
+        <div class="settings-row__sub">Update your login password</div>
+      </div>
+      <svg class="settings-row__chevron" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </a>
+
+    {# Email — display only, not editable #}
+    <div class="settings-row">
+      <div class="settings-row__icon settings-icon--amber" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+      </div>
+      <div class="settings-row__text">
+        <div class="settings-row__title">Email Address</div>
+        <div class="settings-row__sub">{{ current_user.email }}</div>
+      </div>
+    </div>
+
+  </div>
+
+
+  {# ══ LOGOUT ══ — reuses confirmLogout() from base.html #}
+  <div class="settings-logout-group animate-on-scroll">
+    <div class="settings-logout-row"
+         onclick="confirmLogout(event)"
+         role="button"
+         aria-label="Log out">
+      <div class="settings-row__icon settings-icon--coral" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </div>
+      <div class="settings-logout-row__title">Log Out</div>
+      <svg class="settings-row__chevron" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </div>
+  </div>
+
+
+  {# ══ DANGER ZONE ══ #}
+  <div class="settings-section-label settings-section-label--danger">Danger Zone</div>
+  <div class="settings-danger-group animate-on-scroll">
+
+    <div class="settings-danger-group__header">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span class="settings-danger-group__header-text">Irreversible actions</span>
+    </div>
+
+    {#
+      Delete Account — uses showConfirm() pointing to contact page
+      (same as old code) since deletion is not yet implemented.
+
+      TODO: Replace showConfirm() with the full "type username to
+      confirm" bottom-sheet modal once the delete route is built.
+      The modal markup is preserved below in a comment block
+      so it can be uncommented and wired when ready.
+
+      Suggested route: POST /auth/delete-account
+        Body: { confirm_username: str, csrf_token: str }
+    #}
+    <div class="settings-danger-row"
+         onclick="showConfirm(
+           'Account Deletion',
+           'Account deletion is not yet available. Please contact our support team.',
+           function(){ window.location.href='{{ url_for('main.contact') }}'; }
+         )"
+         role="button"
+         aria-label="Delete your account">
+      <div class="settings-row__icon settings-icon--coral" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6M14 11v6"/>
+          <path d="M9 6V4h6v2"/>
+        </svg>
+      </div>
+      <div class="settings-danger-row__text">
+        <div class="settings-danger-row__title">Delete Account</div>
+        <div class="settings-danger-row__sub">Permanently removes all your data</div>
+      </div>
+      <svg class="settings-row__chevron" viewBox="0 0 24 24"
+           style="stroke: var(--coral-color);" aria-hidden="true">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </div>
+
+  </div>
+
+
+  {# ── VERSION NOTE ── #}
+  <div class="settings-version">C-Connect · Campus Edition</div>
+
+</div>{# /settings-page #}
+
+
+{#
+  ══════════════════════════════════════════════════════════
+  TODO: DELETE ACCOUNT MODAL
+  Uncomment this block and replace the showConfirm() above
+  with onclick="document.getElementById('deleteAccountModal').classList.add('open')"
+  once the backend delete route is implemented.
+
+  Required:
+    • POST /auth/delete-account route with CSRF
+    • Confirm by typing username before enabling submit
+  ══════════════════════════════════════════════════════════
+
+  <div class="settings-modal-overlay" id="deleteAccountModal"
+       onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="settings-modal-sheet">
+      <div class="settings-modal-handle"></div>
+      <div class="settings-modal-title" style="color:var(--coral-color)">
+        Delete Account
+      </div>
+      <div class="settings-modal-sub">
+        This permanently deletes your account and all data.
+        This action <strong>cannot be undone</strong>.
+        Type <strong>{{ current_user.username }}</strong> to confirm.
+      </div>
+      <div class="settings-modal-field">
+        <label>Confirm username</label>
+        <input class="settings-modal-input" type="text"
+               placeholder="{{ current_user.username }}"
+               id="deleteUsernameInput">
+      </div>
+      <div class="settings-modal-actions">
+        <button class="settings-modal-cancel"
+                onclick="document.getElementById('deleteAccountModal').classList.remove('open')">
+          Cancel
+        </button>
+        <form method="POST" action="/auth/delete-account" style="flex:1; display:contents;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="settings-modal-confirm settings-modal-confirm--danger"
+                  id="deleteAccountBtn" disabled>
+            Delete Forever
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+#}
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    
-    // Set initial state
-    darkModeToggle.checked = window.cconnect.themeManager.getTheme() === 'dark';
-    
-    // Toggle theme on change
-    darkModeToggle.addEventListener('change', function() {
-        window.cconnect.themeManager.toggleTheme();
+(function () {
+  "use strict";
+
+  /* ============================================================
+     SETTINGS PAGE
+  ============================================================ */
+
+  /* ── Dark Mode Toggle ───────────────────────────────────────
+     Wired to window.cconnect.themeManager — same as old code.
+     Uses the custom .settings-toggle element instead of
+     Bootstrap's form-check-input, but same JS logic.
+  ── */
+  const darkToggle = document.getElementById('darkModeToggle');
+
+  if (darkToggle && window.cconnect && window.cconnect.themeManager) {
+
+    /* Set initial visual state from current theme */
+    const isDark = window.cconnect.themeManager.getTheme() === 'dark';
+    if (isDark) {
+      darkToggle.classList.add('is-on', 'is-on--indigo');
+      darkToggle.setAttribute('aria-checked', 'true');
+    }
+
+    /* Toggle on click — same handler as old code */
+    darkToggle.addEventListener('click', function () {
+      window.cconnect.themeManager.toggleTheme();
+      const nowDark = window.cconnect.themeManager.getTheme() === 'dark';
+      darkToggle.classList.toggle('is-on', nowDark);
+      darkToggle.setAttribute('aria-checked', String(nowDark));
     });
-});
+  }
+
+
+  /*
+    TODO: Delete Account modal username confirmation.
+    Uncomment when the modal block above is activated.
+
+    document.getElementById('deleteUsernameInput')
+      ?.addEventListener('input', function () {
+        const expected = '{{ current_user.username | e }}';
+        const btn      = document.getElementById('deleteAccountBtn');
+        const match    = this.value === expected;
+        btn.disabled         = !match;
+        btn.style.opacity    = match ? '1' : '0.5';
+        btn.style.pointerEvents = match ? 'auto' : 'none';
+      });
+  */
+
+})();
 </script>
 {% endblock %}

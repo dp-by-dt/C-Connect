@@ -244,7 +244,8 @@ def reset_password(token):
 
 @auth.route("/change-password", methods=["GET", "POST"])
 @login_required
-@limiter.limit("5 per hour")
+@limiter.limit("5 per hour", key_func=lambda: str(current_user.id)) # labmda used for the each user
+## previously only each IP gets 5 req per day, not each user gets it, no matter if they are sharing same network
 def change_password():
     form = ChangePasswordForm()
 
