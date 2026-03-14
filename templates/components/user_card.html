@@ -1,308 +1,421 @@
-<!-- ==================== USER CARD COMPONENT ====================
-     Modern card design with full-bleed image and floating actions
-     Used in: Search, Discover, Connections pages
-     ============================================================ -->
+{# ============================================================
+   components/user_card.html
+   Reusable person card — included by discover.html,
+   connections pages, and search results.
+
+   Context variables (passed via {% with %} in parent):
+     • user         — User model instance
+         .id
+         .username
+         .email
+         .profile.profile_picture  (optional, may be None)
+         .connection_count         (int, computed by route)
+     • conn_status  — string: 'connected' | 'requested'
+                      | 'incoming' | None/''
+
+   Attributes emitted for JS targeting:
+     • [data-user-card]   — consumed by window.cconnect.initializeSearch()
+     • [data-dept]        — TODO: populate from user.profile.department
+                            once that field exists on UserProfile
+
+   CSRF: every POST form includes {{ csrf_token() }} — do not remove.
+============================================================ #}
 
 <style>
-/* ===== User Card Styles ===== */
-.user-card {
-    position: relative;
-    width: 100%;
-    max-width: 280px;
-    margin: 0 auto;
-    background: var(--bg-primary);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-smooth);
-    cursor: pointer;
+  /* ============================================================
+     USER CARD — scoped component styles
+     Defined here so the component is self-contained when
+     included on any page. Uses global.css CSS variables.
+  ============================================================ */
+
+  /* ── Card shell ── */
+  .user-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
-    /* Golden ratio: 1.618 - Card ratio is roughly 1:1.5 .... changed now*/
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition:
+      box-shadow  var(--transition-smooth),
+      transform   var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+    /* Consistent tall portrait ratio */
     aspect-ratio: 3 / 4;
-}
+    position: relative;
+  }
 
-.user-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
-}
+  .user-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+  }
 
-/* ===== Card Image Section ===== */
-.user-card__image-wrapper {
+  /* ── Photo area (fills ~65% of card height via aspect-ratio) ── */
+  .user-card__photo {
     position: relative;
     width: 100%;
-    height: 100%;
+    /* Fill from top; bottom info section is fixed height */
+    flex: 1;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius:var(--radius-xl);
-}
+    background: var(--bg-tertiary);
+    min-height: 0;       /* allow flex child to shrink */
+  }
 
-.user-card__image {
+  .user-card__photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: center top;
+    display: block;
     transition: transform var(--transition-smooth);
-}
+  }
 
-.user-card:hover .user-card__image {
-    transform: scale(1.05);
-}
+  .user-card:hover .user-card__photo img {
+    transform: scale(1.04);
+  }
 
-/* Fallback avatar when no image */
-.user-card__avatar-fallback {
+  /* Fallback gradient + initial when no profile picture */
+  .user-card__photo-fallback {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
-    font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-}
+    /* Subtle two-tone gradient using brand palette */
+    background: linear-gradient(
+      145deg,
+      var(--primary-dim)  0%,
+      var(--bg-tertiary)  100%
+    );
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: -1px;
+    user-select: none;
+    transition: background var(--transition-smooth);
+  }
 
-/* ===== Card Header Overlay (Top) ===== */
-.user-card__header {
+  /* ── Status badge (top-right of photo) ── */
+  .user-card__badge {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 1.25rem 1rem;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), transparent);
-    z-index: 2;
-}
-
-.user-card__name {
-    font-size: 1.375rem;
+    top: 8px;
+    right: 8px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
     font-weight: 700;
-    color: white;
-    margin: 0 0 0.25rem 0;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-    line-height: 1.2;
-}
+    letter-spacing: 0.3px;
+    /* Frosted look against any photo */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
 
-.user-card__email {
-    font-size: 0.8125rem;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  .user-card__badge--connected {
+    background: rgba(45, 122, 58, 0.82);
+    color: #fff;
+  }
+
+  .user-card__badge--requested {
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .user-card__badge--incoming {
+    background: rgba(79, 95, 204, 0.82);   /* indigo — incoming request */
+    color: #fff;
+  }
+
+  /* ── Info section (fixed bottom strip) ── */
+  .user-card__info {
+    flex-shrink: 0;
+    padding: 10px 12px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .user-card__name {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  /* Department / year line
+     TODO: Replace placeholder text once user.profile.department
+     and user.profile.year fields exist on backend.            */
+  .user-card__dept {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
     white-space: nowrap;
-}
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
 
-/* ===== Card Footer (Bottom - Glass Effect) ===== */
-.user-card__footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem 0.875rem;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.75) 0%,
-        rgba(0, 0, 0, 0.5) 50%,
-        transparent 100%
-    );
-    /* backdrop-filter: saturate(180%) blur(12px);
-    -webkit-backdrop-filter: saturate(180%) blur(12px); */
-    z-index: 2;
-}
+  .user-card__dept-accent {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
 
-/* Alternative glass effect for dark theme */
-.theme-dark .user-card__footer {
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.85) 0%,
-        rgba(0, 0, 0, 0.6) 50%,
-        transparent 100%
-    );
-}
-
-/* ===== Footer Content Layout ===== */
-.user-card__footer-content {
+  /* ── Footer row: connection count + action ── */
+  .user-card__foot {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-}
+    gap: 6px;
+    margin-top: 2px;
+  }
 
-/* ===== Connection Count (Left Side) ===== */
-.user-card__connections {
+  /* Connection count pill */
+  .user-card__conn-count {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
+    gap: 4px;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
 
-.user-card__connections i {
-    font-size: 1rem;
-    opacity: 0.9;
-}
+  .user-card__conn-count svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    flex-shrink: 0;
+  }
 
-/* ===== Action Button (Right Side) ===== */
-.user-card__action-btn {
-    padding: 0.5rem 1rem;
+  /* ── Action buttons ── */
+  .user-card__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: var(--radius-xs);
     border: none;
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    font-size: 0.8125rem;
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
     cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
+    letter-spacing: 0.1px;
+    transition:
+      background   var(--transition-fast),
+      box-shadow   var(--transition-fast),
+      transform    var(--transition-bounce),
+      color        var(--transition-fast);
+    line-height: 1;
+  }
 
-/* Primary Action Button */
-.user-card__action-btn--primary {
-    background: rgba(255, 255, 255, 0.95);
-    color: var(--text-primary);
-}
+  .user-card__btn svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    flex-shrink: 0;
+  }
 
-.user-card__action-btn--primary:hover {
-    background: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+  /* Connect — primary green */
+  .user-card__btn--connect {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+  }
+  .user-card__btn--connect:hover {
+    background: var(--primary-hover);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-green);
+  }
 
-/* Connected State */
-.user-card__action-btn--connected {
-    background: rgba(255, 255, 255, 0.25);
-    color: white;
-    border: 1.5px solid rgba(255, 255, 255, 0.8);
-    cursor: default;
-}
+  /* Message — subtle surface */
+  .user-card__btn--message {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+  }
+  .user-card__btn--message:hover {
+    background: var(--primary-dim);
+    border-color: var(--primary-border);
+    color: var(--primary-color);
+  }
 
-/* Requested/Pending State */
-.user-card__action-btn--pending {
-    background: rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.85);
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
+  /* Requested / Pending — disabled look */
+  .user-card__btn--pending {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
     cursor: not-allowed;
-}
+    opacity: 0.85;
+  }
 
-.user-card__action-btn i {
-    font-size: 1rem;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-    .user-card {
-        max-width: 100%;
-        aspect-ratio: 3 / 4; /* Slightly less tall on mobile */
-    }
-    
-    .user-card__name {
-        font-size: 1.25rem;
-    }
-    
-    .user-card__email {
-        font-size: 0.75rem;
-    }
-    
-    .user-card__footer {
-        padding: 0.875rem 0.75rem;
-    }
-    
-    .user-card__action-btn {
-        padding: 0.5rem 0.875rem;
-        font-size: 0.75rem;
-    }
-    
-    .user-card__connections {
-        font-size: 0.8125rem;
-    }
-}
-
-@media (min-width: 1200px) {
-    .user-card {
-        max-width: 300px;
-    }
-}
+  /* Ensure form wrappers around buttons have no default margin */
+  .user-card__btn-form {
+    margin: 0;
+    padding: 0;
+    display: contents;   /* form is invisible in layout */
+  }
 </style>
 
-<!-- ===== USER CARD MARKUP ===== -->
-<div class="user-card animate-on-scroll" 
-     data-user-card 
-     onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'">
-    
-    <!-- Image Wrapper (95% of card) -->
-    <div class="user-card__image-wrapper">
-        {% if user.profile and user.profile.profile_picture %}
-            <img src="{{ user.profile.profile_picture }}" 
-                 alt="{{ user.username }}" 
-                 class="user-card__image"
-                 onerror="this.style.display='none'">
-        {% else %}
-            <!-- Fallback: Gradient with initial -->
-            <!-- TODO: Later replace with random image from database -->
-            <div class="user-card__avatar-fallback">
-                {{ user.username[0].upper() }}
-            </div>
-        {% endif %}
-        
-        <!-- Header Overlay (Name + Email) -->
-        <div class="user-card__header">
-            <h3 class="user-card__name">{{ user.username }}</h3>
-            <p class="user-card__email">{{ user.email }}</p>
-        </div>
-        
-        <!-- Footer (Glass Effect with Actions) -->
-        <div class="user-card__footer" onclick="event.stopPropagation();">
-            <div class="user-card__footer-content">
-                <!-- Left: Connection Count -->
-                <div class="user-card__connections">
-                    <i class="bi bi-people-fill"></i>
-                    <span>{{ user.connection_count if user.connection_count is defined else 208 }}</span>
-                </div>
-                
-                <!-- Right: Action Button -->
-                {% if conn_status == 'connected' %}
-                    <!-- Connected - Message Button -->
-                    <form method="POST" 
-                          action="{{ url_for('messages.chat', user_id=user.id) }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="user-card__action-btn user-card__action-btn--primary">
-                            <i class="bi bi-chat-dots-fill"></i>
-                            <span>Message</span>
-                        </button>
-                    </form>
-                    
-                {% elif conn_status == 'incoming' %}
-                    <!-- Incoming Request - Pending State -->
-                    <button class="user-card__action-btn user-card__action-btn--pending" disabled>
-                        <i class="bi bi-clock"></i>
-                        <span>Pending</span>
-                    </button>
-                    
-                {% elif conn_status == 'requested' %}
-                    <!-- Request Sent - Requested State (No connecting animation) -->
-                    <button class="user-card__action-btn user-card__action-btn--pending" disabled>
-                        <i class="bi bi-check2"></i>
-                        <span>Requested</span>
-                    </button>
-                    
-                {% else %}
-                    <!-- No Connection - Add Member Button -->
-                    <form method="POST" 
-                          action="{{ url_for('connections.connections_send', target_id=user.id) }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="user-card__action-btn user-card__action-btn--primary">
-                            <i class="bi bi-plus-circle-fill"></i>
-                            <span>Connect</span>
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
-        </div>
+
+{# ── CARD MARKUP ── #}
+<div
+  class="user-card animate-on-scroll"
+  data-user-card
+  {# TODO: Set data-dept from user.profile.department once that
+     field exists on UserProfile model. Used for client-side
+     chip filtering on the discover page.                      #}
+  data-dept=""
+  onclick="window.location.href='{{ url_for('main.view_user_profile', user_id=user.id) }}'"
+  role="article"
+  aria-label="Profile card for {{ user.username }}"
+>
+
+  {# ── PHOTO AREA ── #}
+  <div class="user-card__photo">
+
+    {% if user.profile and user.profile.profile_picture %}
+      <img
+        src="{{ user.profile.profile_picture }}"
+        alt="{{ user.username }}'s profile picture"
+        loading="lazy"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      >
+      {# Hidden fallback shown if image 404s #}
+      <div class="user-card__photo-fallback" style="display:none;">
+        {{ user.username[0].upper() }}
+      </div>
+    {% else %}
+      {# No profile picture — show gradient initial #}
+      <div class="user-card__photo-fallback">
+        {{ user.username[0].upper() }}
+      </div>
+    {% endif %}
+
+    {# ── Connection status badge ── #}
+    {% if conn_status == 'connected' %}
+      <span class="user-card__badge user-card__badge--connected">Connected</span>
+    {% elif conn_status == 'requested' %}
+      <span class="user-card__badge user-card__badge--requested">Requested</span>
+    {% elif conn_status == 'incoming' %}
+      <span class="user-card__badge user-card__badge--incoming">Pending</span>
+    {% endif %}
+
+  </div>{# /user-card__photo #}
+
+
+  {# ── INFO STRIP ── #}
+  <div class="user-card__info">
+
+    <h3 class="user-card__name">{{ user.username }}</h3>
+
+    {#
+      TODO: Replace with user.profile.department + user.profile.year
+      once those fields are added to the UserProfile model.
+      Example: <span class="user-card__dept-accent">{{ user.profile.department }}</span> · {{ user.profile.year }} yr
+    #}
+    <div class="user-card__dept">
+      <span class="user-card__dept-accent">{{ user.email.split('@')[0] }}</span>
     </div>
-</div>
+
+    <div class="user-card__foot">
+
+      {# Connection count — computed by route, available on user object #}
+      <div class="user-card__conn-count">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {{ user.connection_count if user.connection_count is defined else '' }}
+      </div>
+
+      {# ── ACTION BUTTONS — stop click bubbling so card nav doesn't fire ── #}
+
+      {% if conn_status == 'connected' %}
+        {# Already connected → open chat #}
+        <form
+          class="user-card__btn-form"
+          method="POST"
+          action="{{ url_for('messages.chat', user_id=user.id) }}"
+          onclick="event.stopPropagation();"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="user-card__btn user-card__btn--message">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Msg
+          </button>
+        </form>
+
+      {% elif conn_status == 'incoming' %}
+        {# They sent us a request — show as pending, non-actionable here #}
+        <button
+          class="user-card__btn user-card__btn--pending"
+          disabled
+          onclick="event.stopPropagation();"
+          aria-label="Incoming connection request"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Pending
+        </button>
+
+      {% elif conn_status == 'requested' %}
+        {# We already sent a request — show as sent #}
+        <button
+          class="user-card__btn user-card__btn--pending"
+          disabled
+          onclick="event.stopPropagation();"
+          aria-label="Connection request sent"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Sent
+        </button>
+
+      {% else %}
+        {# No connection — send request #}
+        <form
+          class="user-card__btn-form"
+          method="POST"
+          action="{{ url_for('connections.connections_send', target_id=user.id) }}"
+          onclick="event.stopPropagation();"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="user-card__btn user-card__btn--connect">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5"  y1="12" x2="19" y2="12"/>
+            </svg>
+            Add
+          </button>
+        </form>
+      {% endif %}
+
+    </div>{# /user-card__foot #}
+  </div>{# /user-card__info #}
+
+</div>{# /user-card #}

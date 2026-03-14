@@ -1,347 +1,818 @@
+{# ============================================================
+   search.html  —  Live Search Page
+   Extends: base.html  (provides topbar, sidebar, bottom-nav,
+            flash messages, Bootstrap, global.css, global.js)
+
+   Backend variables expected from the Flask route:
+     • query   — str, pre-filled search term from ?q= param
+                 (empty string if no query)
+
+   API endpoint consumed:
+     • GET /api/search?q=<str>&offset=<int>&limit=<int>
+       Returns: { results: [{html: "<str>"}], has_more: <bool> }
+       Each html string = server-rendered components/user_card.html
+       NOTE: html string begins with a <style> block then the <div>
+             — injection must handle multiple root elements.
+
+   FIX (v2): card injection now uses <template> + DocumentFragment
+   to append ALL child nodes (style + card div) rather than
+   firstElementChild which was silently grabbing <style> and
+   dropping the actual card element.
+============================================================ #}
+
 {% extends "base.html" %}
 
-{% block title %}Search - {{ query }}{% endblock %}
+{% block title %}Search{% if query %} — {{ query }}{% endif %}{% endblock %}
+
 
 {% block extra_css %}
 <style>
-.search-header {
-    padding: 2.5rem 0;
-    text-align: center;
-}
 
-.search-title {
-    font-size: clamp(2rem, 4vw, 2.5rem);
+  /* ============================================================
+     SEARCH PAGE — scoped styles
+     Color intent map (from global.css palette):
+       --primary-color / green  → active chips, connect CTAs, focus rings
+       --indigo-color           → result count number (info/identity)
+       --amber-color            → query highlight, empty-state icon
+       --coral-color            → clear button hover (remove/cancel)
+       --teal-color             → live dot, end-label, loading indicator
+  ============================================================ */
+
+  .search-page {
+    padding-top: 20px;
+    padding-bottom: calc(var(--bottom-nav-height, 72px) + 32px);
+  }
+
+
+  /* ── HERO ────────────────────────────────────────────────── */
+  .search-hero {
+    padding: 0 var(--content-padding) 20px;
+    animation: search-rise 0.36s ease both;
+  }
+
+  .search-hero__eyebrow {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
     font-weight: 700;
-    margin-bottom: 1rem;
-}
+    color: var(--teal-color);       /* teal = "live / real-time" signal */
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-.search-subtitle {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
+  /* Pulsing dot — teal, reinforces "live search" feeling */
+  .search-hero__live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal-color);
+    display: inline-block;
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
 
-.search-wrapper {
-    max-width: 600px;
-    margin: 0 auto 2rem;
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);   }
+    50%       { opacity: 0.4; transform: scale(1.5); }
+  }
+
+  .search-hero__title {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.4px;
+    line-height: 1.18;
+    margin-bottom: 6px;
+  }
+
+  /* Amber for the search term — warm, draws the eye */
+  .search-hero__query {
+    color: var(--amber-color);
+    font-style: italic;
+  }
+
+  .search-hero__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+
+  /* ── SEARCH BAR ──────────────────────────────────────────── */
+  .search-bar-wrap {
+    padding: 0 var(--content-padding);
     position: relative;
-}
+    margin-bottom: 14px;
+    animation: search-rise 0.38s ease both;
+    animation-delay: 0.04s;
+  }
 
-.search-icon {
+  .search-bar-wrap__input {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    padding: 0 50px 0 18px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    outline: none;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow   var(--transition-fast);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .search-bar-wrap__input::placeholder { color: var(--text-muted); }
+
+  .search-bar-wrap__input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-dim);
+  }
+
+  /* Coral on hover — signals "remove / cancel" action */
+  .search-bar-wrap__clear {
     position: absolute;
-    left: 1.25rem;
+    right: calc(var(--content-padding) + 12px);
     top: 50%;
     transform: translateY(-50%);
+    width: 28px; height: 28px;
+    border-radius: var(--radius-full);
+    border: none;
+    background: var(--bg-tertiary);
     color: var(--text-muted);
-    font-size: 1.125rem;
-    pointer-events: none;
-}
-
-.search-input {
-    width: 100%;
-    padding: 1rem 1rem 1rem 3.25rem;
-    border-radius: var(--border-radius-lg);
-    border: 2px solid var(--border-color);
-    background: var(--bg-secondary);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background: var(--bg-primary);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-}
-
-.results-header {
-    display: flex;
-    justify-content: space-between;
+    display: none;
     align-items: center;
-    margin: 2rem 0 1.5rem;
-}
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      color      var(--transition-fast);
+    padding: 0;
+  }
 
-.results-count {
-    font-size: 1rem;
-    color: var(--text-secondary);
-}
+  .search-bar-wrap__clear:hover {
+    background: var(--coral-dim);
+    color: var(--coral-color);
+  }
 
-.users-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-}
+  .search-bar-wrap__clear svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.2; stroke-linecap: round;
+  }
 
-.user-card {
-    padding: 2rem 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.user-card::before {
-    content: '';
+  .search-bar-wrap__icon {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
+    right: calc(var(--content-padding) + 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px; height: 17px;
+    stroke: var(--text-muted);
+    fill: none; stroke-width: 1.8; stroke-linecap: round;
+    pointer-events: none;
+  }
 
-.user-card:hover::before {
-    transform: scaleX(1);
-}
 
-.user-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
-}
-
-.user-avatar {
-    width: 90px;
-    height: 90px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
+  /* ── FILTER CHIPS ────────────────────────────────────────── */
+  /* TODO: Wire to ?dept= once /api/search supports it server-side */
+  .search-filters {
+    padding: 0 var(--content-padding);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: white;
-    margin: 0 auto 1.25rem;
-    box-shadow: var(--shadow-md);
-}
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 16px;
+    animation: search-rise 0.40s ease both;
+    animation-delay: 0.07s;
+  }
+  .search-filters::-webkit-scrollbar { display: none; }
 
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 3rem 0;
-}
-
-.page-link {
-    padding: 0.75rem 1.25rem;
-    border: 2px solid var(--border-color);
+  .search-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-subtle);
     background: var(--bg-secondary);
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    transition: all 0.3s ease;
-}
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+      background    var(--transition-fast),
+      border-color  var(--transition-fast),
+      color         var(--transition-fast),
+      box-shadow    var(--transition-fast);
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    user-select: none;
+  }
 
-.page-link:hover,
-.page-link.active {
+  .search-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-dim);
+  }
+
+  .search-chip.active {
     border-color: var(--primary-color);
     background: var(--primary-color);
-    color: white;
-}
+    color: #fff;
+    box-shadow: var(--shadow-green);
+  }
 
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    grid-column: 1 / -1;
-}
 
-.loading {
-    text-align: center;
-    padding: 2rem;
+  /* ── STATS ROW ───────────────────────────────────────────── */
+  .search-stats {
+    padding: 0 var(--content-padding);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-height: 22px;
+  }
+
+  .search-stats__text {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     color: var(--text-muted);
-}
+    font-weight: 500;
+    flex: 1;
+  }
 
-@media (max-width: 768px) {
-    .users-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-    
-    .results-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-    }
-}
+  /* Indigo count — "information / identity" colour role */
+  .search-stats__count {
+    font-family: var(--font-display);
+    color: var(--indigo-color);
+    font-weight: 700;
+  }
+
+  /* Teal live dot — matches eyebrow, signals active fetch */
+  .search-stats__live {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--teal-color);
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+    animation: live-pulse 1.1s ease-in-out infinite;
+  }
+
+
+  /* ── RESULTS GRID ────────────────────────────────────────── */
+  .search-grid {
+    padding: 0 var(--content-padding);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 360px) {
+    .search-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 640px) {
+    .search-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  }
+  @media (min-width: 1024px) {
+    .search-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  }
+
+
+  /* ── SKELETON CARDS ──────────────────────────────────────── */
+  .search-skeleton {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-skeleton__photo {
+    flex: 1;
+    background: linear-gradient(90deg,
+      var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
+
+  .search-skeleton__info {
+    padding: 10px 12px 12px;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+
+  .search-skeleton__line {
+    height: 10px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg,
+      var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
+  .search-skeleton__line--short { width: 55%; }
+  .search-skeleton__line--xs    { width: 35%; height: 8px; }
+
+  @keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+
+  /* ── EMPTY STATE ─────────────────────────────────────────── */
+  .search-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 52px 24px;
+    animation: search-rise 0.35s ease both;
+  }
+
+  .search-empty__icon {
+    font-size: 34px; display: block; margin-bottom: 14px;
+    color: var(--amber-color);   /* amber = gentle "nothing found" warning */
+    opacity: 0.7;
+  }
+
+  .search-empty__title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .search-empty__text {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .search-empty__keyword {
+    color: var(--amber-color);
+    font-weight: 600;
+    font-style: italic;
+  }
+
+
+  /* ── END-OF-RESULTS DIVIDER ──────────────────────────────── */
+  /* Teal rule — calm, conclusive, distinct from page chrome */
+  .search-end-label {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 24px 0 8px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--teal-color);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .search-end-label::before,
+  .search-end-label::after {
+    content: '';
+    flex: 1; max-width: 60px; height: 1px;
+    background: var(--teal-border);
+    border-radius: 1px;
+  }
+
+
+  /* ── SCROLL SENTINEL ─────────────────────────────────────── */
+  .search-sentinel { height: 1px; grid-column: 1 / -1; }
+
+
+  /* ── ENTRY ANIMATION ─────────────────────────────────────── */
+  @keyframes search-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
 </style>
 {% endblock %}
 
 
-
-
 {% block body %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="search-header animate-on-scroll">
-        <h1 class="search-title">
-            <i class="bi bi-search me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-            Discover Your Community
-        </h1>
-        <p class="search-subtitle">
-            {% if query %}
-                Showing results for "<strong>{{ query }}</strong>"
-            {% else %}
-                Find People with similar interests and expand your campus network
-            {% endif %}
-        </p>
-        
-        <!-- Search Bar (pre-filled) -->
-        <div class="search-wrapper">
-            <i class="bi bi-search search-icon"></i>
-            <input 
-                type="text" 
-                class="search-input" 
-                id="searchInput"
-                value="{{ query }}"
-                placeholder="Search by name, department, bio..."
-            >
-        </div>
+<div class="search-page">
+
+  {# ── HERO ── #}
+  <div class="search-hero">
+    <div class="search-hero__eyebrow">
+      <span class="search-hero__live-dot" aria-hidden="true"></span>
+      Live Search
+    </div>
+    <h1 class="search-hero__title">
+      {% if query %}
+        Results for <span class="search-hero__query">"{{ query }}"</span>
+      {% else %}
+        Find Your People
+      {% endif %}
+    </h1>
+    <p class="search-hero__sub">
+      {% if query %}
+        Searching across names, emails and interests.
+      {% else %}
+        Search by name, department or interest to connect.
+      {% endif %}
+    </p>
+  </div>
+
+
+  {# ── SEARCH BAR — id="searchInput" kept for backend compat ── #}
+  <div class="search-bar-wrap">
+    <input
+      class="search-bar-wrap__input"
+      type="text"
+      id="searchInput"
+      value="{{ query }}"
+      placeholder="Search by name, department, bio…"
+      autocomplete="off"
+      aria-label="Search students"
+    >
+    <button class="search-bar-wrap__clear" id="searchClearBtn"
+            aria-label="Clear search" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="18" y1="6"  x2="6"  y2="18"/>
+        <line x1="6"  y1="6"  x2="18" y2="18"/>
+      </svg>
+    </button>
+    <svg class="search-bar-wrap__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+    </svg>
+  </div>
+
+
+  {# ── FILTER CHIPS ── TODO: wire to ?dept= once backend supports it ── #}
+  <div class="search-filters" id="searchFilterChips"
+       role="group" aria-label="Filter by department">
+    <div class="search-chip active" data-filter="all"    role="button" tabindex="0">All</div>
+    <div class="search-chip"        data-filter="cse"    role="button" tabindex="0">CSE</div>
+    <div class="search-chip"        data-filter="ece"    role="button" tabindex="0">ECE</div>
+    <div class="search-chip"        data-filter="mech"   role="button" tabindex="0">Mech</div>
+    <div class="search-chip"        data-filter="design" role="button" tabindex="0">Design</div>
+    <div class="search-chip"        data-filter="mba"    role="button" tabindex="0">MBA</div>
+    <div class="search-chip"        data-filter="civil"  role="button" tabindex="0">Civil</div>
+  </div>
+
+
+  {# ── STATS ROW ── #}
+  <div class="search-stats">
+    <span class="search-stats__text" id="statsText">&nbsp;</span>
+    <span class="search-stats__live" id="loadingDot" aria-hidden="true"></span>
+  </div>
+
+
+  {# ── RESULTS GRID ── #}
+  <div class="search-grid" id="resultsContainer"
+       aria-live="polite" aria-label="Search results">
+
+    {# Skeleton cards — removed on first API response #}
+    <div class="search-skeleton" id="sk1" aria-hidden="true">
+      <div class="search-skeleton__photo"></div>
+      <div class="search-skeleton__info">
+        <div class="search-skeleton__line"></div>
+        <div class="search-skeleton__line search-skeleton__line--short"></div>
+        <div class="search-skeleton__line search-skeleton__line--xs"></div>
+      </div>
+    </div>
+    <div class="search-skeleton" id="sk2" aria-hidden="true">
+      <div class="search-skeleton__photo"></div>
+      <div class="search-skeleton__info">
+        <div class="search-skeleton__line"></div>
+        <div class="search-skeleton__line search-skeleton__line--short"></div>
+        <div class="search-skeleton__line search-skeleton__line--xs"></div>
+      </div>
+    </div>
+    <div class="search-skeleton" id="sk3" aria-hidden="true">
+      <div class="search-skeleton__photo"></div>
+      <div class="search-skeleton__info">
+        <div class="search-skeleton__line"></div>
+        <div class="search-skeleton__line search-skeleton__line--short"></div>
+        <div class="search-skeleton__line search-skeleton__line--xs"></div>
+      </div>
+    </div>
+    <div class="search-skeleton" id="sk4" aria-hidden="true">
+      <div class="search-skeleton__photo"></div>
+      <div class="search-skeleton__info">
+        <div class="search-skeleton__line"></div>
+        <div class="search-skeleton__line search-skeleton__line--short"></div>
+        <div class="search-skeleton__line search-skeleton__line--xs"></div>
+      </div>
     </div>
 
-<div id="resultsContainer" class="users-grid">
-        <!-- ADD THIS EMPTY STATE FIRST -->
-    <div id="emptyState" class="empty-state text-center py-5" style="display: none; grid-column: 1 / -1;">
-        <div class="empty-icon mb-3">
-            <i class="bi bi-search fs-1 text-muted"></i>
-        </div>
-        <h4 class="text-muted mb-2">No results found</h4>
-        <p class="text-muted mb-0">Try different keywords or clear the search</p>
-    </div>
+    {# Sentinel — IntersectionObserver triggers next page load #}
+    <div class="search-sentinel" id="scrollSentinel" aria-hidden="true"></div>
 
-    <!-- here load the search results: By default load the last active users too (like in discover)-->
+  </div>{# /search-grid #}
 
-</div>
-
-<div id="loadingSpinner" class="loading" style="display:none;">
-    Loading…
-</div>
-
-
-
+</div>{# /search-page #}
 {% endblock %}
 
 
-<!-- Connecting to the js -->
- {% block extra_js %}
+{% block extra_js %}
+{# Keep original main_script.js load — untouched #}
 <script src="{{ url_for('main.static', filename='js/main_script.js') }}"></script>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('searchInput');
-    const resultsContainer = document.getElementById('resultsContainer');
-    const spinner = document.getElementById("loadingSpinner");
+(function () {
+  "use strict";
 
-    let currentQuery = "";
-    let currentOffset = 0;
-    let loading = false;
-    let hasMore = true;
-    const LIMIT = 20 ;
+  /* ============================================================
+     SEARCH PAGE v2 — infinite scroll + live search
 
-    // small helper: debounce
-    function debounce(fn, delay){ 
-        let t; 
-        return (...args)=>{ 
-            clearTimeout(t); 
-            t = setTimeout(()=>fn(...args), delay); 
-        }; 
+     ROOT CAUSE FIX:
+       The API's item.html string is structured as:
+         \n\n<style>...card CSS...</style>\n\n<div data-user-card ...>
+       The previous version used:
+         tmp.innerHTML = item.html;
+         const cardEl = tmp.firstElementChild;   // grabbed <style> ❌
+         resultsContainer.insertBefore(cardEl, sentinel);
+       This silently dropped the actual card <div> every time.
+
+       Fix: parse via <template> element and insert ALL children
+       (both <style> and <div>) using a DocumentFragment.
+       The <style> block is benign when injected multiple times
+       (browser deduplicates identical rules) and the card <div>
+       is now correctly placed in the grid.
+  ============================================================ */
+
+  /* ── DOM refs ── */
+  const input            = document.getElementById('searchInput');
+  const clearBtn         = document.getElementById('searchClearBtn');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const statsText        = document.getElementById('statsText');
+  const loadingDot       = document.getElementById('loadingDot');
+  const sentinel         = document.getElementById('scrollSentinel');
+  const chips            = document.querySelectorAll('.search-chip');
+
+  /* ── State — same variable names as old code ── */
+  let currentQuery  = "{{ query | e }}";
+  let currentOffset = 0;
+  let loading       = false;
+  let hasMore       = true;
+  let totalLoaded   = 0;
+  let activeFilter  = 'all';
+  const LIMIT       = 20;
+
+  /* ── Debounce helper (same as old code) ── */
+  function debounce(fn, delay) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+  }
+
+  /* ── Build API URL ── */
+  function buildUrl(q, offset) {
+    let url = `/api/search?q=${encodeURIComponent(q)}&offset=${offset}&limit=${LIMIT}`;
+    /*
+      TODO: Uncomment once /api/search supports ?dept= filtering.
+      if (activeFilter !== 'all') url += `&dept=${encodeURIComponent(activeFilter)}`;
+    */
+    return url;
+  }
+
+  /* ── Remove skeleton placeholders ── */
+  function removeSkeletons() {
+    ['sk1','sk2','sk3','sk4'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+  }
+
+  /* ── Loading dot visibility ── */
+  function setLoading(state) {
+    loading = state;
+    loadingDot.style.opacity = state ? '1' : '0';
+  }
+
+  /* ── Stats label — indigo count + muted label ── */
+  function updateStats() {
+    if (totalLoaded === 0) {
+      statsText.innerHTML = currentQuery
+        ? `No results for <strong>"${currentQuery}"</strong>`
+        : '&nbsp;';
+    } else {
+      statsText.innerHTML =
+        `<span class="search-stats__count">${totalLoaded}</span> ` +
+        `${totalLoaded === 1 ? 'person' : 'people'} found`;
+    }
+  }
+
+  /* ── Empty state ── */
+  function showEmpty() {
+    removeEmpty();
+    const kw = currentQuery
+      ? `<span class="search-empty__keyword">"${currentQuery}"</span>`
+      : 'your search';
+    const el = document.createElement('div');
+    el.id = 'searchEmptyState';
+    el.className = 'search-empty';
+    el.innerHTML =
+      `<i class="bi bi-search search-empty__icon" aria-hidden="true"></i>` +
+      `<h2 class="search-empty__title">No results found</h2>` +
+      `<p class="search-empty__text">No students matched ${kw}.<br>` +
+      `Try different keywords or clear the filter.</p>`;
+    resultsContainer.insertBefore(el, sentinel);
+  }
+
+  function removeEmpty() {
+    const el = document.getElementById('searchEmptyState');
+    if (el) el.remove();
+  }
+
+  /* ── End-of-results label ── */
+  function showEndLabel() {
+    if (document.getElementById('searchEndLabel')) return;
+    const el = document.createElement('div');
+    el.id = 'searchEndLabel';
+    el.className = 'search-end-label';
+    el.textContent = "You've seen everyone";
+    resultsContainer.insertBefore(el, sentinel);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+  }
+
+  function removeEndLabel() {
+    const el = document.getElementById('searchEndLabel');
+    if (el) el.remove();
+  }
+
+  /* ── Stagger animation for a batch of card elements ── */
+  function animateCards(cardEls) {
+    cardEls.forEach((card, i) => {
+      card.style.opacity   = '0';
+      card.style.transform = 'translateY(10px)';
+      card.style.transition =
+        `opacity 0.3s ease ${i * 0.04}s, transform 0.3s ease ${i * 0.04}s`;
+      requestAnimationFrame(() => {
+        card.style.opacity   = '1';
+        card.style.transform = 'translateY(0)';
+      });
+    });
+  }
+
+  /* ── Client-side chip filter on loaded cards ── */
+  function applyChipFilter() {
+    resultsContainer.querySelectorAll('[data-user-card]').forEach(card => {
+      const dept = (card.dataset.dept || '').toLowerCase();
+      card.style.display =
+        (activeFilter === 'all' || dept === activeFilter) ? '' : 'none';
+    });
+  }
+
+  /* ============================================================
+     THE FIX — injectHtml(htmlString)
+
+     Uses <template> to parse the full html string safely.
+     <template>.content is a DocumentFragment containing ALL
+     parsed child nodes — in this case: [<style>, <div>].
+     We clone it, find the card element(s) for animation,
+     then insert the whole fragment before the sentinel so
+     nothing gets dropped.
+  ============================================================ */
+  function injectHtml(htmlString) {
+    const tpl     = document.createElement('template');
+    tpl.innerHTML = htmlString;
+
+    const fragment = tpl.content.cloneNode(true);
+
+    /* Grab card elements for animation BEFORE inserting
+       (once inserted into DOM the fragment is emptied)   */
+    const cardEls = Array.from(
+      fragment.querySelectorAll('[data-user-card]')
+    );
+
+    /* Insert entire fragment (style + card div) before sentinel */
+    resultsContainer.insertBefore(fragment, sentinel);
+
+    return cardEls;
+  }
+
+  /* ============================================================
+     loadMore — core fetch loop
+  ============================================================ */
+  async function loadMore(reset = false) {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+
+    if (reset) {
+      currentOffset = 0;
+      hasMore       = true;
+      totalLoaded   = 0;
+      resultsContainer.querySelectorAll('[data-user-card]').forEach(c => c.remove());
+      removeEmpty();
+      removeEndLabel();
     }
 
-
-    async function loadMore(reset = false) {
-        if (loading || !hasMore) return;
-
-        loading = true;  
-        spinner.style.display = "block";  
-
-        
-        if (reset) {
-            currentOffset = 0;
-            hasMore = true;
-            resultsContainer.innerHTML = "";  // Clears everything including emptyState
-        }
-
-
-        const query = currentQuery || document.getElementById('searchInput').value.trim();
-        const url = `/api/search?q=${encodeURIComponent(currentQuery)}&offset=${currentOffset}&limit=${LIMIT}`;
-        const resp = await fetch(url);
-
-        if (!resp.ok) {
-            spinner.style.display = "none";
-            loading = false;
-            return;
-        }
-
-        const data = await resp.json();
-
-        if (data.results.length > 0) {
-            // Hide empty state when we have results
-            const emptyState = document.getElementById('emptyState');
-            if (emptyState) emptyState.style.display = 'none';
-
-
-            data.results.forEach(item => {
-                resultsContainer.insertAdjacentHTML("beforeend", item.html);
-            });
-
-            currentOffset += data.results.length;
-            hasMore = data.has_more;
-        } else {
-            hasMore = false;
-            // Show empty state when NO results
-            const emptyState = document.getElementById('emptyState');
-            if (emptyState) emptyState.style.display = 'block';
-        }
-
-        
-
-        spinner.style.display = "none";
-        loading = false;
+    let resp;
+    try {
+      resp = await fetch(buildUrl(currentQuery, currentOffset));
+    } catch {
+      setLoading(false);
+      return;
     }
 
-    // Initial load
+    if (!resp.ok) { setLoading(false); return; }
+
+    const data = await resp.json();
+
+    removeSkeletons();  /* remove on first real response */
+
+    if (data.results && data.results.length > 0) {
+      removeEmpty();
+
+      const allNewCards = [];
+      data.results.forEach(item => {
+        const cards = injectHtml(item.html);
+        allNewCards.push(...cards);
+      });
+
+      currentOffset += data.results.length;
+      totalLoaded   += data.results.length;
+      hasMore        = data.has_more;
+
+      animateCards(allNewCards);
+      applyChipFilter();
+
+      if (!hasMore) showEndLabel();
+
+    } else {
+      hasMore = false;
+      if (totalLoaded === 0) showEmpty();
+      else showEndLabel();
+    }
+
+    updateStats();
+    setLoading(false);
+  }
+
+  /* ── Reset + reload helper ── */
+  function resetAndLoad(query) {
+    currentQuery  = query;
+    currentOffset = 0;
+    hasMore       = true;
+    loading       = false;
     loadMore(true);
+  }
 
-    //helper function to reset the result
-    function resetAndLoad(query) {
-        currentQuery = query;
-        currentOffset = 0;
-        hasMore = true;
-        loading = false;
-        resultsContainer.innerHTML = "";
-        loadMore();
-    }
+  /* ============================================================
+     IntersectionObserver — replaces scroll-event polling
+     rootMargin 300px bottom = start loading before user hits end
+  ============================================================ */
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !loading && hasMore) loadMore(false);
+      });
+    },
+    { rootMargin: '0px 0px 300px 0px', threshold: 0 }
+  );
+  observer.observe(sentinel);
 
-    // Search input
-    input.addEventListener("input", debounce(e => {
-        const q = e.target.value.trim();
-        resetAndLoad(q);
-    }, 300));
+  /* ── Search input (300ms debounce — same as old code) ── */
+  input.addEventListener('input', debounce(e => {
+    const q = e.target.value.trim();
+    clearBtn.style.display = q ? 'flex' : 'none';
+    resetAndLoad(q);
+  }, 300));
 
-        
+  /* ── Clear button ── */
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    input.focus();
+    resetAndLoad('');
+  });
 
+  /* Pre-fill state if ?q= was in URL */
+  if (input.value.trim()) clearBtn.style.display = 'flex';
 
-    // Infinite scroll
-    window.addEventListener("scroll", debounce(() => {
-        if ((window.innerHeight + window.scrollY >= document.body.offsetHeight - 800)) {
-        loadMore(false);
-           }
-    }, 150));
+  /* ── Chip filters ── */
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = chip.dataset.filter || 'all';
+      applyChipFilter();          /* instant feedback on loaded cards */
+      resetAndLoad(currentQuery); /* re-fetch with new filter context */
+    });
 
+    chip.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chip.click(); }
+    });
+  });
 
+  /* ── Initial load ── */
+  loadMore(true);
 
-});
+})();
 </script>
-
-
-
-
 {% endblock %}
-
-

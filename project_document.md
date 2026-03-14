@@ -1666,6 +1666,18 @@ Remaining bugs:
     ❌ A whole clensification needed
 
 
+#### Discover page (search.html)
+    - Upgraded more dynamically (is responsive)
+    - Also updated the supporting user_card.html file
+    ❌ cards too large
+    ❌ user.connections not showing
+    ❌ can be more colorful 
+    ⚠️ Most of these modifications are to be done in `user_card.html` file
+    ⚠️ There are some TODO tags too
+
+
+
+
 
 
 
