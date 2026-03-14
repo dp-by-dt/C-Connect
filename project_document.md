@@ -1697,6 +1697,13 @@ Remaining bugs:
     ⚠️ Just a problem when comes back to the chat page, the nav bars of the base.html file is getting loaded (due to cache). But not much of a problem right now
 
 
+#### Campus board
+    - Updated the page for good
+    - Also update the _vibe_widget.html file
+    - Also the colors for the dominimat option from the vibe/routes file
+    ⚠️ Some color bleeding is a ui problem that needs fixing (but can live with that)
+    ⚠️ can improve by adding time remaining for the vibe section, collapsing it once voted and giving more life for the campus events
+
 
 
 

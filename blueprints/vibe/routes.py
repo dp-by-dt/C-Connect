@@ -70,11 +70,11 @@ def update_daily_state(question):
 
     # 🎨 simple color mapping (v1)
     color_map = {
-        0: "#4CAF50",  # green
-        1: "#FFC107",  # amber
-        2: "#F44336",  # red
-        3: "#9C27B0",  # purple (future)
-        4: "#2196F3",  # blue (future)
+        0: "#2d7a3a",  # forest green
+        1: "#4f5fcc",  # indigo blue
+        2: "#d97706",  # warm amber
+        3: "#0d8a8a",  # teal
+        4: "#7c5cbf",  # soft violet
     }
 
     state = VibeDailyState.query.get(today)
