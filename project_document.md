@@ -1705,6 +1705,13 @@ Remaining bugs:
     ⚠️ can improve by adding time remaining for the vibe section, collapsing it once voted and giving more life for the campus events
 
 
+#### Notification page (notif_list)
+    - Corrected it. But not really better. but just good.
+    ❌ The size of the top and bottom nav bars from the base.html file is a bit off
+    ❌ Clicking notifications doesn't take you to the relevant page
+    ❌❌ Still no notification option for messages
+    ⚠️ Need to connect the notifications with notification type
+
 
 
 

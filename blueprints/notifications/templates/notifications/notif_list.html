@@ -1,254 +1,602 @@
+{# ============================================================
+   notifications.html  —  Notifications Page
+   Extends: base.html
+
+   Backend variables (from notifications route):
+     • notifs     — list of Notification objects, newest first
+                    .id, .message, .type, .is_read,
+                    .created_at (UTC naive datetime),
+                    .sender_id (optional, may be None)
+
+   Global Jinja functions:
+     • to_ist(dt) — converts UTC datetime to IST datetime
+     • csrf_token()
+
+   Routes used:
+     • POST url_for('notifications.mark_all_read')
+            Marks all notifications as read.
+            No per-notification route exists — tapping a
+            notification fires mark_all_read silently via
+            fetch, then navigates to the relevant page.
+
+   Notification types (n.type values):
+     'connection'  → green  → links to connections page
+     'message'     → indigo → links to inbox
+     'like'        → coral  → no deep link (TODO: post link)
+     'board'       → amber  → links to campus board
+     default       → teal   → no navigation
+
+   Grouping:
+     Jinja groups notifications into Today / Yesterday / Earlier
+     by comparing to_ist(n.created_at).date() with today's IST date.
+
+   Auto mark-all-read:
+     Fired on beforeunload (same as old code) AND when user
+     taps a notification (silent fetch, then navigate).
+     This avoids needing a per-notification mark-read route.
+============================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Notifications{% endblock %}
 
+
 {% block extra_css %}
 <style>
-.notifications-header {
-    padding: 2.5rem 0;
-}
 
-.notifications-title {
-    font-size: clamp(2rem, 4vw, 2.5rem);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
+  /* ============================================================
+     NOTIFICATIONS PAGE — scoped styles
+     Color intent:
+       --primary / green  → connection type notifications,
+                            mark-all CTA, unread left bar
+       --indigo-color     → message notifications, unread count
+       --coral-color      → like notifications, unread dot
+       --amber-color      → board notifications, time labels
+       --teal-color       → generic/fallback notifications
+  ============================================================ */
 
-.notifications-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.125rem;
-}
-
-.notifications-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-}
-
-.notif-stats {
-    color: var(--text-secondary);
-    font-size: 0.9375rem;
-}
-
-.notif-item {
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
-    position: relative;
-}
-
-.notif-item.unread {
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.05), transparent);
-    border-left-color: var(--primary-color);
-}
-
-.notif-item.unread::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    animation: pulse-dot 2s infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% {
-        opacity: 1;
-        transform: translateY(-50%) scale(1);
+    .notif-page {
+        padding-top: 12px;
+        padding-bottom: calc(var(--bottom-nav-height, 72px) + 24px);
     }
-    50% {
-        opacity: 0.5;
-        transform: translateY(-50%) scale(1.2);
-    }
-}
 
-.notif-item:hover {
-    transform: translateX(8px);
-    box-shadow: var(--shadow-md);
-}
 
-.notif-content {
+  /* ── HERO + ACTIONS BAR ──────────────────────────────────── */
+  .notif-hero {
+    padding: 12px var(--content-padding) 14px;
     display: flex;
     align-items: flex-start;
-    gap: 1.25rem;
-}
+    justify-content: space-between;
+    gap: 12px;
+    animation: notif-rise 0.34s ease both;
+  }
 
-.notif-icon {
-    width: 45px;
-    height: 45px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-    flex-shrink: 0;
-}
+  .notif-hero__left {}
 
-.notif-body {
-    flex: 1;
-}
+  .notif-hero__eyebrow {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 3px;
+  }
 
-.notif-message {
-    font-size: 0.9375rem;
+  .notif-hero__title {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl); font-weight: 800;
     color: var(--text-primary);
-    line-height: 1.6;
-    margin-bottom: 0.5rem;
-}
+    letter-spacing: -0.4px; line-height: 1.18;
+    display: flex; align-items: center; gap: 10px;
+    margin: 0;
+  }
 
-.notif-time {
-    font-size: 0.8125rem;
+  /* Unread count pill — coral, signals action needed */
+  .notif-hero__unread-pill {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--coral-color);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: var(--text-sm); font-weight: 700;
+    line-height: 1;
+    transition: opacity var(--transition-base),
+                transform var(--transition-base);
+  }
+
+  .notif-hero__unread-pill.hidden {
+    opacity: 0; pointer-events: none;
+    transform: scale(0.8);
+  }
+
+  /* Mark all read — indigo text button, top right */
+  .notif-hero__mark-all {
+    font-family: var(--font-display);
+    font-size: var(--text-sm); font-weight: 700;
+    color: var(--indigo-color);
+    cursor: pointer; white-space: nowrap;
+    padding-top: 6px;
+    transition: color var(--transition-fast);
+    border: none; background: none;
+  }
+
+  .notif-hero__mark-all:hover { color: var(--indigo-hover); }
+
+
+  /* ── TIME GROUP LABEL ────────────────────────────────────── */
+  .notif-group-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px var(--content-padding) 8px;
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
     color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    text-transform: uppercase; letter-spacing: 1px;
+  }
 
-.notif-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
+  .notif-group-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border-subtle);
+  }
 
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-}
 
-.empty-icon {
-    font-size: 4rem;
-    color: var(--text-muted);
-    opacity: 0.5;
-    margin-bottom: 1.5rem;
-}
+  /* ── NOTIFICATION LIST ───────────────────────────────────── */
+  .notif-list {
+    padding: 0 var(--content-padding);
+    display: flex; flex-direction: column;
+    gap: 4px;
+  }
 
-.empty-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+
+  /* ── NOTIFICATION ROW ────────────────────────────────────── */
+  .notif-row {
+    display: flex; align-items: flex-start;
+    gap: 13px; padding: 13px 14px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    position: relative;
+    transition:
+      background  var(--transition-fast),
+      transform   var(--transition-fast),
+      box-shadow  var(--transition-fast);
+    animation: notif-rise 0.40s ease both;
+    text-decoration: none; color: inherit;
+  }
+
+  .notif-row:nth-child(1) { animation-delay: 0.04s; }
+  .notif-row:nth-child(2) { animation-delay: 0.08s; }
+  .notif-row:nth-child(3) { animation-delay: 0.12s; }
+  .notif-row:nth-child(4) { animation-delay: 0.16s; }
+  .notif-row:nth-child(5) { animation-delay: 0.20s; }
+  .notif-row:nth-child(6) { animation-delay: 0.24s; }
+
+  /* Unread state — elevated surface */
+  .notif-row--unread {
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* Left accent bar — primary green for unread */
+  .notif-row--unread::before {
+    content: '';
+    position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: var(--primary-color);
+  }
+
+  .notif-row:hover {
+    background: var(--bg-secondary);
+    transform: translateX(2px);
+  }
+
+  .notif-row--unread:hover {
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+  }
+
+
+  /* ── ICON BUBBLE ─────────────────────────────────────────── */
+  .notif-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative;
+  }
+
+  /* Type color variants */
+  .notif-icon--connection { background: var(--primary-dim); }
+  .notif-icon--message    { background: var(--indigo-dim); }
+  .notif-icon--like       { background: var(--coral-dim); }
+  .notif-icon--board      { background: var(--amber-dim); }
+  .notif-icon--default    { background: var(--teal-dim); }
+
+  .notif-icon svg {
+    width: 20px; height: 20px; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .notif-icon--connection svg { stroke: var(--primary-color); }
+  .notif-icon--message    svg { stroke: var(--indigo-color); }
+  .notif-icon--like       svg { stroke: var(--coral-color); }
+  .notif-icon--board      svg { stroke: var(--amber-color); }
+  .notif-icon--default    svg { stroke: var(--teal-color); }
+
+  /* Unread dot on icon — coral */
+  .notif-row--unread .notif-icon::after {
+    content: '';
+    position: absolute; top: 1px; right: 1px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--coral-color);
+    border: 2px solid var(--bg-secondary);
+  }
+
+
+  /* ── NOTIFICATION CONTENT ────────────────────────────────── */
+  .notif-content { flex: 1; min-width: 0; padding-top: 2px; }
+
+  .notif-message {
+    font-family: var(--font-body);
+    font-size: var(--text-base); font-weight: 400;
     color: var(--text-secondary);
-    margin-bottom: 0.75rem;
-}
+    line-height: 1.5; margin-bottom: 5px;
+  }
 
-.empty-text {
+  .notif-row--unread .notif-message {
+    color: var(--text-primary); font-weight: 500;
+  }
+
+  .notif-message strong {
+    color: var(--text-primary); font-weight: 700;
+  }
+
+  /* Timestamp */
+  .notif-time {
+    display: flex; align-items: center; gap: 4px;
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
+  }
+
+  .notif-time svg {
+    width: 11px; height: 11px; stroke: var(--text-muted);
+    fill: none; stroke-width: 1.8; stroke-linecap: round;
+    flex-shrink: 0;
+  }
+
+  /* "Go to" chevron — subtle, right side */
+  .notif-row__chevron {
+    flex-shrink: 0; align-self: center;
+    color: var(--text-muted); opacity: 0;
+    transition: opacity var(--transition-fast),
+                transform var(--transition-fast),
+                color var(--transition-fast);
+  }
+
+  .notif-row__chevron svg {
+    width: 15px; height: 15px; stroke: currentColor;
+    fill: none; stroke-width: 2; stroke-linecap: round;
+  }
+
+  .notif-row:hover .notif-row__chevron {
+    opacity: 1; transform: translateX(2px);
+    color: var(--text-tertiary);
+  }
+
+
+  /* ── EMPTY STATE ─────────────────────────────────────────── */
+  .notif-empty {
+    text-align: center;
+    padding: 60px 24px;
+    margin: 0 var(--content-padding);
+    animation: notif-rise 0.35s ease both;
+  }
+
+  .notif-empty__icon {
+    font-size: 38px; display: block;
+    margin-bottom: 14px; opacity: 0.4;
     color: var(--text-muted);
-    font-size: 1.0625rem;
-}
+  }
 
-@media (max-width: 768px) {
-    .notifications-header {
-        padding: 1.5rem 0;
-    }
-    
-    .notifications-actions {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .notif-content {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .notif-actions {
-        width: 100%;
-        justify-content: stretch;
-    }
-    
-    .notif-actions a,
-    .notif-actions button {
-        flex: 1;
-    }
-}
+  .notif-empty__title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg); font-weight: 700;
+    color: var(--text-secondary); margin-bottom: 8px;
+  }
+
+  .notif-empty__text {
+    font-family: var(--font-body);
+    font-size: var(--text-base); color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+
+  /* ── ENTRY ANIMATION ─────────────────────────────────────── */
+  @keyframes notif-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
 </style>
 {% endblock %}
 
+
+{# ── Jinja helpers ────────────────────────────────────────────
+   icon_for_type(type) → Bootstrap Icons class name
+   color_for_type(type) → CSS modifier class
+   nav_for_type(type) → URL to navigate to on tap
+#}
+
+{% macro icon_for_type(type) %}
+  {%- if type == 'connection' -%}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="8.5" cy="7" r="4"/>
+      <line x1="20" y1="8" x2="20" y2="14"/>
+      <line x1="23" y1="11" x2="17" y2="11"/>
+    </svg>
+  {%- elif type == 'message' -%}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  {%- elif type == 'like' -%}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  {%- elif type == 'board' -%}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7"/>
+      <rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  {%- else -%}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  {%- endif -%}
+{% endmacro %}
+
+{% macro dest_url_for_type(type) %}
+  {%- if type == 'connection' -%}
+    {{ url_for('connections.connections_home') }}
+  {%- elif type == 'message' -%}
+    {{ url_for('messages.inbox') }}
+  {%- elif type == 'board' -%}
+    /campus-board
+  {%- else -%}
+    #
+  {%- endif -%}
+{% endmacro %}
+
+
 {% block body %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="notifications-header animate-on-scroll">
-        <h1 class="notifications-title">
-            <i class="bi bi-bell-fill me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-            Notifications
-        </h1>
-        <p class="notifications-subtitle">Stay updated with your campus activities</p>
-    </div>
+<div class="notif-page">
 
-    <!-- Actions Bar -->
-    {% if notifs %}
-    <div class="notifications-actions glass-card animate-on-scroll">
-        <div class="notif-stats">
-            <i class="bi bi-info-circle me-2"></i>
-            <strong>{{ notifs | selectattr("is_read", "equalto", False) | list | length }}</strong> unread notification(s)
-        </div>
-        <form method="POST" action="{{ url_for('notifications.mark_all_read') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-primary-custom btn-sm">
-                <i class="bi bi-check-all me-2"></i>Mark All as Read
-            </button>
-        </form>
-    </div>
-    {% endif %}
-
-    <!-- Notifications List -->
-    <div class="notifications-list">
-        {% if notifs %}
-            {% for n in notifs %}
-            <div class="notif-item glass-card animate-on-scroll {{ '' if n.is_read else 'unread' }}">
-                <div class="notif-content">
-                    <div class="notif-icon">
-                        <i class="bi bi-{{ 'person-plus' if 'connection' in n.message.lower() else 'bell' }}"></i>
-                    </div>
-                    <div class="notif-body">
-                        <div class="notif-message">{{ n.message }}</div>
-                        <div class="notif-time">
-                            <i class="bi bi-clock"></i>
-                            {{ to_ist(n.created_at).strftime('%B %d, %Y at %I:%M %p') }}
-                        </div>
-                    </div>
-                    {% if not n.is_read %}
-                    <div class="notif-actions">
-                        <a href="{{ url_for('notifications.mark_read', notif_id=n.id) }}" class="btn btn-outline-custom btn-sm">
-                            <i class="bi bi-check"></i>
-                            <span class="d-none d-md-inline ms-1">Mark Read</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
+  {# ── HERO + MARK ALL ── #}
+  <div class="notif-hero">
+    <div class="notif-hero__left">
+      <div class="notif-hero__eyebrow">Activity</div>
+      <h1 class="notif-hero__title">
+        Notifications
+        {# Unread count pill — only shown if there are unread #}
+        {% set unread_count = notifs | selectattr("is_read", "equalto", False) | list | length %}
+        {% if unread_count > 0 %}
+        <span class="notif-hero__unread-pill"
+              id="unreadPill"
+              aria-label="{{ unread_count }} unread notifications">
+          {{ unread_count }}
+        </span>
         {% else %}
-            <div class="glass-card empty-state animate-on-scroll">
-                <div class="empty-icon">
-                    <i class="bi bi-bell-slash"></i>
-                </div>
-                <h2 class="empty-title">No Notifications</h2>
-                <p class="empty-text">You're all caught up! Check back later for updates.</p>
-            </div>
+        <span class="notif-hero__unread-pill hidden"
+              id="unreadPill"
+              aria-hidden="true">0</span>
         {% endif %}
+      </h1>
     </div>
-</div>
 
+    {# Mark all read — only shown if notifs exist #}
+    {% if notifs %}
+    <form method="POST"
+          action="{{ url_for('notifications.mark_all_read') }}"
+          id="markAllForm"
+          style="margin:0;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="notif-hero__mark-all">
+        Mark all read
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+
+  {# ══════════════════════════════════════════════════════════
+     NOTIFICATIONS — grouped by Today / Yesterday / Earlier
+     Groups are built in Jinja by comparing notification date
+     to today's IST date.
+  ══════════════════════════════════════════════════════════ #}
+  {% if notifs %}
+
+    {#
+      FIX: The previous approach used dynamic <div> open/close
+      inside Jinja conditionals which caused mismatched tags and
+      broken layout on mobile.
+
+      New approach: pre-build three separate lists (today,
+      yesterday, earlier) in Jinja, then render each group as a
+      complete self-contained block. No dynamic tag open/close.
+    #}
+
+    {# Get today's IST date for comparison #}
+    {% set today_ist = to_ist(notifs[0].created_at).date() %}
+
+    {# Pre-split notifications into three groups #}
+    {% set today_notifs     = [] %}
+    {% set yesterday_notifs = [] %}
+    {% set earlier_notifs   = [] %}
+
+    {% for n in notifs %}
+      {% set delta = (today_ist - to_ist(n.created_at).date()).days %}
+      {% if delta == 0 %}
+        {% if today_notifs.append(n) %}{% endif %}
+      {% elif delta == 1 %}
+        {% if yesterday_notifs.append(n) %}{% endif %}
+      {% else %}
+        {% if earlier_notifs.append(n) %}{% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {# Render each group only if it has items #}
+    {% for group_label, group_notifs in [
+        ('Today',     today_notifs),
+        ('Yesterday', yesterday_notifs),
+        ('Earlier',   earlier_notifs)
+    ] %}
+      {% if group_notifs %}
+
+        <div class="notif-group-label" role="separator">{{ group_label }}</div>
+
+        <div class="notif-list">
+          {% for n in group_notifs %}
+
+            {# ── NOTIFICATION ROW ──
+               Each notification is an <a> link that:
+               1. Fires silentMarkAllRead() via onclick (background fetch)
+               2. Navigates to the relevant page via href
+
+               TODO: Once a per-notification mark-read route exists,
+               replace with individual POST /notifications/read/<n.id>
+            #}
+            {% set n_ist = to_ist(n.created_at) %}
+            {% set delta = (today_ist - n_ist.date()).days %}
+
+            <a class="notif-row {{ 'notif-row--unread' if not n.is_read else '' }} animate-on-scroll"
+               href="{{ dest_url_for_type(n.type) | trim }}"
+               onclick="silentMarkAllRead(event)"
+               aria-label="{{ n.message }}">
+
+              {# Icon bubble — type-colored #}
+              <div class="notif-icon notif-icon--{{ n.type if n.type in ['connection','message','like','board'] else 'default' }}"
+                   aria-hidden="true">
+                {{ icon_for_type(n.type) }}
+              </div>
+
+              {# Content #}
+              <div class="notif-content">
+                <div class="notif-message">{{ n.message }}</div>
+                <div class="notif-time">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                  </svg>
+                  {# Time format: today → time only, yesterday → Yesterday · time, older → d Mon · time #}
+                  {% if delta == 0 %}
+                    {{ n_ist.strftime("%I:%M %p") }}
+                  {% elif delta == 1 %}
+                    Yesterday · {{ n_ist.strftime("%I:%M %p") }}
+                  {% else %}
+                    {{ n_ist.strftime("%-d %b · %I:%M %p") }}
+                  {% endif %}
+                </div>
+              </div>
+
+              {# Chevron — navigable types only #}
+              {% if n.type in ['connection', 'message', 'board'] %}
+              <div class="notif-row__chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+              {% endif %}
+
+            </a>
+
+          {% endfor %}
+        </div>{# /notif-list #}
+
+      {% endif %}
+    {% endfor %}
+
+  {% else %}
+
+    {# ── EMPTY STATE ── #}
+    <div class="notif-empty animate-on-scroll">
+      <i class="bi bi-bell-slash notif-empty__icon" aria-hidden="true"></i>
+      <h2 class="notif-empty__title">All caught up!</h2>
+      <p class="notif-empty__text">
+        No notifications yet.<br>
+        We'll let you know when something happens.
+      </p>
+    </div>
+
+  {% endif %}
+
+</div>{# /notif-page #}
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-// Auto-mark as read when leaving page
-window.addEventListener("beforeunload", function() {
+(function () {
+  "use strict";
+
+  /* ============================================================
+     NOTIFICATIONS PAGE
+  ============================================================ */
+
+  /* ── CSRF token for fetch calls ── */
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute('content');
+    const inp = document.querySelector('input[name="csrf_token"]');
+    return inp ? inp.value : '';
+  }
+
+  /* ── Silent mark-all-read fetch ─────────────────────────────
+     Called when user taps any notification row.
+     Fires POST to mark_all_read without navigating to that page.
+     The <a> href then handles navigation normally.
+
+     TODO: Replace with per-notification mark-read once that
+     route is implemented:
+       POST /notifications/read/<n.id>
+     Until then, tapping any notification marks all as read
+     (same behaviour as the existing beforeunload handler).
+  ── */
+  window.silentMarkAllRead = function (e) {
+    /* Don't intercept — let the link navigate normally.
+       Just fire the mark-all-read in the background.    */
     fetch("{{ url_for('notifications.mark_all_read') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token() }}"
-        },
-        keepalive: true
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken()
+      },
+      keepalive: true
+    }).catch(() => {});
+
+    /* Optimistically hide the unread pill */
+    const pill = document.getElementById('unreadPill');
+    if (pill) pill.classList.add('hidden');
+
+    /* Optimistically remove unread styling on all rows */
+    document.querySelectorAll('.notif-row--unread').forEach(row => {
+      row.classList.remove('notif-row--unread');
     });
-});
+
+    /* Let the default <a> navigation happen */
+  };
+
+
+  /* ── Auto mark-all-read on page leave (same as old code) ── */
+  window.addEventListener('beforeunload', () => {
+    fetch("{{ url_for('notifications.mark_all_read') }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken()
+      },
+      keepalive: true
+    });
+  });
+
+})();
 </script>
 {% endblock %}
