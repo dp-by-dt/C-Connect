@@ -1676,7 +1676,17 @@ Remaining bugs:
     ⚠️ There are some TODO tags too
 
 
+#### Connections Page (list.html)
+    - Upgraded properly and working
+    ❌ user profile pic not showing
+    ❌ 'sent' connection request number not updating on cancelling a request
+    ❌ 'cancelling' request loading a api page (not html)
 
+
+#### Inbox page
+    - Modification done and working
+    - Not much of problems are seeing 
+    ❌ The time is not proper, need to show it in ist (or delete for now)
 
 
 

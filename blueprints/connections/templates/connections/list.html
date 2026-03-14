@@ -1,312 +1,951 @@
+{# ============================================================
+   connections.html  —  Connections Management Page
+   Extends: base.html  (provides topbar, sidebar, bottom-nav,
+            flash messages, Bootstrap, global.css, global.js)
+
+   Backend variables expected from the Flask route:
+     • incoming  — list of Connection objects where
+                   c.target_user_id == current_user.id
+                   and c.status == 'pending'
+                   c.user = sender (may be None if user deleted)
+
+     • outgoing  — list of Connection objects where
+                   c.user_id == current_user.id
+                   and c.status == 'pending'
+                   c.connected_user = receiver (may be None)
+
+     • accepted  — list of Connection objects where
+                   c.status in ('accepted', 'connected')
+                   other = c.user if c.user_id != current_user.id
+                           else c.connected_user
+                   (either side may be None if user deleted)
+
+   URL hash deep-linking:
+     #requests    → opens Requests tab (default)
+     #sent        → opens Sent tab
+     #connections → opens Connections tab
+     Handled by JS on DOMContentLoaded.
+
+   Confirmation modal:
+     showConfirm() from global.js used for disconnect action.
+     Reject and cancel use inline animate-out (no confirmation
+     needed — they are low-stakes reversible actions).
+
+   Avatar color assignment:
+     user.id % 5 → deterministic, same color per person always.
+     0 → green, 1 → indigo, 2 → amber, 3 → coral, 4 → teal
+============================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Connections{% endblock %}
 
+
 {% block extra_css %}
 <style>
-.connections-header {
-    padding: 2.5rem 0;
-    text-align: center;
-}
 
-.connections-title {
-    font-size: clamp(2rem, 4vw, 2.5rem);
+  /* ============================================================
+     CONNECTIONS PAGE — scoped styles
+     Color intent map:
+       --primary / green  → accepted/connected state, active tab
+       --indigo-color     → message action, indigo avatars
+       --amber-color      → outgoing/pending state, cancel action
+       --coral-color      → reject action, disconnect, coral avatars
+       --teal-color       → sent-tab badge, teal avatars
+  ============================================================ */
+
+  .connections-page {
+    /* No top padding — topbar+tabs are sticky and handle their own height */
+    padding-bottom: calc(var(--bottom-nav-height, 72px) + 24px);
+  }
+
+
+  /* ── STICKY TABS HEADER ──────────────────────────────────── */
+  /*
+    base.html already renders a sticky topbar.
+    We append a tab bar directly below it via a second
+    sticky element so both scroll away together cleanly.
+  */
+  .connections-tabs-bar {
+    position: sticky;
+    top: var(--topbar-height, 60px);   /* sits just below topbar */
+    z-index: 110;
+    background: var(--glass-bg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    padding: 0 var(--content-padding);
+    animation: conn-rise 0.3s ease both;
+  }
+
+  .conn-tab {
+    flex: 1;
+    padding: 14px 0 13px;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
     font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.connections-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.125rem;
-}
-
-.section-card {
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.section-header {
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    transition:
+      color        var(--transition-fast),
+      border-color var(--transition-fast);
+    text-align: center;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: 0.2px;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .conn-tab:hover { color: var(--text-secondary); }
+
+  .conn-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+  }
+
+  /* Tab count badges */
+  .conn-tab__badge {
+    min-width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    transition: all var(--transition-fast);
+    line-height: 1;
+  }
+
+  /* Amber badge = incoming requests (action needed) */
+  .conn-tab__badge--amber {
+    background: var(--amber-color);
+    color: #fff;
+  }
+
+  /* Teal badge = sent/outgoing */
+  .conn-tab__badge--teal {
+    background: var(--teal-color);
+    color: #fff;
+  }
+
+  /* Green badge = accepted connections */
+  .conn-tab__badge--green {
+    background: var(--primary-color);
+    color: #fff;
+  }
+
+  /* Hide badge when zero */
+  .conn-tab__badge[data-count="0"] { display: none; }
+
+
+  /* ── TAB PANELS ──────────────────────────────────────────── */
+  .conn-panel {
+    display: none;
+    padding: 16px var(--content-padding) 0;
+    animation: conn-rise 0.32s ease both;
+  }
+
+  .conn-panel.active { display: block; }
+
+
+  /* ── SECTION LABEL ───────────────────────────────────────── */
+  .conn-section-label {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
-}
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
 
-.section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+  .conn-section-label__text {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin: 0;
-}
+    gap: 6px;
+  }
 
-.badge-count {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
+  .conn-section-label__dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 
-.connection-item {
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    border-radius: var(--border-radius-md);
+  .conn-section-label__dot--green  { background: var(--primary-color); }
+  .conn-section-label__dot--amber  { background: var(--amber-color); }
+  .conn-section-label__dot--teal   { background: var(--teal-color); }
+  .conn-section-label__dot--coral  { background: var(--coral-color); }
+
+  .conn-section-label__count {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+
+  /* ── CONNECTIONS SEARCH (accepted tab only) ──────────────── */
+  .conn-search {
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  .conn-search__input {
+    width: 100%;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-subtle);
     background: var(--bg-secondary);
+    padding: 0 42px 0 16px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    outline: none;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow   var(--transition-fast);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .conn-search__input::placeholder { color: var(--text-muted); }
+
+  .conn-search__input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-dim);
+  }
+
+  .conn-search__icon {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    stroke: var(--text-muted); fill: none;
+    stroke-width: 1.8; stroke-linecap: round;
+    pointer-events: none;
+  }
+
+
+  /* ── PERSON ROW ──────────────────────────────────────────── */
+  .conn-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-}
+    margin-bottom: 8px;
+    transition:
+      box-shadow  var(--transition-base),
+      transform   var(--transition-base);
+    box-shadow: var(--shadow-xs);
+    animation: conn-rise 0.38s ease both;
+  }
 
-.connection-item:hover {
-    transform: translateX(8px);
-    box-shadow: var(--shadow-md);
-    background: var(--bg-tertiary);
-}
+  .conn-row:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
 
-.connection-avatar {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  /* Staggered entrance per row index */
+  .conn-row:nth-child(1) { animation-delay: 0.04s; }
+  .conn-row:nth-child(2) { animation-delay: 0.09s; }
+  .conn-row:nth-child(3) { animation-delay: 0.14s; }
+  .conn-row:nth-child(4) { animation-delay: 0.19s; }
+  .conn-row:nth-child(5) { animation-delay: 0.24s; }
+  .conn-row:nth-child(6) { animation-delay: 0.29s; }
+
+
+  /* ── AVATAR ──────────────────────────────────────────────── */
+  .conn-row__av {
+    width: 44px; height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 17px;
     flex-shrink: 0;
-}
+    user-select: none;
+  }
 
-.connection-info {
-    flex: 1;
-}
+  /* Avatar color variants — assigned by user.id % 5 */
+  .conn-row__av--0 { background: var(--primary-dim);  color: var(--primary-color); }
+  .conn-row__av--1 { background: var(--indigo-dim);   color: var(--indigo-color); }
+  .conn-row__av--2 { background: var(--amber-dim);    color: var(--amber-color); }
+  .conn-row__av--3 { background: var(--coral-dim);    color: var(--coral-color); }
+  .conn-row__av--4 { background: var(--teal-dim);     color: var(--teal-color); }
 
-.connection-name {
-    font-size: 1.125rem;
+
+  /* ── ROW INFO ────────────────────────────────────────────── */
+  .conn-row__info { flex: 1; min-width: 0; }
+
+  .conn-row__name {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin: 0;
+  }
 
-.connection-meta {
+  .conn-row__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
     color: var(--text-muted);
-    font-size: 0.875rem;
-}
+    margin-top: 2px;
+    font-weight: 400;
+  }
 
-.connection-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
-
-.connection-actions form {
-    display: inline;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem 2rem;
-}
-
-.empty-icon {
-    font-size: 3rem;
-    color: var(--text-muted);
-    opacity: 0.5;
-    margin-bottom: 1rem;
-}
-
-.empty-title {
-    font-size: 1.25rem;
+  /* Amber "Pending" label inside outgoing row */
+  .conn-row__sub--pending {
+    color: var(--amber-color);
     font-weight: 600;
+  }
+
+
+  /* ── ACTION BUTTONS ──────────────────────────────────────── */
+  .conn-row__actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  /* Forms inside actions must not affect layout */
+  .conn-row__actions form {
+    margin: 0;
+    padding: 0;
+    display: contents;
+  }
+
+  .conn-btn {
+    height: 34px;
+    border-radius: var(--radius-xs);
+    border: none;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition:
+      background  var(--transition-fast),
+      color       var(--transition-fast),
+      transform   var(--transition-fast),
+      box-shadow  var(--transition-fast);
+    padding: 0 12px;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .conn-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.2; stroke-linecap: round;
+    flex-shrink: 0;
+  }
+
+  /* Accept — green, primary action */
+  .conn-btn--accept {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+  }
+  .conn-btn--accept:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-green);
+  }
+
+  /* Reject — coral tint, icon-only */
+  .conn-btn--reject {
+    background: var(--coral-dim);
+    color: var(--coral-color);
+    border: 1px solid var(--coral-border);
+    padding: 0 10px;
+  }
+  .conn-btn--reject:hover {
+    background: var(--coral-color);
+    color: #fff;
+    border-color: var(--coral-color);
+  }
+
+  /* Cancel outgoing — amber tint */
+  .conn-btn--cancel {
+    background: var(--amber-dim);
+    color: var(--amber-color);
+    border: 1px solid var(--amber-border);
+    padding: 0 10px;
+  }
+  .conn-btn--cancel:hover {
+    background: var(--amber-color);
+    color: #fff;
+    border-color: var(--amber-color);
+  }
+
+  /* Message — indigo tint */
+  .conn-btn--message {
+    background: var(--indigo-dim);
+    color: var(--indigo-color);
+    border: 1px solid var(--indigo-border);
+    padding: 0 10px;
+  }
+  .conn-btn--message:hover {
+    background: var(--indigo-color);
+    color: #fff;
+  }
+
+  /* View profile — neutral */
+  .conn-btn--view {
+    background: var(--bg-tertiary);
     color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-}
+    border: 1px solid var(--border-subtle);
+    padding: 0 10px;
+  }
+  .conn-btn--view:hover {
+    background: var(--primary-dim);
+    border-color: var(--primary-border);
+    color: var(--primary-color);
+  }
 
-.empty-text {
+  /* Disconnect — icon-only, coral on hover */
+  .conn-btn--disconnect {
+    width: 34px;
+    padding: 0;
+    background: transparent;
     color: var(--text-muted);
-    font-size: 0.9375rem;
-}
+    border: 1px solid var(--border-subtle);
+  }
+  .conn-btn--disconnect:hover {
+    background: var(--coral-dim);
+    border-color: var(--coral-border);
+    color: var(--coral-color);
+  }
 
-@media (max-width: 768px) {
-    .connections-header {
-        padding: 1.5rem 0;
-    }
-    
-    .section-card {
-        padding: 1.5rem;
-    }
-    
-    .connection-item {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.25rem;
-    }
-    
-    .connection-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-    
-    .connection-actions .btn {
-        width: 100%;
-    }
-}
+
+  /* ── EMPTY STATE ─────────────────────────────────────────── */
+  .conn-empty {
+    text-align: center;
+    padding: 44px 24px;
+    animation: conn-rise 0.35s ease both;
+  }
+
+  .conn-empty__icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.45;
+    color: var(--text-muted);
+  }
+
+  .conn-empty__title {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .conn-empty__text {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  .conn-empty__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-color);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-green);
+    transition:
+      background  var(--transition-fast),
+      transform   var(--transition-fast);
+  }
+  .conn-empty__cta:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+  .conn-empty__cta i { font-size: 14px; }
+
+
+  /* ── SUBSECTION SPACING ──────────────────────────────────── */
+  .conn-subsection { margin-bottom: 20px; }
+
+
+  /* ── ENTRY ANIMATION ─────────────────────────────────────── */
+  @keyframes conn-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Skip animation on rows added dynamically via JS */
+  .conn-row--no-anim { animation: none !important; }
+
 </style>
 {% endblock %}
 
+
+{# ── Jinja macro: avatar color class from user.id % 5 ── #}
+{% macro av_class(user_id) %}conn-row__av--{{ user_id % 5 }}{% endmacro %}
+
+
 {% block body %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="connections-header animate-on-scroll">
-        <h1 class="connections-title">
-            <i class="bi bi-people-fill me-2" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-            Your Connections
-        </h1>
-        <p class="connections-subtitle">Manage your campus network</p>
+<div class="connections-page">
+
+  {# ── TABS BAR (sticky, sits below base.html topbar) ── #}
+  <div class="connections-tabs-bar" role="tablist" aria-label="Connections sections">
+
+    <div class="conn-tab active"
+         id="conn-tab-requests"
+         role="tab"
+         aria-selected="true"
+         aria-controls="conn-panel-requests"
+         tabindex="0"
+         data-tab="requests">
+      Requests
+      <span class="conn-tab__badge conn-tab__badge--amber"
+            id="badge-requests"
+            data-count="{{ incoming|length }}">
+        {{ incoming|length if incoming|length > 0 else '' }}
+      </span>
     </div>
 
-    <!-- Incoming Requests -->
-    <div class="section-card glass-card animate-on-scroll">
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="bi bi-inbox"></i>
-                Incoming Requests
-                {% if incoming %}
-                <span class="badge-count">{{ incoming|length }}</span>
-                {% endif %}
-            </h2>
-        </div>
+    <div class="conn-tab"
+         id="conn-tab-sent"
+         role="tab"
+         aria-selected="false"
+         aria-controls="conn-panel-sent"
+         tabindex="0"
+         data-tab="sent">
+      Sent
+      <span class="conn-tab__badge conn-tab__badge--teal"
+            id="badge-sent"
+            data-count="{{ outgoing|length }}">
+        {{ outgoing|length if outgoing|length > 0 else '' }}
+      </span>
+    </div>
 
+    <div class="conn-tab"
+         id="conn-tab-connections"
+         role="tab"
+         aria-selected="false"
+         aria-controls="conn-panel-connections"
+         tabindex="0"
+         data-tab="connections">
+      Connected
+      <span class="conn-tab__badge conn-tab__badge--green"
+            id="badge-connections"
+            data-count="{{ accepted|length }}">
+        {{ accepted|length if accepted|length > 0 else '' }}
+      </span>
+    </div>
+
+  </div>{# /tabs-bar #}
+
+
+  {# ══════════════════════════════════════════════════════════
+     TAB 1 — INCOMING REQUESTS
+  ══════════════════════════════════════════════════════════ #}
+  <div class="conn-panel active"
+       id="conn-panel-requests"
+       role="tabpanel"
+       aria-labelledby="conn-tab-requests">
+
+    <div class="conn-subsection">
+      <div class="conn-section-label">
+        <span class="conn-section-label__text">
+          <span class="conn-section-label__dot conn-section-label__dot--amber"></span>
+          Incoming · {{ incoming|length }}
+        </span>
+      </div>
+
+      {# ── Incoming request rows ── #}
+      <div id="incoming-list">
         {% if incoming %}
-            {% for c in incoming %}
-            <div class="connection-item">
-                <div class="connection-avatar">
-                    {{ c.user.username[0].upper() if c.connected_user else 'U' }}
-                </div>
-                <div class="connection-info">
-                    <div class="connection-name">{{ c.user.username if c.connected_user else 'UNKNOWN'}}</div>
-                    <div class="connection-meta">wants to connect with you</div>
-                </div>
-                <div class="connection-actions">
-                    <form method="POST" action="{{ url_for('connections.connections_accept', conn_id=c.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-primary-custom btn-sm">
-                            <i class="bi bi-check-lg"></i> Accept
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ url_for('connections.connections_reject', conn_id=c.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-outline-custom btn-sm">
-                            <i class="bi bi-x-lg"></i> Reject
-                        </button>
-                    </form>
-                </div>
+          {% for c in incoming %}
+            {# Guard: skip if sender was deleted #}
+            {% if c.user %}
+            <div class="conn-row animate-on-scroll" id="req-{{ c.id }}">
+
+              {# Avatar — color by sender's user id #}
+              <div class="conn-row__av {{ av_class(c.user.id) }}">
+                {{ c.user.username[0].upper() }}
+              </div>
+
+              {# Info #}
+              <div class="conn-row__info">
+                <p class="conn-row__name">{{ c.user.username }}</p>
+                <p class="conn-row__sub">wants to connect with you</p>
+              </div>
+
+              {# Actions — Accept + Reject, both POST forms with CSRF #}
+              <div class="conn-row__actions">
+
+                <form method="POST"
+                      action="{{ url_for('connections.connections_accept', conn_id=c.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="conn-btn conn-btn--accept">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Accept
+                  </button>
+                </form>
+
+                <form method="POST"
+                      action="{{ url_for('connections.connections_reject', conn_id=c.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="conn-btn conn-btn--reject"
+                          aria-label="Reject request from {{ c.user.username }}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <line x1="18" y1="6"  x2="6"  y2="18"/>
+                      <line x1="6"  y1="6"  x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </form>
+
+              </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
-                <div class="empty-title">No incoming requests</div>
-                <div class="empty-text">You're all caught up!</div>
-            </div>
+            {% endif %}{# /if c.user #}
+          {% endfor %}
         {% endif %}
+      </div>{# /incoming-list #}
+
+      {# Empty state — always rendered, shown/hidden by Jinja + JS #}
+      <div class="conn-empty" id="empty-incoming"
+           {% if incoming %}style="display:none"{% endif %}>
+        <i class="bi bi-inbox conn-empty__icon" aria-hidden="true"></i>
+        <h2 class="conn-empty__title">All caught up!</h2>
+        <p class="conn-empty__text">No incoming connection requests right now.</p>
+      </div>
+
+    </div>{# /subsection #}
+  </div>{# /panel-requests #}
+
+
+  {# ══════════════════════════════════════════════════════════
+     TAB 2 — OUTGOING / SENT REQUESTS
+  ══════════════════════════════════════════════════════════ #}
+  <div class="conn-panel"
+       id="conn-panel-sent"
+       role="tabpanel"
+       aria-labelledby="conn-tab-sent">
+
+    <div class="conn-section-label">
+      <span class="conn-section-label__text">
+        <span class="conn-section-label__dot conn-section-label__dot--teal"></span>
+        Sent requests · {{ outgoing|length }}
+      </span>
     </div>
 
-    <!-- Outgoing Requests -->
-    <div class="section-card glass-card animate-on-scroll">
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="bi bi-send"></i>
-                Outgoing Requests
-                {% if outgoing %}
-                <span class="badge-count">{{ outgoing|length }}</span>
-                {% endif %}
-            </h2>
-        </div>
+    <div id="outgoing-list">
+      {% if outgoing %}
+        {% for c in outgoing %}
+          {# Guard: skip if receiver was deleted #}
+          {% if c.connected_user %}
+          <div class="conn-row animate-on-scroll" id="out-{{ c.id }}">
 
-        {% if outgoing %}
-            {% for c in outgoing %}
-            <div class="connection-item">
-                <div class="connection-avatar">{{ c.connected_user.username[0].upper() if c.connected_user else 'U'}}</div>
-                <div class="connection-info">
-                    <div class="connection-name">{{ c.connected_user.username if c.connected_user else 'UNKNOWN'}}</div>
-                    <div class="connection-meta">Request pending</div>
-                </div>
-                <div class="connection-actions">
-                    <form method="POST" action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-outline-custom btn-sm cancel-btn" data-conn-id="{{ c.id }}">
-                            <i class="bi bi-x-lg"></i> Cancel
-                        </button>
-                    </form>
-                </div>
+            <div class="conn-row__av {{ av_class(c.connected_user.id) }}">
+              {{ c.connected_user.username[0].upper() }}
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-icon"><i class="bi bi-send"></i></div>
-                <div class="empty-title">No outgoing requests</div>
-                <div class="empty-text">Find people to connect with on the Discover page</div>
-                <a href="{{ url_for('main.search_page') }}" class="btn btn-primary-custom btn-sm mt-3">
-                    <i class="bi bi-compass me-2"></i>Discover People
-                </a>
+
+            <div class="conn-row__info">
+              <p class="conn-row__name">{{ c.connected_user.username }}</p>
+              <p class="conn-row__sub">
+                Request <span class="conn-row__sub--pending">Pending</span>
+              </p>
             </div>
-        {% endif %}
+
+            <div class="conn-row__actions">
+              <form method="POST"
+                    action="{{ url_for('connections.connections_cancel', conn_id=c.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="conn-btn conn-btn--cancel"
+                        aria-label="Cancel request to {{ c.connected_user.username }}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <line x1="18" y1="6"  x2="6"  y2="18"/>
+                    <line x1="6"  y1="6"  x2="18" y2="18"/>
+                  </svg>
+                  Cancel
+                </button>
+              </form>
+            </div>
+
+          </div>
+          {% endif %}{# /if c.connected_user #}
+        {% endfor %}
+      {% endif %}
+    </div>{# /outgoing-list #}
+
+    <div class="conn-empty" id="empty-outgoing"
+         {% if outgoing %}style="display:none"{% endif %}>
+      <i class="bi bi-send conn-empty__icon" aria-hidden="true"></i>
+      <h2 class="conn-empty__title">No sent requests</h2>
+      <p class="conn-empty__text">
+        Find new people on the Discover page and send them a connect request.
+      </p>
+      <a href="{{ url_for('main.search_page') }}" class="conn-empty__cta">
+        <i class="bi bi-compass" aria-hidden="true"></i>
+        Discover People
+      </a>
     </div>
 
-    <!-- Your Connections -->
-    <div class="section-card glass-card animate-on-scroll">
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="bi bi-people"></i>
-                Your Connections
-                {% if accepted %}
-                <span class="badge-count">{{ accepted|length }}</span>
-                {% endif %}
-            </h2>
-        </div>
+  </div>{# /panel-sent #}
 
-        {% if accepted %}
-            {% for c in accepted %}
-            {% set other = c.user if c.user_id != current_user.id else c.connected_user %}
-            <div class="connection-item">
-                <div class="connection-avatar">{{ other.username[0].upper() }}</div>
-                <div class="connection-info">
-                    <div class="connection-name">{{ other.username }}</div>
-                    <div class="connection-meta">Connected</div>
-                </div>
-                <div class="connection-actions">
-                    <a href="{{ url_for('main.view_user_profile', user_id=other.id) }}" class="btn btn-outline-custom btn-sm">
-                        <i class="bi bi-eye"></i> View
-                    </a>
-                    <form method="POST" 
-                          action="{{ url_for('connections.connections_disconnect', conn_id=c.id) }}"
-                          onsubmit="return confirm('Are you sure you want to disconnect? This will remove the connection.');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button class="btn btn-outline-custom btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">
-                            <i class="bi bi-person-x"></i> Disconnect
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-icon"><i class="bi bi-people"></i></div>
-                <div class="empty-title">No connections yet</div>
-                <div class="empty-text">Start building your network by connecting with others</div>
-                <a href="{{ url_for('main.search_page') }}" class="btn btn-primary-custom btn-sm mt-3">
-                    <i class="bi bi-compass me-2"></i>Discover People
-                </a>
-            </div>
-        {% endif %}
+
+  {# ══════════════════════════════════════════════════════════
+     TAB 3 — ACCEPTED CONNECTIONS
+  ══════════════════════════════════════════════════════════ #}
+  <div class="conn-panel"
+       id="conn-panel-connections"
+       role="tabpanel"
+       aria-labelledby="conn-tab-connections">
+
+    {# Search bar — filters loaded rows client-side #}
+    <div class="conn-search">
+      <input
+        class="conn-search__input"
+        type="text"
+        id="connSearchInput"
+        placeholder="Search your connections…"
+        autocomplete="off"
+        aria-label="Search connections"
+      >
+      <svg class="conn-search__icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
     </div>
-</div>
+
+    <div class="conn-section-label">
+      <span class="conn-section-label__text">
+        <span class="conn-section-label__dot conn-section-label__dot--green"></span>
+        Connected
+      </span>
+      <span class="conn-section-label__count" id="conn-count">
+        {{ accepted|length }}
+      </span>
+    </div>
+
+    <div id="connections-list">
+      {% if accepted %}
+        {% for c in accepted %}
+          {#
+            Determine the "other" person in this connection.
+            c.user_id is the initiator; if that's the current user
+            then the other person is c.connected_user, else c.user.
+          #}
+          {% set other = c.user if c.user_id != current_user.id else c.connected_user %}
+
+          {# Guard: skip if other user was deleted #}
+          {% if other %}
+          <div class="conn-row animate-on-scroll"
+               id="conn-{{ c.id }}"
+               data-name="{{ other.username | lower }}">
+
+            <div class="conn-row__av {{ av_class(other.id) }}">
+              {{ other.username[0].upper() }}
+            </div>
+
+            <div class="conn-row__info">
+              <p class="conn-row__name">{{ other.username }}</p>
+              <p class="conn-row__sub">Connected</p>
+            </div>
+
+            <div class="conn-row__actions">
+
+              {# Message — links to chat, POST form for session init #}
+              <form method="POST"
+                    action="{{ url_for('messages.chat', user_id=other.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="conn-btn conn-btn--message"
+                        aria-label="Message {{ other.username }}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </button>
+              </form>
+
+              {# View profile — GET link #}
+              <a href="{{ url_for('main.view_user_profile', user_id=other.id) }}"
+                 class="conn-btn conn-btn--view"
+                 aria-label="View {{ other.username }}'s profile">
+                View
+              </a>
+
+              {#
+                Disconnect — POST form.
+                Uses showConfirm() from global.js (same modal as logout)
+                so the user gets a confirmation before the irreversible action.
+                The form is submitted programmatically from the callback.
+              #}
+              <form method="POST"
+                    action="{{ url_for('connections.connections_disconnect', conn_id=c.id) }}"
+                    id="disconnect-form-{{ c.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="button"
+                        class="conn-btn conn-btn--disconnect"
+                        aria-label="Disconnect from {{ other.username }}"
+                        onclick="confirmDisconnect({{ c.id }}, '{{ other.username | e }}')">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <line x1="18" y1="6"  x2="6"  y2="18"/>
+                    <line x1="6"  y1="6"  x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </form>
+
+            </div>
+          </div>
+          {% endif %}{# /if other #}
+
+        {% endfor %}
+      {% endif %}
+    </div>{# /connections-list #}
+
+    <div class="conn-empty" id="empty-connections"
+         {% if accepted %}style="display:none"{% endif %}>
+      <i class="bi bi-people conn-empty__icon" aria-hidden="true"></i>
+      <h2 class="conn-empty__title">No connections yet</h2>
+      <p class="conn-empty__text">
+        Start building your campus network by connecting with others.
+      </p>
+      <a href="{{ url_for('main.search_page') }}" class="conn-empty__cta">
+        <i class="bi bi-compass" aria-hidden="true"></i>
+        Discover People
+      </a>
+    </div>
+
+  </div>{# /panel-connections #}
+
+</div>{# /connections-page #}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     CONNECTIONS PAGE — tab switching, search, confirm disconnect
+  ============================================================ */
+
+  const TABS   = ['requests', 'sent', 'connections'];
+  const panels = {};
+  const tabs   = {};
+
+  TABS.forEach(name => {
+    panels[name] = document.getElementById('conn-panel-' + name);
+    tabs[name]   = document.getElementById('conn-tab-'   + name);
+  });
+
+  /* ── switchTab ──────────────────────────────────────────── */
+  function switchTab(name) {
+    TABS.forEach(t => {
+      const isActive = t === name;
+      tabs[t].classList.toggle('active', isActive);
+      tabs[t].setAttribute('aria-selected', isActive ? 'true' : 'false');
+      panels[t].classList.toggle('active', isActive);
+    });
+    /* Update URL hash for deep-linking without page reload */
+    history.replaceState(null, '', '#' + name);
+  }
+
+  /* Attach click + keyboard handlers to tabs */
+  TABS.forEach(name => {
+    tabs[name].addEventListener('click', () => switchTab(name));
+    tabs[name].addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        switchTab(name);
+      }
+    });
+  });
+
+  /* ── Deep-link via URL hash on load ── */
+  const hash = window.location.hash.replace('#', '');
+  if (TABS.includes(hash)) {
+    switchTab(hash);
+  }
+
+  /* ── Connection search (accepted tab) ── */
+  const searchInput = document.getElementById('connSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      const q    = this.value.trim().toLowerCase();
+      const rows = document.querySelectorAll('#connections-list .conn-row');
+      let visible = 0;
+
+      rows.forEach(row => {
+        /* data-name set from other.username | lower in Jinja */
+        const nameMatch = (row.dataset.name || '').includes(q);
+        const textMatch = row.innerText.toLowerCase().includes(q);
+        const show      = !q || nameMatch || textMatch;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      const countEl = document.getElementById('conn-count');
+      if (countEl) countEl.textContent = visible;
+    });
+  }
+
+  /* ── confirmDisconnect ──────────────────────────────────────
+     Uses showConfirm() from global.js (the same modal used for
+     the logout confirmation). The form is submitted only if the
+     user confirms — avoids accidental disconnections.
+  ── */
+  window.confirmDisconnect = function (connId, username) {
+    showConfirm(
+      'Disconnect',
+      `Remove your connection with <strong>${username}</strong>? This cannot be undone.`,
+      function () {
+        const form = document.getElementById('disconnect-form-' + connId);
+        if (form) form.submit();
+      }
+    );
+  };
+
+  /* ── Helper: update a tab badge count ── */
+  function updateBadge(badgeId, count) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    badge.setAttribute('data-count', count);
+    badge.textContent = count > 0 ? count : '';
+  }
+
+})();
+</script>
 {% endblock %}

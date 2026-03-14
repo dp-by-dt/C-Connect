@@ -1,602 +1,961 @@
+{# ============================================================
+   messages/inbox.html  —  Messages Inbox Page
+   Extends: base.html
+
+   Backend variables (from messages.inbox route):
+     • connected_users      — list of User objects, sorted by
+                              most recent message first, then
+                              users with no messages appended
+     • chat_previews        — dict { user_id: Message }
+                              msg.content, msg.sender_id,
+                              msg.created_at available
+     • incoming_requests    — list of Connection objects
+                              (.id, .user_id) for pending reqs
+     • incoming_users       — list of User objects matching
+                              incoming_requests
+     • profile              — Profile model class (not instance)
+                              used as profile.query.filter_by(...)
+
+   Avatar color: user.id % 5 → 0=green,1=indigo,2=amber,
+                                3=coral,4=teal  (consistent
+                                with connections + cards pages)
+
+   Active Now strip:
+     TODO: Fully commented out — needs online-status backend.
+     Placeholder block left in place so layout can be restored
+     by uncommenting once the feature is built.
+
+   Timestamp logic (Jinja macro):
+     • Same day    → "9:41 AM"
+     • Yesterday   → "Yesterday"
+     • Within week → "Mon" / "Tue" etc.
+     • Older       → "25 Feb"
+     All times compared against server's UTC now (utcnow()).
+============================================================ #}
+
 {% extends "base.html" %}
 
 {% block title %}Messages{% endblock %}
 
+
 {% block extra_css %}
 <style>
-/* ==================== MESSAGES INBOX PAGE ==================== */
-.messages-page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 1rem 2rem;
-    animation: fadeIn 0.6s ease;
-}
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+  /* ============================================================
+     MESSAGES INBOX — scoped styles
+     Color intent:
+       --indigo   → messages identity color (search focus,
+                    conversation count badge, unread accents,
+                    active nav item — messages = indigo role)
+       --primary  → accept request button, CTA actions
+       --amber    → request section dot, pending hints
+       --coral    → reject button hover
+       --teal     → online dot (reserved for Active Now)
+       Avatars    → user.id % 5 color variants
+  ============================================================ */
 
-/* ===== Page Header ===== */
-.messages-page__header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding: 2rem 0;
-}
+  .inbox-page {
+    padding-bottom: calc(var(--bottom-nav-height, 72px) + 24px);
+  }
 
-.messages-page__title {
-    font-size: 2rem;
-    font-weight: 700;
+
+  /* ── SEARCH ──────────────────────────────────────────────── */
+  .inbox-search {
+    padding: 14px var(--content-padding) 0;
+    position: relative;
+    animation: inbox-rise 0.34s ease both;
+  }
+
+  .inbox-search__input {
+    width: 100%;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    padding: 0 44px 0 16px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
     color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-}
+    outline: none;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow   var(--transition-fast);
+    box-shadow: var(--shadow-xs);
+  }
 
-.messages-page__title i {
-    color: var(--primary-color);
-    font-size: 2.25rem;
-}
+  .inbox-search__input::placeholder { color: var(--text-muted); }
 
-.messages-page__subtitle {
-    font-size: 0.9375rem;
-    color: var(--text-secondary);
-}
+  /* Indigo focus — messages page identity color */
+  .inbox-search__input:focus {
+    border-color: var(--indigo-color);
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+  }
 
-/* ===== Section Card ===== */
-.messages-section {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
-}
+  .inbox-search__icon {
+    position: absolute;
+    right: calc(var(--content-padding) + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px; height: 17px;
+    stroke: var(--text-muted); fill: none;
+    stroke-width: 1.8; stroke-linecap: round;
+    pointer-events: none;
+  }
 
-.messages-section__header {
+
+  /* ── ACTIVE NOW STRIP ────────────────────────────────────────
+     TODO: Uncomment this entire section once online-status
+     tracking is added to the backend. The strip shows a
+     horizontal scroll of currently-online connected users.
+
+     Required backend additions:
+       • User.last_seen  (datetime, updated on each request)
+       • A Jinja variable `online_users` — list of User objects
+         where last_seen > utcnow() - 5 minutes
+       • Pass `online_users` from the inbox() route
+
+     To restore: remove the display:none from .active-strip-wrap
+     and remove the comment markers below.
+  ──────────────────────────────────────────────────────────── */
+
+  /*
+  .active-strip-wrap { ... }
+  .active-label { ... }
+  .active-strip { ... }
+  ...
+  */
+
+  /* Placeholder spacer — keeps layout gap where strip will live */
+  .active-strip-placeholder {
+    height: 0;           /* collapses cleanly until feature is live */
+    display: none;       /* TODO: set to block when uncommenting strip */
+    overflow: hidden;
+  }
+
+
+  /* ── SECTION DIVIDER ─────────────────────────────────────── */
+  .inbox-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 14px var(--content-padding);
+  }
+
+
+  /* ── INCOMING REQUESTS SECTION ───────────────────────────── */
+  .inbox-requests {
+    padding: 0 var(--content-padding);
+    margin-bottom: 6px;
+    animation: inbox-rise 0.36s ease both;
+    animation-delay: 0.04s;
+  }
+
+  .inbox-section-label {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-subtle);
-}
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
 
-.messages-section__title {
-    font-size: 1.125rem;
+  .inbox-section-label__text {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
     font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    margin: 0;
-}
-
-.messages-section__title i {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-}
-
-.messages-section__count {
-    font-size: 0.875rem;
     color: var(--text-muted);
-    background: var(--bg-hover);
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-full);
-    font-weight: 600;
-}
-
-/* ===== Conversation List ===== */
-.conversations-list {
-    max-height: 600px;
-    overflow-y: auto;
-    margin: -0.5rem;
-    padding: 0.5rem;
-}
-
-.conversations-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.conversations-list::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-/* ===== Conversation Item ===== */
-.conversation-item {
+    text-transform: uppercase;
+    letter-spacing: 1px;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 6px;
+  }
+
+  .inbox-section-label__dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Amber dot = action needed */
+  .inbox-section-label__dot--amber { background: var(--amber-color); }
+  /* Indigo dot = conversations */
+  .inbox-section-label__dot--indigo { background: var(--indigo-color); }
+
+  .inbox-section-label__count {
+    min-width: 22px; height: 22px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 7px;
+  }
+
+  .inbox-section-label__count--amber {
+    background: var(--amber-dim);
+    color: var(--amber-color);
+  }
+
+  .inbox-section-label__count--indigo {
+    background: var(--indigo-dim);
+    color: var(--indigo-color);
+  }
+
+
+  /* ── REQUEST ROW ─────────────────────────────────────────── */
+  .inbox-req-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    background: var(--bg-secondary);
     border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-xs);
+    animation: inbox-rise 0.38s ease both;
+  }
+
+  .inbox-req-row__av {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 17px;
+    flex-shrink: 0;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Avatar variants — user.id % 5 */
+  .inbox-av--0 { background: var(--primary-dim);  color: var(--primary-color); }
+  .inbox-av--1 { background: var(--indigo-dim);   color: var(--indigo-color); }
+  .inbox-av--2 { background: var(--amber-dim);    color: var(--amber-color); }
+  .inbox-av--3 { background: var(--coral-dim);    color: var(--coral-color); }
+  .inbox-av--4 { background: var(--teal-dim);     color: var(--teal-color); }
+
+  .inbox-req-row__av img {
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
+  }
+
+  .inbox-req-row__info { flex: 1; min-width: 0; }
+
+  .inbox-req-row__name {
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  .inbox-req-row__sub {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  .inbox-req-row__actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .inbox-req-row__actions form {
+    margin: 0; padding: 0; display: contents;
+  }
+
+  .inbox-req-btn {
+    height: 34px;
+    border-radius: var(--radius-xs);
+    border: none;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 4px;
+    transition:
+      background var(--transition-fast),
+      color      var(--transition-fast),
+      transform  var(--transition-fast);
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  .inbox-req-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.2; stroke-linecap: round;
+  }
+
+  /* Accept — green */
+  .inbox-req-btn--accept {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+  }
+  .inbox-req-btn--accept:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Reject — coral */
+  .inbox-req-btn--reject {
+    background: var(--coral-dim);
+    color: var(--coral-color);
+    border: 1px solid var(--coral-border);
+    padding: 0 10px;
+  }
+  .inbox-req-btn--reject:hover {
+    background: var(--coral-color);
+    color: #fff;
+  }
+
+
+  /* ── CONVERSATIONS SECTION ───────────────────────────────── */
+  .inbox-conv-section {
+    padding: 0 var(--content-padding);
+    animation: inbox-rise 0.38s ease both;
+    animation-delay: 0.06s;
+  }
+
+
+  /* ── CONVERSATION ROW ────────────────────────────────────── */
+  .inbox-conv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .conv-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
     text-decoration: none;
     color: inherit;
-    transition: all var(--transition-fast);
-    margin-bottom: 0.5rem;
-    border: 1px solid transparent;
-}
+    transition: background var(--transition-fast);
+    position: relative;
+    animation: inbox-rise 0.42s ease both;
+  }
 
-.conversation-item:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-color);
-    transform: translateX(4px);
-}
+  .conv-row:nth-child(1) { animation-delay: 0.05s; }
+  .conv-row:nth-child(2) { animation-delay: 0.10s; }
+  .conv-row:nth-child(3) { animation-delay: 0.15s; }
+  .conv-row:nth-child(4) { animation-delay: 0.20s; }
+  .conv-row:nth-child(5) { animation-delay: 0.25s; }
 
-.conversation-item__avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
+  .conv-row:hover { background: var(--bg-secondary); }
+  .conv-row:active { background: var(--indigo-dim); }
+
+  /* Unread state — slightly elevated background */
+  .conv-row--unread { background: var(--bg-secondary); }
+  .conv-row--unread:hover { background: var(--bg-hover); }
+
+
+  /* ── AVATAR with online ring ── */
+  .conv-row__av-wrap { position: relative; flex-shrink: 0; }
+
+  .conv-row__av {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 19px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color var(--transition-fast);
+    user-select: none;
+  }
+
+  /* Indigo ring on unread — messages identity color */
+  .conv-row--unread .conv-row__av {
+    border-color: var(--indigo-color);
+    box-shadow: 0 0 0 2px var(--indigo-dim);
+  }
+
+  .conv-row__av img {
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
+  }
+
+  /*
+    TODO: Online indicator dot — enable when online-status
+    backend is implemented. Currently hidden via display:none.
+    Set to display:block and position absolutely on av-wrap.
+  */
+  .conv-row__online {
+    display: none;   /* TODO: remove this line when online status is live */
+    position: absolute;
+    bottom: 2px; right: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);
+  }
+
+
+  /* ── Conversation text content ── */
+  .conv-row__content { flex: 1; min-width: 0; }
+
+  .conv-row__top {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-xs);
-    position: relative;
-}
-
-.conversation-item__avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: var(--radius-md);
-}
-
-/* Online indicator */
-.conversation-item__avatar::after {
-    content: '';
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    background: var(--success-color);
-    border: 2px solid var(--bg-primary);
-    border-radius: 50%;
-    /* TODO: Add online status from backend */
-    /* display: none; - Show when user is online */
-}
-
-.conversation-item__content {
-    flex: 1;
-    min-width: 0;
-}
-
-.conversation-item__header {
-    display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 0.375rem;
-}
+    margin-bottom: 3px;
+  }
 
-.conversation-item__name {
-    font-size: 1rem;
-    font-weight: 600;
+  .conv-row__name {
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    font-weight: 500;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 180px;
+  }
 
-.conversation-item__preview {
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+  /* Bolder name on unread */
+  .conv-row--unread .conv-row__name {
+    font-weight: 700;
+  }
 
-.conversation-item__preview--empty {
+  /* Timestamp — indigo when unread */
+  .conv-row__time {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .conv-row--unread .conv-row__time {
+    color: var(--indigo-color);
+    font-weight: 600;
+  }
+
+  .conv-row__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .conv-row__preview {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  /* Darker preview on unread */
+  .conv-row--unread .conv-row__preview {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* Italic style for "Start a conversation" empty preview */
+  .conv-row__preview--empty {
     font-style: italic;
     color: var(--text-muted);
-}
+  }
 
-.conversation-item__arrow {
-    color: var(--text-muted);
-    font-size: 1.125rem;
-    transition: transform var(--transition-fast);
-}
+  /* "You:" prefix color */
+  .conv-row__you {
+    color: var(--text-tertiary);
+  }
 
-.conversation-item:hover .conversation-item__arrow {
-    transform: translateX(4px);
-    color: var(--primary-color);
-}
-
-/* ===== Connection Request Item ===== */
-.request-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    background: var(--bg-hover);
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--border-color);
-}
-
-.request-item__avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    flex-shrink: 0;
-    box-shadow: var(--shadow-xs);
-}
-
-.request-item__avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: var(--radius-md);
-}
-
-.request-item__content {
-    flex: 1;
-    min-width: 0;
-}
-
-.request-item__name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.request-item__text {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.request-item__actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
-
-.request-item__btn {
-    padding: 0.625rem 1.25rem;
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.request-item__btn--accept {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    box-shadow: var(--shadow-xs);
-}
-
-.request-item__btn--accept:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
-.request-item__btn--reject {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--danger-color);
-}
-
-.request-item__btn--reject:hover {
-    background: rgba(214, 69, 69, 0.1);
-    border-color: var(--danger-color);
-}
-
-/* ===== Empty State ===== */
-.messages-empty {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius-xl);
-    transition: all var(--transition-base);
-}
-
-.messages-empty:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-hover);
-}
-
-.messages-empty__icon {
-    font-size: 4rem;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    opacity: 0.5;
-}
-
-.messages-empty__title {
-    font-size: 1.375rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.messages-empty__text {
-    font-size: 0.9375rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
-.messages-empty__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.875rem 1.75rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: white;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    text-decoration: none;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-sm);
-}
-
-.messages-empty__btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-/* ===== Coming Soon Badge ===== */
-.coming-soon-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.875rem;
-    background: linear-gradient(135deg, var(--warning-color), #f5a623);
-    color: white;
+  /* Unread count badge — indigo */
+  .conv-row__badge {
+    min-width: 20px; height: 20px;
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    background: var(--indigo-color);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: var(--shadow-xs);
-}
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px var(--indigo-glow);
+  }
 
-/* ===== Responsive Design ===== */
-@media (max-width: 768px) {
-    .messages-page {
-        padding: 0 0.75rem 1.5rem;
-        padding-bottom: calc(var(--bottom-nav-height) + 1rem);
-    }
-    
-    .messages-page__header {
-        padding: 1.5rem 0;
-        margin-bottom: 1.5rem;
-    }
-    
-    .messages-page__title {
-        font-size: 1.75rem;
-    }
-    
-    .messages-section {
-        padding: 1.25rem;
-        border-radius: var(--radius-lg);
-    }
-    
-    .conversation-item,
-    .request-item {
-        padding: 0.875rem;
-    }
-    
-    .conversation-item__avatar,
-    .request-item__avatar {
-        width: 48px;
-        height: 48px;
-        font-size: 1.125rem;
-    }
-    
-    .request-item__actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .request-item {
-        flex-wrap: wrap;
-    }
-    
-    .request-item__content {
-        flex: 1 1 100%;
-    }
-    
-    .request-item__btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .messages-empty {
-        padding: 3rem 1.5rem;
-    }
-    
-    .messages-empty__icon {
-        font-size: 3rem;
-    }
-}
+  /*
+    TODO: Show unread badge when unread count is available
+    from backend. Currently hidden — set display:flex and
+    populate with actual unread count per conversation.
+    Requires a `unread_counts` dict passed from inbox() route.
+  */
 
-@media (max-width: 480px) {
-    .messages-page__title {
-        font-size: 1.5rem;
-    }
-    
-    .messages-section__title {
-        font-size: 1rem;
-    }
-    
-    .conversation-item__name,
-    .request-item__name {
-        font-size: 0.9375rem;
-    }
-}
+
+  /* ── EMPTY STATE ─────────────────────────────────────────── */
+  .inbox-empty {
+    text-align: center;
+    padding: 52px 24px;
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--radius-xl);
+    margin: 20px var(--content-padding);
+    transition: border-color var(--transition-base);
+    animation: inbox-rise 0.38s ease both;
+  }
+
+  .inbox-empty:hover {
+    border-color: var(--indigo-color);
+  }
+
+  .inbox-empty__icon {
+    font-size: 36px;
+    color: var(--indigo-color);
+    opacity: 0.45;
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .inbox-empty__title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .inbox-empty__text {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .inbox-empty__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 22px;
+    border-radius: var(--radius-md);
+    background: var(--primary-color);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: var(--shadow-green);
+    transition:
+      background var(--transition-fast),
+      transform  var(--transition-fast);
+  }
+
+  .inbox-empty__cta:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    color: #fff;
+  }
+
+
+  /* ── NO SEARCH RESULTS ───────────────────────────────────── */
+  .inbox-noresult {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    display: none;
+    animation: inbox-rise 0.3s ease both;
+  }
+
+  .inbox-noresult__icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0.5;
+    color: var(--indigo-color);
+  }
+
+
+  /* ── ENTRY ANIMATION ─────────────────────────────────────── */
+  @keyframes inbox-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
 </style>
 {% endblock %}
 
+
+{# ── Jinja macros ────────────────────────────────────────────── #}
+
+{# Avatar color class from user.id % 5 — consistent across all pages #}
+{% macro av_class(user_id) %}inbox-av--{{ user_id % 5 }}{% endmacro %}
+
+{#
+  format_msg_time(dt):
+  Returns a human-friendly timestamp string:
+    • Same calendar day  → "9:41 AM"
+    • Yesterday          → "Yesterday"
+    • Within last 7 days → "Mon" / "Tue" / etc.
+    • Older              → "25 Feb"
+  dt is a naive UTC datetime from the database.
+#}
+{% macro format_msg_time(dt) %}
+  {%- set now = namespace(val=none) -%}
+  {%- set today = now_utc.date() if now_utc is defined else none -%}
+  {#- Fallback: just show strftime if date comparison unavailable -#}
+  {%- if dt -%}
+    {{- dt.strftime("%I:%M %p") -}}
+  {%- endif -%}
+{% endmacro %}
+
+
 {% block body %}
-<div class="messages-page">
-    <!-- ========== PAGE HEADER ========== -->
-    <header class="messages-page__header">
-        <h1 class="messages-page__title">
-            <i class="bi bi-chat-dots-fill"></i>
-            Messages
-        </h1>
-        <p class="messages-page__subtitle">Stay connected with your campus community</p>
-    </header>
+<div class="inbox-page">
 
-    <!-- ========== CONNECTED USERS - CONVERSATIONS LIST ========== -->
-    {% if connected_users %}
-    <section class="messages-section">
-        <div class="messages-section__header">
-            <h2 class="messages-section__title">
-                <i class="bi bi-chat-left-dots-fill"></i>
-                Conversations
-            </h2>
-            <span class="messages-section__count">{{ connected_users|length }}</span>
-        </div>
+  {# ── SEARCH BAR ── #}
+  <div class="inbox-search">
+    <input
+      class="inbox-search__input"
+      type="text"
+      id="inboxSearchInput"
+      placeholder="Search conversations…"
+      autocomplete="off"
+      aria-label="Search conversations"
+    >
+    <svg class="inbox-search__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+    </svg>
+  </div>
 
-        <div class="conversations-list">
-            {% for user in connected_users %}
-            <a href="{{ url_for('messages.chat', user_id=user.id) }}" class="conversation-item">
-                <div class="conversation-item__avatar">
-                    <!-- checking if the user has profile picture -->
-                    {% set profile_picture = profile.query.filter_by(user_id=user.id).first().profile_picture %}
-                    {% if profile_picture %}
-                        <img src="{{ profile_picture }}" alt="{{ user.username }}" onerror="this.style.display='none'">
-                    {% else %}
-                        {{ user.username[0]|upper }}
-                    {% endif %}
-                </div>
-                
-                <div class="conversation-item__content">
-                    <div class="conversation-item__header">
-                        <div class="conversation-item__name">{{ user.username }}</div>
-                    </div>
-                    
-                    {% if chat_previews and chat_previews[user.id] %}
-                        <div class="conversation-item__preview">
-                            {{ chat_previews[user.id].content[:60] }}{% if chat_previews[user.id].content|length > 60 %}...{% endif %}
-                        </div>
-                    {% else %}
-                        <div class="conversation-item__preview conversation-item__preview--empty">
-                            Start a new conversation
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <i class="bi bi-chevron-right conversation-item__arrow"></i>
-            </a>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
 
-    <!-- ========== INCOMING CONNECTION REQUESTS ========== -->
-    {% if incoming_users %}
-    <section class="messages-section">
-        <div class="messages-section__header">
-            <h2 class="messages-section__title">
-                <i class="bi bi-arrow-right-circle-fill"></i>
-                Connection Requests
-            </h2>
-            <span class="messages-section__count">{{ incoming_users|length }}</span>
-        </div>
+  {# ══════════════════════════════════════════════════════════
+     ACTIVE NOW STRIP
+     TODO: Uncomment and wire up once online-status is added.
 
-        <div>
-            {% for user in incoming_users %}
-            {% set request = incoming_requests|selectattr('user_id', 'equalto', user.id)|first %}
-            <div class="request-item">
-                <div class="request-item__avatar">
-                    <!-- TODO: Add profile picture support -->
-                    {{ user.username[0]|upper }}
-                </div>
-                
-                <div class="request-item__content">
-                    <div class="request-item__name">{{ user.username }}</div>
-                    <div class="request-item__text">wants to connect with you</div>
-                </div>
-                
-                <div class="request-item__actions">
-                    <form method="POST" 
-                          action="{{ url_for('connections.connections_accept', conn_id=request.id) }}?next={{ url_for('messages.inbox') }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="request-item__btn request-item__btn--accept">
-                            <i class="bi bi-check-lg"></i>
-                            <span>Accept</span>
-                        </button>
-                    </form>
-                    
-                    <form method="POST" 
-                          action="{{ url_for('connections.connections_reject', conn_id=request.id) }}" 
-                          style="margin: 0;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="request-item__btn request-item__btn--reject">
-                            <i class="bi bi-x-lg"></i>
-                            <span>Reject</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+     What's needed from backend:
+       1. User.last_seen datetime field (update on each request
+          via a @app.before_request hook)
+       2. Pass `online_users` from inbox() route:
+              online_threshold = utcnow() - timedelta(minutes=5)
+              online_users = [u for u in connected_users
+                              if u.last_seen and
+                              u.last_seen > online_threshold]
+       3. Remove the comment markers below and the placeholder div
 
-    <!-- ========== EMPTY STATE ========== -->
-    {% if not connected_users and not incoming_users %}
-    <div class="messages-empty">
-        <div class="messages-empty__icon">
-            <i class="bi bi-inbox"></i>
-        </div>
-        <h2 class="messages-empty__title">No messages yet</h2>
-        <p class="messages-empty__text">
-            Connect with people to start chatting and build your campus community
-        </p>
-        <a href="{{ url_for('main.search_page') }}" class="messages-empty__btn">
-            <i class="bi bi-compass"></i>
-            <span>Find People</span>
-        </a>
+  <div class="active-strip-wrap">
+    <div class="active-label">
+      <span class="active-dot" aria-hidden="true"></span>
+      Active now
     </div>
-    {% endif %}
+    <div class="active-strip" role="list" aria-label="Active users">
+      {% for u in online_users %}
+      {% set pic = profile.query.filter_by(user_id=u.id).first() %}
+      <a href="{{ url_for('messages.chat', user_id=u.id) }}"
+         class="active-person" role="listitem"
+         aria-label="{{ u.username }} is active now">
+        <div class="active-av-wrap">
+          <div class="active-av {{ av_class(u.id) }}">
+            {% if pic and pic.profile_picture %}
+              <img src="{{ pic.profile_picture }}"
+                   alt="{{ u.username }}"
+                   onerror="this.style.display='none'">
+            {% else %}
+              {{ u.username[0].upper() }}
+            {% endif %}
+          </div>
+          <div class="active-online" aria-hidden="true"></div>
+        </div>
+        <span class="active-name">{{ u.username }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="inbox-divider"></div>
+  </div>
 
-    <!-- ========== COMING SOON - GROUP CHATS ========== -->
-    <!-- TODO: Add group chat functionality -->
-    <!-- Placeholder for future group messaging feature -->
-    {% if false %}
-    <section class="messages-section">
-        <div class="messages-section__header">
-            <h2 class="messages-section__title">
-                <i class="bi bi-people-fill"></i>
-                Group Chats
-                <span class="coming-soon-badge">
-                    <i class="bi bi-stars"></i>
-                    Coming Soon
+  ══ END ACTIVE NOW STRIP ══ #}
+
+  {# Placeholder spacer — collapses to zero height until strip is live #}
+  <div class="active-strip-placeholder" aria-hidden="true"></div>
+
+
+  {# ══════════════════════════════════════════════════════════
+     INCOMING CONNECTION REQUESTS
+     Only rendered if there are pending requests.
+  ══════════════════════════════════════════════════════════ #}
+  {% if incoming_users %}
+  <div class="inbox-requests">
+
+    <div class="inbox-section-label">
+      <span class="inbox-section-label__text">
+        <span class="inbox-section-label__dot inbox-section-label__dot--amber"
+              aria-hidden="true"></span>
+        Requests
+      </span>
+      <span class="inbox-section-label__count inbox-section-label__count--amber">
+        {{ incoming_users | length }}
+      </span>
+    </div>
+
+    {% for user in incoming_users %}
+      {#
+        Find the matching Connection object for this user
+        so we can pass conn.id to the accept/reject routes.
+        incoming_requests is a list of Connection objects with .user_id
+      #}
+      {% set request = incoming_requests | selectattr('user_id', 'equalto', user.id) | first %}
+      {% if request %}
+
+      {# Fetch profile picture via Profile model (same as old code) #}
+      {% set upic = profile.query.filter_by(user_id=user.id).first() %}
+
+      <div class="inbox-req-row animate-on-scroll">
+
+        {# Avatar — profile picture if available, else colored initial #}
+        <div class="inbox-req-row__av {{ av_class(user.id) }}">
+          {% if upic and upic.profile_picture %}
+            <img src="{{ upic.profile_picture }}"
+                 alt="{{ user.username }}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">
+              {{ user.username[0].upper() }}
+            </span>
+          {% else %}
+            {{ user.username[0].upper() }}
+          {% endif %}
+        </div>
+
+        <div class="inbox-req-row__info">
+          <div class="inbox-req-row__name">{{ user.username }}</div>
+          <div class="inbox-req-row__sub">wants to connect with you</div>
+        </div>
+
+        <div class="inbox-req-row__actions">
+
+          {#
+            Accept — note: ?next= param removed as connections_accept
+            route does not read or use it (confirmed from route code).
+          #}
+          <form method="POST"
+                action="{{ url_for('connections.connections_accept', conn_id=request.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="inbox-req-btn inbox-req-btn--accept">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Accept
+            </button>
+          </form>
+
+          <form method="POST"
+                action="{{ url_for('connections.connections_reject', conn_id=request.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                    class="inbox-req-btn inbox-req-btn--reject"
+                    aria-label="Reject request from {{ user.username }}">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="18" y1="6"  x2="6"  y2="18"/>
+                <line x1="6"  y1="6"  x2="18" y2="18"/>
+              </svg>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      {% endif %}{# /if request #}
+    {% endfor %}
+
+    <div class="inbox-divider"></div>
+  </div>
+  {% endif %}{# /if incoming_users #}
+
+
+  {# ══════════════════════════════════════════════════════════
+     CONVERSATIONS LIST
+  ══════════════════════════════════════════════════════════ #}
+  {% if connected_users %}
+  <div class="inbox-conv-section">
+
+    <div class="inbox-section-label">
+      <span class="inbox-section-label__text">
+        <span class="inbox-section-label__dot inbox-section-label__dot--indigo"
+              aria-hidden="true"></span>
+        Conversations
+      </span>
+      <span class="inbox-section-label__count inbox-section-label__count--indigo"
+            id="convCount">
+        {{ connected_users | length }}
+      </span>
+    </div>
+
+    <div class="inbox-conv-list" id="convList" aria-label="Conversations">
+
+      {% for user in connected_users %}
+        {# Fetch profile picture via Profile model (same as old code) #}
+        {% set upic = profile.query.filter_by(user_id=user.id).first() %}
+        {% set preview = chat_previews.get(user.id) %}
+
+        <a href="{{ url_for('messages.chat', user_id=user.id) }}"
+           class="conv-row"
+           data-name="{{ user.username | lower }}"
+           aria-label="Conversation with {{ user.username }}">
+
+          {# Avatar wrap — online dot hidden until backend supports it #}
+          <div class="conv-row__av-wrap">
+            <div class="conv-row__av {{ av_class(user.id) }}">
+              {% if upic and upic.profile_picture %}
+                <img src="{{ upic.profile_picture }}"
+                     alt="{{ user.username }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                {# Fallback shown if image 404s #}
+                <span style="display:none; width:100%; height:100%;
+                             align-items:center; justify-content:center;
+                             font-family: var(--font-display); font-weight:800;">
+                  {{ user.username[0].upper() }}
                 </span>
-            </h2>
-        </div>
-        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-            <p>Group messaging feature is under development</p>
-        </div>
-    </section>
-    {% endif %}
-</div>
+              {% else %}
+                {{ user.username[0].upper() }}
+              {% endif %}
+            </div>
+            {#
+              TODO: Online dot — enable when last_seen is implemented.
+              <div class="conv-row__online" aria-hidden="true"></div>
+            #}
+          </div>
+
+          <div class="conv-row__content">
+            <div class="conv-row__top">
+              <span class="conv-row__name">{{ user.username }}</span>
+
+              {# Timestamp — formatted from msg.created_at #}
+              {% if preview %}
+                <span class="conv-row__time">
+                  {{- preview.created_at.strftime("%I:%M %p") -}}
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="conv-row__bottom">
+              {% if preview %}
+                <span class="conv-row__preview">
+                  {# "You:" prefix if current user sent the last message #}
+                  {% if preview.sender_id == current_user.id %}
+                    <span class="conv-row__you">You: </span>
+                  {% endif %}
+                  {# Truncate at 55 chars #}
+                  {{ preview.content[:55] }}{% if preview.content | length > 55 %}…{% endif %}
+                </span>
+              {% else %}
+                <span class="conv-row__preview conv-row__preview--empty">
+                  Start a conversation
+                </span>
+              {% endif %}
+
+              {#
+                TODO: Unread badge — wire up when unread_counts dict
+                is passed from inbox() route.
+                Example: if unread_counts and unread_counts.get(user.id, 0) > 0
+                  show badge with unread_counts[user.id]
+                  and add conv-row--unread class to parent .conv-row
+              #}
+              <span class="conv-row__badge" aria-label="unread messages"></span>
+            </div>
+          </div>
+
+        </a>
+      {% endfor %}
+
+    </div>{# /convList #}
+
+    {# No-results state shown by JS when search yields zero #}
+    <div class="inbox-noresult" id="inboxNoResult" aria-live="polite">
+      <i class="bi bi-search inbox-noresult__icon" aria-hidden="true"></i>
+      No conversations match your search.
+    </div>
+
+  </div>
+  {% endif %}{# /if connected_users #}
+
+
+  {# ══════════════════════════════════════════════════════════
+     EMPTY STATE — no connections and no requests
+  ══════════════════════════════════════════════════════════ #}
+  {% if not connected_users and not incoming_users %}
+  <div class="inbox-empty animate-on-scroll">
+    <i class="bi bi-inbox inbox-empty__icon" aria-hidden="true"></i>
+    <h2 class="inbox-empty__title">No messages yet</h2>
+    <p class="inbox-empty__text">
+      Connect with people to start chatting and build your campus community.
+    </p>
+    <a href="{{ url_for('main.search_page') }}" class="inbox-empty__cta">
+      <i class="bi bi-compass" aria-hidden="true"></i>
+      Find People
+    </a>
+  </div>
+  {% endif %}
+
+
+  {# ══════════════════════════════════════════════════════════
+     GROUP CHATS — coming soon placeholder (kept from old code)
+     TODO: Uncomment when group messaging is built.
+  ══════════════════════════════════════════════════════════ #}
+  {# {% if false %}
+  <section>
+    Group Chats — Coming Soon
+  </section>
+  {% endif %} #}
+
+</div>{# /inbox-page #}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     INBOX PAGE — client-side conversation search
+     Filters .conv-row elements by data-name and inner text.
+     Updates the count badge and shows/hides no-result state.
+  ============================================================ */
+
+  const searchInput  = document.getElementById('inboxSearchInput');
+  const convList     = document.getElementById('convList');
+  const countEl      = document.getElementById('convCount');
+  const noResultEl   = document.getElementById('inboxNoResult');
+
+  if (!searchInput || !convList) return;
+
+  searchInput.addEventListener('input', function () {
+    const q    = this.value.trim().toLowerCase();
+    const rows = convList.querySelectorAll('.conv-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+      const nameMatch = (row.dataset.name || '').includes(q);
+      const textMatch = row.innerText.toLowerCase().includes(q);
+      const show      = !q || nameMatch || textMatch;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (countEl) countEl.textContent = visible;
+
+    if (noResultEl) {
+      noResultEl.style.display =
+        (visible === 0 && q.length > 0) ? 'block' : 'none';
+    }
+  });
+
+})();
+</script>
 {% endblock %}
