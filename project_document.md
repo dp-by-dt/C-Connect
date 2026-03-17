@@ -1640,8 +1640,13 @@ Remaining bugs:
 #### Dashboard:
     - UI upgraded
     - Existing backend end points added (❌exept profile completion logic)
-    ❌ Feed and explore loading is not connected (needs extension from the backend side)
-    ❌ No integration from `base.html` level
+    ❌ Feed and explore loading is not connected (needs extension from the backend side) (-✅fixed)
+    ❌ No integration from `base.html` level (-✅fixed)
+    -----------------------
+    - Bottom feed section showing latest posts
+    ❌ Post images not showing the images as expected
+    ⚠️ Interest not linked anywhere
+    
     
 #### Feed/Posts:
     - UI upgraded successfully - existing backend properly integrated
@@ -1719,6 +1724,13 @@ Remaining bugs:
     ⚠️ Dark mode toggle not connected to the one on the nav bar (only problem in the desktop)
     ✅ Change password giving limit error (Critical error) probably due to some backend bug with it (used to work properly before)-- (solved by modifying the route file, so that each user get's 5 req per day, not each IP address)
 
+
+### Problems
+1. Dashboard: bottom nav not working
+2. Message: when soft keyboard, the text box goes down
+3. Time is in utc.. need to convert to ist
+4. Notification: not linked
+5. 
 
 
 

@@ -106,11 +106,24 @@ def dashboard():
         session.pop("profile_completed", None)
 
 
+    # Get latest posts from connected users (for dashboard preview)
+    connected_ids = [conn.target_user_id if conn.user_id == user_id else conn.user_id 
+                    for conn in Connection.query.filter(
+                        Connection.status.in_(['accepted', 'connected']),
+                        (Connection.user_id == user_id) | (Connection.target_user_id == user_id)
+                    ).all()]
+
+    feed_posts = Post.query.filter(
+        Post.user_id.in_(connected_ids)
+    ).order_by(Post.created_at.desc()).limit(5).all()
+
+
     return render_template('main/dashboard.html', 
                     username=current_user.username, 
                     stats=stats, posts=current_user.posts, 
                     profile_pic=current_user.profile.profile_picture, 
-                    profile_completion=completion
+                    profile_completion=completion,
+                    feed_posts = feed_posts
                 )
 
 
