@@ -1647,7 +1647,7 @@ Remaining bugs:
     ❌ Post images not showing the images as expected
     ⚠️ Interest not linked anywhere
     
-    
+
 #### Feed/Posts:
     - UI upgraded successfully - existing backend properly integrated
     ❌ But some features need improvement (like using AJAX, add post button etc.)
@@ -1723,6 +1723,13 @@ Remaining bugs:
     ⚠️ Hide most of the ones which are not present
     ⚠️ Dark mode toggle not connected to the one on the nav bar (only problem in the desktop)
     ✅ Change password giving limit error (Critical error) probably due to some backend bug with it (used to work properly before)-- (solved by modifying the route file, so that each user get's 5 req per day, not each IP address)
+
+
+#### Profile (Others)
+    - Upgraded, not much of a porblem
+    ❌ Posts doesn't show images 
+    ❌ clicking post doesn't get you to that particular post (like in the dashboard)
+    ❌❌ There is a critical issue with connections: Once a user send connection, rejected and then can't sent connection/accept from the user's profile. but can be done from the discover page and keeps the conection. This might arise duplicate connection bug
 
 
 ### Problems
