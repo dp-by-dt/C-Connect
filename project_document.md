@@ -1660,6 +1660,7 @@ Remaining bugs:
     ✅ department, year etc. details has not been extended from backend (Solvedd)
     ⚠️ Interests tags are not dynamicly shown (start adding from db side)--- not sure
     ✅ seeing all posts from the grid's size need improvements.. And can't like/delete from there. (solved... Can like and delete, but can't open on a new window)
+    ✅ Settings icon and back icon's bar showing on top (commented it out)
     - Almost work for the beta testing
 
 #### Profile Edit

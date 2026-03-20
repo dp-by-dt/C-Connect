@@ -84,11 +84,11 @@
   /* ── FLOATING TOPBAR ─────────────────────────────────────── */
   .op-topbar {
     position: fixed;
-    top: var(--topbar-h, 58px);
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 100%; max-width: 760px;
-    z-index: 95;
+    z-index: 120;
     padding: 14px 18px 12px;
     display: flex; align-items: center;
     justify-content: space-between;
@@ -793,7 +793,7 @@
 {% block body %}
 <div class="op-page">
 
-  {# ── FLOATING TOPBAR ── #}
+  {# ── FLOATING TOPBAR (not right now requried.....) ──
   <header class="op-topbar" id="opTopbar">
     <a href="{{ url_for('main.dashboard') }}"
        class="op-topbar__btn" aria-label="Back to dashboard">
@@ -813,6 +813,8 @@
       </svg>
     </a>
   </header>
+
+   #}
 
 
   {# ── BANNER ── #}
@@ -1203,58 +1205,7 @@ commented out for now---------------
   #}
 
 
-  {# ── OWN BOTTOM NAV ── #}
-  <nav class="op-bottom-nav" aria-label="Main navigation">
 
-    <a class="op-nav-item" href="{{ url_for('main.search_page') }}">
-      <div class="op-nav-icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
-        </svg>
-      </div>
-      <span class="op-nav-label">Discover</span>
-    </a>
-
-    <a class="op-nav-item" href="{{ url_for('connections.connections_home') }}">
-      <div class="op-nav-icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      </div>
-      <span class="op-nav-label">Connect</span>
-    </a>
-
-    <a class="op-nav-fab" href="{{ url_for('main.dashboard') }}" aria-label="Home">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        <polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-    </a>
-
-    <a class="op-nav-item" href="{{ url_for('messages.inbox') }}">
-      <div class="op-nav-icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-      </div>
-      <span class="op-nav-label">Messages</span>
-    </a>
-
-    <a class="op-nav-item op-nav-item--active" href="#">
-      <div class="op-nav-icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      </div>
-      <span class="op-nav-label">Profile</span>
-    </a>
-
-  </nav>
 
 </div>{# /op-page #}
 {% endblock %}

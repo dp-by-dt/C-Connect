@@ -6095,3 +6095,7 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2026-03-19 23:27:38,974 [INFO] app: Cleaned up 6 old notifications.
 2026-03-20 12:41:56,055 [INFO] app: Cleaned up 0 old notifications.
 2026-03-20 16:50:26,573 [INFO] app: Cleaned up 0 old notifications.
+2026-03-20 18:28:43,887 [WARNING] app: IMAGE_PATH (DB): uploads/posts/post_img19_20260320125826.jpg
+2026-03-20 18:28:43,888 [WARNING] app: UPLOAD_FOLDER: static/uploads
+2026-03-20 20:55:27,273 [INFO] app: Cleaned up 0 old notifications.
+2026-03-20 20:57:03,986 [INFO] app: Cleaned up 0 old notifications.
