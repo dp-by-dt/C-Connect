@@ -1732,6 +1732,11 @@ Remaining bugs:
     ❌❌ There is a critical issue with connections: Once a user send connection, rejected and then can't sent connection/accept from the user's profile. but can be done from the discover page and keeps the conection. This might arise duplicate connection bug
 
 
+#### Base.html
+    - Upgraded with better side and bottom bars
+    ⚠️ Few modifications needed in UI as some pages show overlaps with the base template (like the user's profile and connections page) but not a big problem for beta testing
+
+
 ### Problems
 1. Dashboard: bottom nav not working
 2. Message: when soft keyboard, the text box goes down

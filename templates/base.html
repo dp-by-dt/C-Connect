@@ -1,434 +1,1299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ==================== THEME INITIALIZATION (ANTI-FLICKER) ==================== -->
-<script>
+
+  <!-- ==================== THEME INIT (ANTI-FLICKER) ==================== -->
+  <script>
     (function() {
-        // Prevent any transitions during load
-        const css = document.createElement('style');
-        css.textContent = '* { transition: none !important; }';
-        document.head.appendChild(css);
-        
-        const t = localStorage.getItem("cconnect-theme") || "light";
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const dark = (t === "dark") || (t === "system" && prefersDark);
-
-        if (dark) {
-            document.documentElement.classList.add("theme-dark");
-        } else {
-            document.documentElement.classList.remove("theme-dark");
-        }
-
-        // Re-enable transitions after a brief delay
-        window.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => {
-                css.remove();
-            }, 50);
-        });
+      const css = document.createElement('style');
+      css.textContent = '* { transition: none !important; }';
+      document.head.appendChild(css);
+      const t = localStorage.getItem("cconnect-theme") || "light";
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if ((t === "dark") || (t === "system" && prefersDark)) {
+        document.documentElement.classList.add("theme-dark");
+      }
+      window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => css.remove(), 50);
+      });
     })();
-</script>
+  </script>
 
-    <!-- ==================== HTMX FOR DYNAMIC INTERACTIONS ==================== -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <!-- ==================== HTMX ==================== -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-    <!-- ==================== VIBE COLOR INJECTION ==================== -->
-    {% if g.vibe_color %}
-    <style>
-        :root {
-            --vibe-accent: {{ g.vibe_color }};
-        }
-    </style>
-    {% endif %}
+  <!-- ==================== VIBE COLOR ==================== -->
+  {% if g.vibe_color %}
+  <style>:root { --vibe-accent: {{ g.vibe_color }}; }</style>
+  {% endif %}
 
-    <!-- ==================== META & TITLE ==================== -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="C-Connect - Connect with your campus community">
-    <title>{% block title %}C-Connect{% endblock %} | Campus Connect</title>
+  <!-- ==================== META ==================== -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="C-Connect — Connect with your campus community">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}C-Connect{% endblock %} | Campus Connect</title>
 
-    <!-- ==================== PRECONNECT TO CDNS ==================== -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <!-- ==================== PRECONNECT ==================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-    <!-- ==================== FONTS ==================== -->
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@300;400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <!-- ==================== FONTS ==================== -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@300;400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 
-    <!-- ==================== ICONS ==================== -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+  <!-- ==================== ICONS ==================== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-    <!-- ==================== STYLESHEETS ==================== -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+  <!-- ==================== STYLESHEETS ==================== -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+
+  <style>
+    /* ── Bootstrap reset ── */
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body { line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* ============================================================
+       BASE LAYOUT
+       Mobile:  topbar + bottom-nav (5 items) + hamburger sidebar
+       Desktop: topbar + icon-only sidebar (expands on hover/toggle)
+       No bottom-nav on desktop.
+    ============================================================ */
+
+    /* ── CSS Variables (supplement global.css) ── */
+    :root {
+      --topbar-h:        58px;
+      --sidebar-w:       70px;       /* collapsed — icons only */
+      --sidebar-w-open:  220px;      /* expanded — icons + labels */
+      --bottom-nav-h:    64px;
+      --nav-transition:  0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Body layout ── */
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body, 'DM Sans', sans-serif);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Authenticated layout shifts content right on desktop */
+    body.auth-layout {
+      padding-top: var(--topbar-h);
+    }
+
+    @media (min-width: 768px) {
+      body.auth-layout .main-content {
+        margin-left: var(--sidebar-w);
+        transition: margin-left var(--nav-transition);
+      }
+      body.auth-layout.sidebar-open .main-content {
+        margin-left: var(--sidebar-w-open);
+      }
+    }
+
+    @media (max-width: 767px) {
+      body.auth-layout {
+        padding-bottom: var(--bottom-nav-h);
+      }
+    }
+
+    /* ── Main content ── */
+    .main-content {
+      min-height: calc(100dvh - var(--topbar-h));
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 0 16px;
+      transition: margin-left var(--nav-transition);
+    }
+
+    @media (min-width: 768px) {
+      .main-content {
+        /* On desktop, content fills space after sidebar */
+        max-width: none;
+        padding: 0 24px 24px;
+      }
+    }
 
 
-    <style>
-        /* Override Bootstrap reboot font compression */
-        html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-        body { line-height: 1.6; -webkit-font-smoothing: antialiased; }
-        *, *::before, *::after { box-sizing: border-box; }
-    </style>
+    /* ============================================================
+       TOPBAR
+       Transparent at top, frosts on scroll.
+       Hidden only on pages that inject body class overrides.
+    ============================================================ */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--topbar-h);
+      z-index: 100;
+      display: flex; align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+      /* Start transparent */
+      background: transparent;
+      border-bottom: 1px solid transparent;
+      transition:
+        background   0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+    }
 
-    {% block extra_css %}{% endblock %}
+    .topbar.scrolled {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom-color: var(--border-color);
+      box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+    }
+
+    /* Hamburger — mobile only */
+    .topbar__burger {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer; flex-shrink: 0;
+      transition: all var(--transition-fast);
+      color: var(--text-primary);
+      font-size: 18px;
+    }
+
+    .topbar__burger:hover {
+      background: var(--primary-dim);
+      border-color: var(--primary-border);
+      color: var(--primary-color);
+    }
+
+    @media (min-width: 768px) {
+      .topbar__burger { display: none; }
+    }
+
+    /* Brand */
+    .topbar__brand {
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none; flex: 1;
+    }
+
+    .topbar__brand-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--primary-dim);
+      flex-shrink: 0;
+      animation: base-pulse 2.4s ease infinite;
+    }
+
+    @keyframes base-pulse {
+      0%,100% { box-shadow: 0 0 0 3px var(--primary-dim); }
+      50%      { box-shadow: 0 0 0 6px transparent; }
+    }
+
+    .topbar__brand-name {
+      font-family: var(--font-display, 'Syne', sans-serif);
+      font-weight: 800; font-size: 17px;
+      letter-spacing: -0.4px; color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .topbar__brand-name span { color: var(--primary-color); }
+
+    /* Right actions */
+    .topbar__actions {
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Icon button — bell, theme toggle */
+    .topbar__icon-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer; position: relative;
+      text-decoration: none; color: var(--text-secondary);
+      font-size: 17px;
+      transition: all var(--transition-fast);
+    }
+
+    .topbar__icon-btn:hover {
+      background: var(--primary-dim);
+      border-color: var(--primary-border);
+      color: var(--primary-color);
+    }
+
+    /* Notification badge */
+    .topbar__badge {
+      position: absolute; top: 5px; right: 5px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--coral-color);
+      border: 1.5px solid var(--bg-secondary);
+    }
+
+    .topbar__badge--count {
+      width: auto; height: 16px;
+      padding: 0 4px; border-radius: 8px;
+      font-family: var(--font-display);
+      font-size: 9px; font-weight: 700;
+      color: #fff; background: var(--coral-color);
+      top: 4px; right: 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Avatar button — links to profile */
+    .topbar__avatar-btn {
+      width: 33px; height: 33px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 13px;
+      text-decoration: none; color: #fff;
+      flex-shrink: 0;
+      border: 2px solid var(--bg-secondary);
+      box-shadow: 0 0 0 2px var(--primary-border);
+      transition: all var(--transition-fast);
+      overflow: hidden;
+    }
+
+    .topbar__avatar-btn:hover {
+      box-shadow: 0 0 0 2px var(--primary-color);
+      transform: scale(1.05);
+    }
+
+    /* Avatar color variants — user.id % 5 */
+    .topbar-av--0 { background: var(--primary-color); }
+    .topbar-av--1 { background: var(--indigo-color); }
+    .topbar-av--2 { background: var(--amber-color); }
+    .topbar-av--3 { background: var(--coral-color); }
+    .topbar-av--4 { background: var(--teal-color); }
+
+    .topbar__avatar-btn img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+
+    /* ============================================================
+       DESKTOP SIDEBAR
+       Collapsed (icon-only) by default.
+       Expands on hover OR when .sidebar-open class on body.
+       Hidden on mobile.
+    ============================================================ */
+    .sidebar {
+      position: fixed;
+      top: var(--topbar-h); left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex; flex-direction: column;
+      z-index: 90;
+      overflow: visible;
+      transition: width var(--nav-transition);
+      border-radius: 0 16px 16px 0
+    }
+
+    /* Expand on hover */
+    .sidebar:hover,
+    body.sidebar-open .sidebar {
+      width: var(--sidebar-w-open);
+      min-width: var(--sidebar-w-open);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.07);
+    }
+
+    @media (max-width: 767px) {
+      .sidebar { display: none; }
+    }
+
+    /* Sidebar nav */
+    .sidebar__nav {
+      flex: 1; padding: 12px 0;
+      display: flex; flex-direction: column; gap: 2px;
+      overflow-y: auto; overflow-x: hidden;
+    }
+
+    .sidebar__link {
+      display: flex; align-items: center;
+      gap: 12px; padding: 10px 8px;
+      border-radius: 0;
+      color: var(--text-muted);
+      text-decoration: none;
+      white-space: nowrap;
+      position: relative;
+      transition:
+        background var(--transition-fast),
+        color      var(--transition-fast);
+      min-height: 44px;
+    }
+
+    .sidebar__link:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .sidebar__link.active {
+      background: var(--primary-dim);
+      color: var(--primary-color);
+      margin-right: 2px;
+      border-right: 3px solid var(--primary-color);
+      border-radius: 5px;
+    }
+
+    .sidebar__link-icon {
+      width: 24px; height: 24px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+
+    .sidebar__link-text {
+      font-family: var(--font-display);
+      font-size: 13.5px; font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+    }
+
+    /* Show text on hover or when open */
+    .sidebar:hover .sidebar__link-text,
+    body.sidebar-open .sidebar .sidebar__link-text {
+      opacity: 1;
+    }
+
+    /* Tooltip for collapsed state */
+    .sidebar__link[data-tooltip]:not(.sidebar:hover .sidebar__link)::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(var(--sidebar-w) + 8px);
+      top: 50%; transform: translateY(-50%);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-family: var(--font-display);
+      font-size: 11px; font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 200;
+    }
+
+    .sidebar__link[data-tooltip]:not(.sidebar:hover .sidebar__link):hover::after {
+      opacity: 1;
+    }
+
+    /* Sidebar bottom — logout */
+    .sidebar__bottom {
+      padding: 12px 0;
+      border-top: 1px solid var(--border-color);
+      flex-shrink: 0;
+      background: var(--bg-secondary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar__logout-btn {
+      display: flex; align-items: center;
+      gap: 12px; padding: 15px 18px;
+      color: var(--coral-color);
+      cursor: pointer; white-space: nowrap;
+      background: none; border: none; width: 100%;
+      text-align: left;
+      transition: background var(--transition-fast);
+      min-height: 80px;
+      padding-bottom: 80px;
+    }
+
+    .sidebar__logout-btn:hover { background: var(--coral-dim); }
+
+    .sidebar__logout-btn .sidebar__link-icon { font-size: 17px; }
+
+    .sidebar__logout-btn .sidebar__link-text {
+      font-family: var(--font-display);
+      font-size: 13.5px; font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .sidebar:hover .sidebar__logout-btn .sidebar__link-text,
+    body.sidebar-open .sidebar .sidebar__logout-btn .sidebar__link-text {
+      opacity: 1;
+    }
+
+
+    /* ============================================================
+       MOBILE BOTTOM NAV
+       5 items: Feed · Discover · Home FAB · Messages · Board
+       Hidden on desktop.
+    ============================================================ */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: var(--bottom-nav-h);
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border-color);
+      display: flex; align-items: center;
+      justify-content: space-around;
+      padding: 0 4px 8px;
+      z-index: 100;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.055);
+    }
+
+    @media (min-width: 768px) {
+      .bottom-nav { display: none; }
+
+    .topbar {
+        left: var(--sidebar-w);  /* ADD — offset topbar by sidebar width */
+        transition: left var(--nav-transition);
+    }
+    body.sidebar-open .topbar {
+        left: var(--sidebar-w-open);
+    }
+    }
+
+    .bottom-nav__item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      cursor: pointer; padding: 6px 10px;
+      border-radius: 10px; flex: 1;
+      text-decoration: none;
+      color: var(--text-muted);
+      transition: color var(--transition-fast);
+      font-size: 20px;
+    }
+
+    .bottom-nav__item span {
+      font-family: var(--font-body);
+      font-size: 9.5px; letter-spacing: 0.2px;
+      color: inherit;
+    }
+
+    .bottom-nav__item.active,
+    .bottom-nav__item:hover {
+      color: var(--primary-color);
+    }
+
+    .bottom-nav__item.active span { font-weight: 600; }
+
+    /* Home FAB — center elevated button */
+    .bottom-nav__fab {
+      width: 50px; height: 50px;
+      background: var(--primary-color);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: #fff;
+      font-size: 22px;
+      box-shadow: 0 4px 16px var(--primary-glow, rgba(45,122,58,0.3));
+      transition: all var(--transition-fast);
+      flex-shrink: 0; margin-top: -8px;
+    }
+
+    .bottom-nav__fab:hover {
+      background: var(--primary-hover);
+      transform: scale(1.07); color: #fff;
+    }
+
+
+    /* ============================================================
+       MOBILE HAMBURGER SIDEBAR
+       Slide-in from left. Simplified — key links only.
+       Overlay darkens the rest of the screen.
+    ============================================================ */
+    .mob-sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 260px;
+      background: var(--bg-secondary);
+      z-index: 300;
+      transform: translateX(-100%);
+      transition: transform var(--nav-transition);
+      display: flex; flex-direction: column;
+      box-shadow: 4px 0 32px rgba(0,0,0,0.14);
+    }
+
+    .mob-sidebar.open { transform: translateX(0); }
+
+    @media (min-width: 768px) {
+      .mob-sidebar { display: none; }
+    }
+
+    /* Header */
+    .mob-sidebar__header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .mob-sidebar__brand {
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none;
+    }
+
+    .mob-sidebar__brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary-color);
+    }
+
+    .mob-sidebar__brand-name {
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 18px;
+      letter-spacing: -0.3px; color: var(--text-primary);
+    }
+
+    .mob-sidebar__brand-name span { color: var(--primary-color); }
+
+    .mob-sidebar__close {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: var(--bg-hover);
+      border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 16px;
+      transition: all var(--transition-fast);
+    }
+
+    .mob-sidebar__close:hover {
+      background: var(--coral-dim); color: var(--coral-color);
+    }
+
+    /* User strip */
+    .mob-sidebar__user {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      text-decoration: none; flex-shrink: 0;
+    }
+
+    .mob-sidebar__user-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 15px;
+      color: #fff; flex-shrink: 0;
+    }
+
+    .mob-sidebar__user-info { flex: 1; min-width: 0; }
+
+    .mob-sidebar__user-name {
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .mob-sidebar__user-email {
+      font-size: 11px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Nav links */
+    .mob-sidebar__nav {
+      flex: 1; padding: 10px 0;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+    }
+
+    .mob-sidebar__link {
+      display: flex; align-items: center; gap: 13px;
+      padding: 11px 18px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 600;
+      transition: all var(--transition-fast);
+      border-left: 3px solid transparent;
+    }
+
+    .mob-sidebar__link i { font-size: 17px; flex-shrink: 0; }
+
+    .mob-sidebar__link:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-left-color: var(--primary-border);
+    }
+
+    .mob-sidebar__link.active {
+      background: var(--primary-dim);
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+    }
+
+    /* Divider */
+    .mob-sidebar__divider {
+      height: 1px; background: var(--border-color);
+      margin: 8px 18px;
+    }
+
+    /* Bottom logout */
+    .mob-sidebar__bottom {
+      padding: 10px 0 20px;
+      border-top: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .mob-sidebar__logout {
+      display: flex; align-items: center; gap: 13px;
+      padding: 11px 18px;
+      color: var(--coral-color);
+      font-family: var(--font-display);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; background: none; border: none;
+      width: 100%; text-align: left;
+      transition: background var(--transition-fast);
+    }
+
+    .mob-sidebar__logout:hover { background: var(--coral-dim); }
+    .mob-sidebar__logout i { font-size: 17px; }
+
+    /* Overlay */
+    .mob-sidebar__overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 299;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--nav-transition);
+    }
+
+    .mob-sidebar__overlay.open {
+      opacity: 1; pointer-events: all;
+    }
+
+
+    /* ============================================================
+       FLASH MESSAGES
+    ============================================================ */
+    .flash-container {
+      position: fixed;
+      top: calc(var(--topbar-h) + 10px);
+      left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      z-index: 500;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+
+    .flash-message {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 13.5px; font-weight: 500;
+      box-shadow: var(--shadow-md);
+      pointer-events: all;
+      animation: flash-in 0.3s ease both;
+    }
+
+    @keyframes flash-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .flash-message--success {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-border);
+      color: var(--primary-color);
+    }
+
+    .flash-message--danger,
+    .flash-message--error {
+      background: var(--coral-dim);
+      border: 1px solid var(--coral-border);
+      color: var(--coral-color);
+    }
+
+    .flash-message--warning {
+      background: var(--amber-dim);
+      border: 1px solid var(--amber-border);
+      color: var(--amber-color);
+    }
+
+    .flash-message--info {
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-border);
+      color: var(--indigo-color);
+    }
+
+    .flash-message i { font-size: 16px; flex-shrink: 0; }
+
+    .flash-message span { flex: 1; }
+
+    .flash-message__close {
+      background: none; border: none; cursor: pointer;
+      color: inherit; opacity: 0.6; font-size: 14px;
+      padding: 0; flex-shrink: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .flash-message__close:hover { opacity: 1; }
+
+
+    /* ============================================================
+       NO-JS BANNER
+    ============================================================ */
+    .no-js-banner {
+      background: var(--amber-dim);
+      color: var(--amber-color);
+      border: 1px solid var(--amber-border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      margin: 8px 16px;
+      text-align: center;
+      font-family: var(--font-body);
+      font-size: 13px; font-weight: 600;
+      position: sticky; z-index: 1000;
+    }
+
+  </style>
+
+  {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-    <!-- ==================== AUTHENTICATED USER LAYOUT ==================== -->
-    {% if current_user.is_authenticated %}
-        
-        <!-- ========== DESKTOP SIDEBAR NAVIGATION ========== -->
-        <aside class="sidebar glass-effect" id="sidebar">
-            <!-- <div class="sidebar__brand">
-                <a href="{{ url_for('main.home') }}" class="sidebar__logo">
-                    <span class="brand-icon">
-                        <i class="bi bi-circle-fill"></i>
-                    </span>
-                    <span class="brand-c">C</span>
-                    <span class="brand-text">Connect</span>
-                </a>
-            </div> -->
 
-            <nav class="sidebar__nav">
-                <a href="{{ url_for('main.dashboard') }}" class="sidebar__link" data-tooltip="Dashboard">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-house-door"></i>
-                    </div>
-                    <span class="sidebar__link-text">Dashboard</span>
-                </a>
-                <a href="{{ url_for('main.search_page') }}" class="sidebar__link" data-tooltip="Discover">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-compass"></i>
-                    </div>
-                    <span class="sidebar__link-text">Discover</span>
-                </a>
-                <a href="{{ url_for('connections.connections_home') }}" class="sidebar__link" data-tooltip="Connections">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-people"></i>
-                    </div>
-                    <span class="sidebar__link-text">Connections</span>
-                </a>
-                <a href="{{ url_for('messages.inbox') }}" class="sidebar__link" data-tooltip="Messages">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-chat-dots"></i>
-                    </div>
-                    <span class="sidebar__link-text">Messages</span>
-                </a>
-                <a href="/campus-board" class="sidebar__link" data-tooltip="Messages">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-stickies"></i>
-                    </div>  
-                    <span class="sidebar__link-text"> Campus Board</span>
-                </a>
-                <a href="{{ url_for('auth.profile') }}" class="sidebar__link" data-tooltip="Profile">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-person-circle"></i>
-                    </div>
-                    <span class="sidebar__link-text">Profile</span>
-                </a>
-                <a href="{{ url_for('main.settings') }}" class="sidebar__link" data-tooltip="Settings">
-                    <div class="sidebar__link-icon">
-                        <i class="bi bi-gear"></i>
-                    </div>
-                    <span class="sidebar__link-text">Settings</span>
-                </a>
-            </nav>
+<body class="{{ 'auth-layout' if current_user.is_authenticated else '' }}">
 
-            <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </aside>
-        
+  {% if current_user.is_authenticated %}
 
-        <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
-        <nav class="bottom-nav glass-effect">
-            <a href="{{ url_for('main.search_page') }}" class="bottom-nav__item">
-                <i class="bi bi-compass"></i>
-                <span>Discover</span>
-            </a>
-            <a href="{{ url_for('connections.connections_home') }}" class="bottom-nav__item">
-                <i class="bi bi-people"></i>
-                <span>Connect</span>
-            </a>
-            <a href="{{ url_for('main.dashboard') }}" class="bottom-nav__item bottom-nav__item--primary">
-                <div class="bottom-nav__primary-bg"></div>
-                <i class="bi bi-house-door-fill"></i>
-            </a>
-            <a href="{{ url_for('messages.inbox') }}" class="bottom-nav__item">
-                <i class="bi bi-chat-dots"></i>
-                <span>Messages</span>
-            </a>
-            <a href="{{ url_for('auth.profile') }}" class="bottom-nav__item">
-                <i class="bi bi-person-circle"></i>
-                <span>Profile</span>
-            </a>
-            <a href="/campus-board" class="bottom-nav__item">
-                <i class="bi bi-stickies"></i>
-                <span>Board</span>
-            </a>
-        </nav>
+    <!-- ====================================================
+         TOPBAR
+    ==================================================== -->
+    <header class="topbar" id="mainTopbar">
 
-        <!-- ========== TOP BAR ========== -->
-        <header class="topbar glass-effect">
-            <div class="topbar__container">
-                <!-- Left Side -->
-                <div class="topbar__left">
-                    <button class="topbar__menu-btn" id="mobileMenuToggle" aria-label="Open menu">
-                        <i class="bi bi-list"></i>
-                    </button>
-                </div>
+      {# Hamburger — mobile only #}
+      <button class="topbar__burger" id="burgerBtn" aria-label="Open menu">
+        <i class="bi bi-list"></i>
+      </button>
 
-                <!-- Center Brand -->
-                <div class="topbar__center">
-                    <a href="{{ url_for('main.home') }}" class="topbar__brand">
-                        <span class="brand-icon-small">
-                            <i class="bi bi-circle-fill"></i>
-                        </span>
-                        <span class="brand-c">C</span>
-                        <span class="brand-text">Connect</span>
-                    </a>
-                </div>
+      {# Brand #}
+      <a href="{{ url_for('main.home') }}" class="topbar__brand">
+        <span class="topbar__brand-dot"></span>
+        <span class="topbar__brand-name">C<span>Connect</span></span>
+      </a>
 
-                <!-- Right Actions -->
-                <div class="topbar__actions">
-                    <a href="{{ url_for('notifications.notifications_list') }}" class="topbar__icon-btn" aria-label="Notifications">
-                        <i class="bi bi-bell"></i>
-                        {% set unread = current_user.notifications | selectattr("is_read", "equalto", False) | list %}
-                        {% if unread|length > 0 %}
-                        <span class="topbar__badge">{{ unread|length }}</span>
-                        {% endif %}
-                    </a>
+      {# Right actions #}
+      <div class="topbar__actions">
 
-                    <button class="topbar__icon-btn topbar__theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <i class="bi bi-sun-fill" id="themeIcon"></i>
-                    </button>
+        {# Theme toggle #}
+        <button class="topbar__icon-btn" id="themeToggle" aria-label="Toggle theme">
+          <i class="bi bi-sun-fill" id="themeIcon"></i>
+        </button>
 
-                    <div class="topbar__profile" id="profileDropdown">
-                        <button class="topbar__profile-btn" aria-label="Profile menu">
-                            <div class="topbar__avatar">
-                                {{ current_user.username[0].upper() }}
-                            </div>
-                            <span class="topbar__username">{{ current_user.username }}</span>
-                            <i class="bi bi-chevron-down topbar__profile-arrow"></i>
-                        </button>
-                        
-                        <div class="topbar__dropdown glass-effect" id="profileMenu">
-                            <a href="{{ url_for('auth.profile') }}" class="topbar__dropdown-item">
-                                <i class="bi bi-person-circle"></i>
-                                <span>My Profile</span>
-                            </a>
-                            <a href="{{ url_for('main.settings') }}" class="topbar__dropdown-item">
-                                <i class="bi bi-gear"></i>
-                                <span>Settings</span>
-                            </a>
-                            <div class="topbar__dropdown-divider"></div>
-                            <a href="#" class="topbar__dropdown-item topbar__dropdown-item--danger" onclick="confirmLogout(event)">
-                                <i class="bi bi-box-arrow-right"></i>
-                                <span>Logout</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+        {# Notifications #}
+        <a href="{{ url_for('notifications.notifications_list') }}"
+           class="topbar__icon-btn"
+           aria-label="Notifications">
+          <i class="bi bi-bell"></i>
+          {% set unread = current_user.notifications
+                          | selectattr("is_read", "equalto", False)
+                          | list %}
+          {% if unread|length > 0 %}
+            <span class="topbar__badge topbar__badge--count"
+                  aria-label="{{ unread|length }} unread">
+              {{ unread|length if unread|length < 10 else '9+' }}
+            </span>
+          {% endif %}
+        </a>
 
-        
-        <!-- ========== MOBILE SIDEBAR MENU ========== -->
-        <div class="mobile-menu" id="mobileMenu">
-            <div class="mobile-menu__content glass-effect">
-                <div class="mobile-menu__header">
-                    <a href="{{ url_for('main.home') }}" class="mobile-menu__brand">
-                        <span class="brand-icon-small">
-                            <i class="bi bi-circle-fill"></i>
-                        </span>
-                        <span class="brand-c">C</span>
-                        <span class="brand-text">Connect</span>
-                    </a>
-                    <button class="mobile-menu__close" id="mobileMenuClose" aria-label="Close menu">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
+        {# Avatar → profile page #}
+        <a href="{{ url_for('auth.profile') }}"
+           class="topbar__avatar-btn topbar-av--{{ current_user.id % 5 }}"
+           aria-label="My profile">
+          {% if current_user.profile and current_user.profile.profile_picture %}
+            <img src="{{ current_user.profile.profile_picture }}"
+                 alt="{{ current_user.username }}"
+                 onerror="this.style.display='none';">
+          {% else %}
+            {{ current_user.username[0].upper() }}
+          {% endif %}
+        </a>
 
-                <nav class="mobile-menu__nav">
-                    <a href="{{ url_for('main.dashboard') }}" class="mobile-menu__link">
-                        <i class="bi bi-house-door"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="{{ url_for('main.search_page') }}" class="mobile-menu__link">
-                        <i class="bi bi-compass"></i>
-                        <span>Discover</span>
-                    </a>
-                    <a href="{{ url_for('connections.connections_home') }}" class="mobile-menu__link">
-                        <i class="bi bi-people"></i>
-                        <span>Connections</span>
-                    </a>
-                    <a href="{{ url_for('messages.inbox') }}" class="mobile-menu__link">
-                        <i class="bi bi-chat-dots"></i>
-                        <span>Messages</span>
-                    </a>
-                    <a href="/campus-board" class="mobile-menu__link">
-                        <i class="bi bi-stickies"></i> 
-                        <span> Campus Board</span>
-                    </a>
-                    <a href="{{ url_for('auth.profile') }}" class="mobile-menu__link">
-                        <i class="bi bi-person-circle"></i>
-                        <span>View Profile</span>
-                    </a>
-                    <a href="{{ url_for('main.settings') }}" class="mobile-menu__link">
-                        <i class="bi bi-gear"></i>
-                        <span>Settings</span>
-                    </a>
-                </nav>
-            </div>
-            <div class="mobile-menu__overlay" id="mobileMenuOverlay"></div>
+      </div>
+    </header>
+
+
+    <!-- ====================================================
+         DESKTOP SIDEBAR
+         Icon-only by default, expands on hover.
+    ==================================================== -->
+    <aside class="sidebar glass-effect" id="desktopSidebar">
+
+      <nav class="sidebar__nav">
+
+        <a href="{{ url_for('main.dashboard') }}"
+           class="sidebar__link" data-tooltip="Dashboard">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-house-door"></i>
+          </div>
+          <span class="sidebar__link-text">Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('main.search_page') }}"
+           class="sidebar__link" data-tooltip="Discover">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-compass"></i>
+          </div>
+          <span class="sidebar__link-text">Discover</span>
+        </a>
+
+        <a href="{{ url_for('posts.feed') }}"
+           class="sidebar__link" data-tooltip="Feed">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-rss"></i>
+          </div>
+          <span class="sidebar__link-text">Feed</span>
+        </a>
+
+        <a href="{{ url_for('connections.connections_home') }}"
+           class="sidebar__link" data-tooltip="Connections">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <span class="sidebar__link-text">Connections</span>
+        </a>
+
+        <a href="{{ url_for('messages.inbox') }}"
+           class="sidebar__link" data-tooltip="Messages">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-chat-dots"></i>
+          </div>
+          <span class="sidebar__link-text">Messages</span>
+        </a>
+
+        <a href="/campus-board"
+           class="sidebar__link" data-tooltip="Campus Board">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-stickies"></i>
+          </div>
+          <span class="sidebar__link-text">Campus Board</span>
+        </a>
+
+        <a href="{{ url_for('auth.profile') }}"
+           class="sidebar__link" data-tooltip="Profile">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-person-circle"></i>
+          </div>
+          <span class="sidebar__link-text">Profile</span>
+        </a>
+
+        <a href="{{ url_for('notifications.notifications_list') }}"
+           class="sidebar__link" data-tooltip="Notifications">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-bell"></i>
+          </div>
+          <span class="sidebar__link-text">Notifications</span>
+        </a>
+
+        <a href="{{ url_for('main.settings') }}"
+           class="sidebar__link" data-tooltip="Settings">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-gear"></i>
+          </div>
+          <span class="sidebar__link-text">Settings</span>
+        </a>
+
+      </nav>
+
+      {# Logout at bottom of sidebar #}
+      <div class="sidebar__bottom">
+        <button class="sidebar__logout-btn"
+                onclick="confirmLogout(event)"
+                data-tooltip="Logout">
+          <div class="sidebar__link-icon">
+            <i class="bi bi-box-arrow-right"></i>
+          </div>
+          <span class="sidebar__link-text">Logout</span>
+        </button>
+      </div>
+
+    </aside>
+
+
+    <!-- ====================================================
+         MOBILE BOTTOM NAV
+         5 items: Feed · Discover · Home FAB · Messages · Board
+    ==================================================== -->
+    <nav class="bottom-nav glass-effect" aria-label="Main navigation">
+
+      <a href="{{ url_for('posts.feed') }}"
+         class="bottom-nav__item"
+         aria-label="Feed">
+        <i class="bi bi-rss"></i>
+        <span>Feed</span>
+      </a>
+
+      <a href="{{ url_for('main.search_page') }}"
+         class="bottom-nav__item"
+         aria-label="Discover">
+        <i class="bi bi-compass"></i>
+        <span>Discover</span>
+      </a>
+
+      <a href="{{ url_for('main.dashboard') }}"
+         class="bottom-nav__fab"
+         aria-label="Home">
+        <i class="bi bi-house-door-fill"></i>
+      </a>
+
+      <a href="{{ url_for('messages.inbox') }}"
+         class="bottom-nav__item"
+         aria-label="Messages">
+        <i class="bi bi-chat-dots"></i>
+        <span>Messages</span>
+      </a>
+
+      <a href="/campus-board"
+         class="bottom-nav__item"
+         aria-label="Campus Board">
+        <i class="bi bi-stickies"></i>
+        <span>Board</span>
+      </a>
+
+    </nav>
+
+
+    <!-- ====================================================
+         MOBILE HAMBURGER SIDEBAR + OVERLAY
+    ==================================================== -->
+    <div class="mob-sidebar__overlay" id="mobOverlay"></div>
+
+    <div class="mob-sidebar" id="mobSidebar"  >
+
+      {# Header #}
+      <div class="mob-sidebar__header">
+        <a href="{{ url_for('main.home') }}" class="mob-sidebar__brand">
+          <span class="mob-sidebar__brand-dot"  ></span>
+          <span class="mob-sidebar__brand-name">C<span>Connect</span></span>
+        </a>
+        <button class="mob-sidebar__close" id="mobSidebarClose" aria-label="Close menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      {# User strip → profile #}
+      <a href="{{ url_for('auth.profile') }}" class="mob-sidebar__user">
+        <div class="mob-sidebar__user-av topbar-av--{{ current_user.id % 5 }}">
+          {% if current_user.profile and current_user.profile.profile_picture %}
+            <img src="{{ current_user.profile.profile_picture }}"
+                 alt="{{ current_user.username }}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+                 onerror="this.style.display='none';">
+          {% else %}
+            {{ current_user.username[0].upper() }}
+          {% endif %}
+        </div>
+        <div class="mob-sidebar__user-info">
+          <div class="mob-sidebar__user-name">{{ current_user.username }}</div>
+          <div class="mob-sidebar__user-email">{{ current_user.email }}</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:13px;"></i>
+      </a>
+
+      {# Nav links #}
+      <nav class="mob-sidebar__nav">
+
+        <a href="{{ url_for('main.dashboard') }}" class="mob-sidebar__link">
+          <i class="bi bi-house-door"></i>
+          Dashboard
+        </a>
+
+        <a href="{{ url_for('main.search_page') }}" class="mob-sidebar__link">
+          <i class="bi bi-compass"></i>
+          Discover
+        </a>
+
+        <a href="{{ url_for('posts.feed') }}" class="mob-sidebar__link">
+          <i class="bi bi-rss"></i>
+          Feed
+        </a>
+
+        <a href="{{ url_for('connections.connections_home') }}" class="mob-sidebar__link">
+          <i class="bi bi-people"></i>
+          Connections
+        </a>
+
+        <a href="{{ url_for('messages.inbox') }}" class="mob-sidebar__link">
+          <i class="bi bi-chat-dots"></i>
+          Messages
+        </a>
+
+        <a href="/campus-board" class="mob-sidebar__link">
+          <i class="bi bi-stickies"></i>
+          Campus Board
+        </a>
+
+        <div class="mob-sidebar__divider"></div>
+
+        <a href="{{ url_for('notifications.notifications_list') }}" class="mob-sidebar__link">
+          <i class="bi bi-bell"></i>
+          Notifications
+          {% set unread = current_user.notifications
+                          | selectattr("is_read", "equalto", False)
+                          | list %}
+          {% if unread|length > 0 %}
+            <span style="margin-left:auto; background:var(--coral-color);
+                         color:#fff; font-size:10px; font-weight:700;
+                         padding:2px 7px; border-radius:99px;
+                         font-family:var(--font-display);">
+              {{ unread|length }}
+            </span>
+          {% endif %}
+        </a>
+
+        <a href="{{ url_for('main.settings') }}" class="mob-sidebar__link">
+          <i class="bi bi-gear"></i>
+          Settings
+        </a>
+
+      </nav>
+
+      {# Logout #}
+      <div class="mob-sidebar__bottom">
+        <button class="mob-sidebar__logout"
+                onclick="confirmLogout(event)">
+          <i class="bi bi-box-arrow-right"></i>
+          Logout
+        </button>
+      </div>
+
+    </div>
+
+
+  {% else %}
+
+    <!-- ====================================================
+         GUEST NAV
+    ==================================================== -->
+    <nav class="guest-nav glass-effect">
+      <div class="guest-nav__container">
+
+        <a href="{{ url_for('main.home') }}" class="guest-nav__brand">
+          <span class="topbar__brand-dot"  ></span>
+          <span class="topbar__brand-name">C<span>Connect</span></span>
+        </a>
+
+        <div class="guest-nav__links">
+          <a href="{{ url_for('main.home') }}"    class="guest-nav__link">Home</a>
+          <a href="{{ url_for('main.about') }}"   class="guest-nav__link">About</a>
+          <a href="{{ url_for('main.contact') }}" class="guest-nav__link">Contact</a>
+          <a href="{{ url_for('auth.login') }}"   class="guest-nav__link">Login</a>
+          <a href="{{ url_for('auth.signup') }}"  class="guest-nav__btn">
+            <span>Get Started</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <button class="guest-nav__theme-toggle topbar__icon-btn"
+                  id="themeToggleGuest" aria-label="Toggle theme">
+            <i class="bi bi-sun-fill" id="themeIcon"></i>
+          </button>
         </div>
 
-    {% else %}
-        <!-- ==================== GUEST USER LAYOUT ==================== -->
-        
-        <nav class="guest-nav glass-effect">
-            <div class="guest-nav__container">
-                <a href="{{ url_for('main.home') }}" class="guest-nav__brand">
-                    <span class="brand-icon-small">
-                        <i class="bi bi-circle-fill"></i>
-                    </span>
-                    <span class="brand-c">C</span>
-                    <span class="brand-text">Connect</span>
-                </a>
+        <button class="guest-nav__mobile-toggle topbar__icon-btn"
+                id="guestMenuToggle" aria-label="Toggle menu">
+          <i class="bi bi-list"></i>
+        </button>
+      </div>
 
-                <div class="guest-nav__links">
-                    <a href="{{ url_for('main.home') }}" class="guest-nav__link">Home</a>
-                    <a href="{{ url_for('main.about') }}" class="guest-nav__link">About</a>
-                    <a href="{{ url_for('main.contact') }}" class="guest-nav__link">Contact</a>
-                    <a href="{{ url_for('auth.login') }}" class="guest-nav__link">Login</a>
-                    <a href="{{ url_for('auth.signup') }}" class="guest-nav__btn">
-                        <span>Get Started</span>
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-                    
-                    <button class="guest-nav__theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                        <i class="bi bi-sun-fill" id="themeIcon"></i>
-                    </button>
-                </div>
+      <div class="guest-nav__mobile-menu" id="guestMobileMenu">
+        <a href="{{ url_for('main.home') }}"    class="guest-nav__mobile-link">Home</a>
+        <a href="{{ url_for('main.about') }}"   class="guest-nav__mobile-link">About</a>
+        <a href="{{ url_for('main.contact') }}" class="guest-nav__mobile-link">Contact</a>
+        <a href="{{ url_for('auth.login') }}"   class="guest-nav__mobile-link">Login</a>
+        <a href="{{ url_for('auth.signup') }}"  class="guest-nav__mobile-link guest-nav__mobile-link--primary">
+          Get Started
+        </a>
+      </div>
+    </nav>
 
-                <button class="guest-nav__mobile-toggle" id="guestMenuToggle" aria-label="Toggle menu">
-                    <i class="bi bi-list"></i>
-                </button>
-            </div>
+  {% endif %}
 
-            <div class="guest-nav__mobile-menu" id="guestMobileMenu">
-                <a href="{{ url_for('main.home') }}" class="guest-nav__mobile-link">Home</a>
-                <a href="{{ url_for('main.about') }}" class="guest-nav__mobile-link">About</a>
-                <a href="{{ url_for('main.contact') }}" class="guest-nav__mobile-link">Contact</a>
-                <a href="{{ url_for('auth.login') }}" class="guest-nav__mobile-link">Login</a>
-                <a href="{{ url_for('auth.signup') }}" class="guest-nav__mobile-link guest-nav__mobile-link--primary">Get Started</a>
-            </div>
-        </nav>
 
+  <!-- ====================================================
+       NO-JS BANNER
+  ==================================================== -->
+  <noscript>
+    <div class="no-js-banner">
+      ⚠️ JavaScript is disabled. Some features may not work.
+    </div>
+  </noscript>
+
+
+  <!-- ====================================================
+       FLASH MESSAGES
+  ==================================================== -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container" role="alert" aria-live="polite">
+      {% for category, message in messages %}
+      <div class="flash-message flash-message--{{ category }}">
+        <i class="bi bi-{{
+          'check-circle-fill'        if category == 'success' else
+          'exclamation-triangle-fill' if category in ('danger','error') else
+          'info-circle-fill'
+        }}"></i>
+        <span>{{ message }}</span>
+        <button class="flash-message__close" aria-label="Dismiss">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
+  {% endwith %}
 
 
-
-    <!-- After topbar closing tag, before flash messages -->
-    <noscript>
-        <div class="no-js-banner" style="
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #dc2626; 
-            border: 1px solid #fca5a5; 
-            border-radius: var(--radius-md);
-            padding: 1rem; 
-            margin: 1rem;
-            text-align: center;
-            font-weight: 600;
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            z-index: 1000;
-            width: 76%;
-            margin-left: 6%;
-            margin-top: .55%;
-            align-content: center;
-        ">
-            ⚠️ JavaScript is disabled. Some features may not work. Turn on JavaScript in browser settings
-        </div>
-    </noscript>
+  <!-- ====================================================
+       MAIN CONTENT
+  ==================================================== -->
+  <main class="main-content">
+    {% block body %}{% endblock %}
+  </main>
 
 
-
-    <!-- ==================== FLASH MESSAGES ==================== -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-container">
-                {% for category, message in messages %}
-                    <div class="flash-message glass-effect flash-message--{{ category }}" role="alert">
-                        <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-triangle-fill' if category == 'danger' else 'info-circle-fill' }}"></i>
-                        <span>{{ message }}</span>
-                        <button class="flash-message__close" aria-label="Close">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+  <!-- ====================================================
+       CONFIRMATION MODAL
+  ==================================================== -->
+  {% include "components/_confirmation_modal.html" %}
 
 
+  <!-- ====================================================
+       SCRIPTS
+  ==================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 
-    <!-- ==================== MAIN CONTENT ==================== -->
-    <main class="main-content">
-        {% block body %}
-        <!-- Page content goes here -->
-        {% endblock %}
-    </main>
+  <script>
+  (function () {
+    "use strict";
+
+    /* ── TOPBAR FROST ON SCROLL ─────────────────────────────── */
+    const topbar = document.getElementById('mainTopbar');
+    if (topbar) {
+      const onScroll = () => {
+        topbar.classList.toggle('scrolled', window.scrollY > 10);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll(); /* Run once on load */
+    }
 
 
-    <!-- ================ Confirmation template loaing ===========-->
-     {% include "components/_confirmation_modal.html" %}
+    /* ── ACTIVE NAV LINK HIGHLIGHT ──────────────────────────── */
+    (function highlightActive() {
+      const path = window.location.pathname;
+      /* Desktop sidebar */
+      document.querySelectorAll('.sidebar__link').forEach(link => {
+        if (link.getAttribute('href') === path) link.classList.add('active');
+      });
+      /* Mobile bottom-nav */
+      document.querySelectorAll('.bottom-nav__item').forEach(link => {
+        if (link.getAttribute('href') === path) link.classList.add('active');
+      });
+      /* Mobile sidebar */
+      document.querySelectorAll('.mob-sidebar__link').forEach(link => {
+        if (link.getAttribute('href') === path) link.classList.add('active');
+      });
+    })();
 
 
-    <!-- ==================== FOOTER ==================== -->
-    <!-- <footer class="footer">
-        <div class="footer__container">
-            <div class="footer__brand">
-                <div class="footer__logo">
-                    <span class="brand-icon-small">
-                        <i class="bi bi-circle-fill"></i>
-                    </span>
-                    <span class="brand-c">C</span>
-                    <span class="brand-text">Connect</span>
-                </div>
-                <p class="footer__tagline">Connecting Campus Communities</p>
-            </div>
-            
-            <div class="footer__links">
-                <a href="{{ url_for('main.about') }}" class="footer__link">About</a>
-                <a href="{{ url_for('main.contact') }}" class="footer__link">Contact</a>
-                <a href="#" class="footer__link">Privacy</a>
-                <a href="#" class="footer__link">Terms</a>
-            </div>
+    /* ── MOBILE HAMBURGER SIDEBAR ───────────────────────────── */
+    const burger    = document.getElementById('burgerBtn');
+    const mobSidebar = document.getElementById('mobSidebar');
+    const mobOverlay = document.getElementById('mobOverlay');
+    const mobClose  = document.getElementById('mobSidebarClose');
 
-            <div class="footer__credits">
-                <small>&copy; 2024 C-Connect. Made with <i class="bi bi-heart-fill"></i> for students.</small>
-            </div>
-        </div>
-    </footer> -->
+    function openMobSidebar() {
+      mobSidebar.classList.add('open');
+      mobOverlay.classList.add('open');
+      mobSidebar.removeAttribute('inert');
+      document.body.style.overflow = 'hidden';
+    }
 
-    <!-- ==================== SCRIPTS ==================== -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+    function closeMobSidebar() {
+      mobSidebar.classList.remove('open');
+      mobOverlay.classList.remove('open');
+      mobSidebar.setAttribute('inert', '');
+      document.body.style.overflow = '';
+    }
 
-    <script>
-        function confirmLogout(event) {
-            event.preventDefault();
-            showConfirm(
-                "Log Out", 
-                "This will end your current session. Are you sure?",
-                function() {
-                    window.location.href = "{{ url_for('auth.logout') }}";  // ✅ REGULAR NAVIGATION
-                }
-            );
+    if (burger)     burger.addEventListener('click', openMobSidebar);
+    if (mobClose)   mobClose.addEventListener('click', closeMobSidebar);
+    if (mobOverlay) mobOverlay.addEventListener('click', closeMobSidebar);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeMobSidebar();
+    });
+
+    /* Close sidebar on nav link tap */
+    document.querySelectorAll('.mob-sidebar__link').forEach(link => {
+      link.addEventListener('click', closeMobSidebar);
+    });
+
+
+    /* ── FLASH MESSAGE AUTO-DISMISS ─────────────────────────── */
+    document.querySelectorAll('.flash-message').forEach(msg => {
+      /* Close button */
+      const btn = msg.querySelector('.flash-message__close');
+      if (btn) btn.addEventListener('click', () => {
+        msg.style.transition = 'opacity 0.3s, transform 0.3s';
+        msg.style.opacity = '0';
+        msg.style.transform = 'translateY(-6px)';
+        setTimeout(() => msg.remove(), 320);
+      });
+      /* Auto-dismiss after 4s */
+      setTimeout(() => {
+        if (msg.isConnected) {
+          msg.style.transition = 'opacity 0.4s';
+          msg.style.opacity = '0';
+          setTimeout(() => msg.remove(), 420);
         }
-    </script>
+      }, 4000);
+    });
 
-    {% block extra_js %}{% endblock %}
+
+    /* ── LOGOUT CONFIRM ─────────────────────────────────────── */
+    window.confirmLogout = function (event) {
+      event.preventDefault();
+      showConfirm(
+        "Log Out",
+        "This will end your current session. Are you sure?",
+        function () {
+          window.location.href = "{{ url_for('auth.logout') }}";
+        }
+      );
+    };
+
+
+    /* ── THEME TOGGLE ───────────────────────────────────────── */
+    /* global.js handles themeManager — we just sync the icon */
+    function syncThemeIcon() {
+      const icon = document.getElementById('themeIcon');
+      if (!icon) return;
+      const isDark = document.documentElement.classList.contains('theme-dark');
+      icon.className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+    }
+
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+    syncThemeIcon();
+    themeBtn.addEventListener('click', () => {
+        if (window.cconnect && window.cconnect.themeManager) {
+        window.cconnect.themeManager.toggleTheme();
+        } else {
+        /* Fallback: toggle class directly */
+        document.documentElement.classList.toggle('theme-dark');
+        const isDark = document.documentElement.classList.contains('theme-dark');
+        localStorage.setItem('cconnect-theme', isDark ? 'dark' : 'light');
+        }
+        syncThemeIcon();
+    });
+    }
+
+  })();
+  </script>
+
+  {% block extra_js %}{% endblock %}
+
 </body>
 </html>

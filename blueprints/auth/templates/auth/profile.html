@@ -84,10 +84,11 @@
   /* ── FLOATING TOPBAR ─────────────────────────────────────── */
   .op-topbar {
     position: fixed;
-    top: 0; left: 50%;
+    top: var(--topbar-h, 58px);
+    left: 50%;
     transform: translateX(-50%);
     width: 100%; max-width: 760px;
-    z-index: 120;
+    z-index: 95;
     padding: 14px 18px 12px;
     display: flex; align-items: center;
     justify-content: space-between;
