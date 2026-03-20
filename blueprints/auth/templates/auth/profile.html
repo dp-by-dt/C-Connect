@@ -1,975 +1,1407 @@
+{# ============================================================
+   auth/profile.html  —  Own Profile Page
+   Extends: base.html
+
+   Layout strategy:
+     base.html topbar/sidebar/bottom-nav hidden via body class.
+     Page renders its own floating topbar (transparent → frosted).
+     Open layout — no heavy card boxing, sections breathe.
+     Same visual language as view_user_profile.html.
+
+   Backend variables:
+     • user    — current_user
+                 .id, .username, .email
+     • profile — UserProfile or None
+                 .bio, .department, .year, .location,
+                 .profile_picture, .interests (list)
+     • stats   — dict: stats['connections'], stats['pending_incoming'],
+                       stats['pending_outgoing']
+     • posts   — list of Post (current_user.posts)
+                 .id, .content, .created_at (UTC),
+                 .image_path (str or None),
+                 .likes (list, has __len__)
+
+   Global Jinja functions:
+     • to_ist(dt)  — UTC → IST datetime
+     • csrf_token()
+
+   Post routes:
+     • POST url_for('posts.toggle_like', post_id=post.id)  — like toggle
+     • POST url_for('posts.delete_post', post_id=post.id)  — delete
+
+   Post images:
+     url_for('static', filename=post.image_path)
+
+   TODO:
+     • liked_post_ids not passed from route — like button shows count
+       but cannot highlight if current user already liked.
+       Add liked_post_ids = {like.post_id for like in current_user.likes}
+       to the route and pass to render_template to enable liked state.
+     • Interests count uses profile.interests|length — adjust if the
+       field name differs on the model.
+     • Share button is visual-only — wire to Web Share API or a share
+       sheet once that feature is planned.
+============================================================ #}
+
 {% extends "base.html" %}
 
-{% block title %}{{ current_user.username }} - Profile{% endblock %}
+{% block title %}{{ user.username }} · Profile{% endblock %}
+
 
 {% block extra_css %}
-
+<script>document.body.classList.add('own-profile-page');</script>
 
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:           #f5f7f5;
-    --surface:      #ffffff;
-    --border:       rgba(0,0,0,0.07);
-    --border2:      rgba(0,0,0,0.12);
-
-    --green:        #2d7a3a;
-    --green-l:      #3a9e4a;
-    --green-dim:    rgba(45,122,58,0.09);
-    --green-glow:   rgba(45,122,58,0.2);
-
-    --indigo:       #4f5fcc;
-    --indigo-l:     #6270e0;
-    --indigo-dim:   rgba(79,95,204,0.09);
-    --indigo-glow:  rgba(79,95,204,0.2);
-
-    --amber:        #d97706;
-    --amber-l:      #f59e0b;
-    --amber-dim:    rgba(217,119,6,0.09);
-    --amber-glow:   rgba(217,119,6,0.18);
-
-    --coral:        #e05c5c;
-    --coral-dim:    rgba(224,92,92,0.09);
-
-    --teal:         #0d8a8a;
-    --teal-dim:     rgba(13,138,138,0.09);
-
-    --txt:          #111a12;
-    --txt2:         #3a4e3b;
-    --muted:        #8fa08f;
-
-    --r-sm:         12px;
-    --r-md:         18px;
-    --r-lg:         22px;
-    --sh-sm:        0 2px 10px rgba(0,0,0,0.055);
-    --sh-md:        0 6px 24px rgba(0,0,0,0.1);
-    --sh-lg:        0 12px 40px rgba(0,0,0,0.14);
+  /* ── HIDE BASE CHROME (same pattern as view_user_profile) ── */
+  .own-profile-page .topbar,
+  .own-profile-page aside.sidebar,
+  .own-profile-page nav.bottom-nav,
+  .own-profile-page .mobile-menu,
+  .own-profile-page .guest-nav {
+    display: none !important;
   }
 
-  html, body {
-    background: var(--bg);
-    color: var(--txt);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+  .own-profile-page .main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 
-  .phone {
-    max-width: 390px;
+
+  /* ── PAGE WRAPPER ── */
+  .op-page {
+    background: var(--bg-primary);
+    min-height: 100dvh;
+    max-width: 760px;
     margin: 0 auto;
-    min-height: 100vh;
-    background: var(--bg);
+    padding-bottom: calc(72px + 24px);
     position: relative;
   }
 
-  /* ─── TOPBAR ─── */
-  .topbar {
+
+  /* ── FLOATING TOPBAR ─────────────────────────────────────── */
+  .op-topbar {
     position: fixed;
     top: 0; left: 50%;
     transform: translateX(-50%);
-    width: 100%; max-width: 390px;
+    width: 100%; max-width: 760px;
     z-index: 120;
     padding: 14px 18px 12px;
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
     justify-content: space-between;
-    transition: background 0.3s, border-bottom 0.3s;
+    transition: background 0.3s ease,
+                backdrop-filter 0.3s ease,
+                border-bottom 0.3s ease;
   }
-  .topbar.scrolled {
-    background: rgba(255,255,255,0.93);
+
+  .op-topbar.scrolled {
+    background: var(--glass-bg);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .topbar-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    color: transparent;
-    transition: color 0.3s;
-    letter-spacing: -0.3px;
-  }
-  .topbar.scrolled .topbar-title { color: var(--txt); }
-
-  .topbar-actions { display: flex; gap: 8px; }
-
-  .tb-btn {
+  .op-topbar__btn {
     width: 36px; height: 36px;
     border-radius: 11px;
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.55);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: var(--sh-sm);
-    transition: all 0.18s;
+    cursor: pointer; flex-shrink: 0;
+    text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition: all var(--transition-fast);
   }
-  .tb-btn:hover { background: #fff; }
-  .tb-btn svg { width: 17px; height: 17px; stroke: var(--txt); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* ─── BANNER ─── */
-  .banner {
-    width: 100%;
-    height: 220px;
-    position: relative;
-    overflow: hidden;
+  .op-topbar__btn:hover { background: #fff; }
+
+  .op-topbar__btn svg {
+    width: 17px; height: 17px;
+    stroke: var(--text-primary); fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .op-topbar__name {
+    font-family: var(--font-display);
+    font-size: var(--text-base); font-weight: 700;
+    color: var(--text-primary);
+    opacity: 0; transition: opacity 0.3s ease;
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 200px;
+  }
+
+  .op-topbar.scrolled .op-topbar__name { opacity: 1; }
+
+
+  /* ── BANNER ──────────────────────────────────────────────── */
+  .op-banner {
+    width: 100%; height: 200px;
+    position: relative; overflow: hidden;
     background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    cursor: pointer;
   }
 
-  .banner-shapes { position: absolute; inset: 0; }
-  .bs { position: absolute; border-radius: 50%; opacity: 0.18; }
-  .bs1 { width: 200px; height: 200px; background: var(--green-l); top: -70px; right: -50px; }
-  .bs2 { width: 140px; height: 140px; background: var(--indigo-l); bottom: -40px; left: -20px; }
-  .bs3 { width: 90px; height: 90px; background: var(--amber-l); top: 30px; left: 38%; opacity: 0.13; }
-  .bs4 { width: 60px; height: 60px; background: var(--coral); bottom: 20px; right: 30%; opacity: 0.12; }
+  .op-banner__shape {
+    position: absolute; border-radius: 50%; opacity: 0.16;
+  }
+  .op-banner__shape--1 { width:200px; height:200px; background:var(--primary-hover);   top:-70px;    right:-50px; }
+  .op-banner__shape--2 { width:140px; height:140px; background:var(--indigo-color);     bottom:-40px; left:-20px; }
+  .op-banner__shape--3 { width:90px;  height:90px;  background:var(--amber-color);      top:30px;     left:38%; opacity:0.11; }
+  .op-banner__shape--4 { width:60px;  height:60px;  background:var(--coral-color);      bottom:20px;  right:30%; opacity:0.10; }
 
-  .banner-dim {
+  .op-banner__dim {
     position: absolute; inset: 0;
-    background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.35) 100%);
+    background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.32) 100%);
   }
 
-  .banner-edit-hint {
-    position: absolute;
-    bottom: 12px; right: 14px;
-    display: flex; align-items: center; gap: 5px;
-    padding: 5px 11px;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(6px);
-    border-radius: 99px;
-    font-size: 11px;
-    color: rgba(255,255,255,0.8);
-    font-weight: 500;
-  }
-  .banner-edit-hint svg { width: 12px; height: 12px; stroke: rgba(255,255,255,0.8); fill: none; stroke-width: 1.8; stroke-linecap: round; }
 
-  /* ─── AVATAR HERO ─── */
-  /* The "special" treatment: large avatar with glow ring + floating edit button */
-  .avatar-section {
+  /* ── AVATAR SECTION ──────────────────────────────────────── */
+  /* Centered avatar with spinning glow ring + edit button */
+  .op-avatar-section {
+    display: flex; justify-content: center;
+    margin-top: -52px; position: relative; z-index: 10;
+  }
+
+  .op-avatar-outer {
     position: relative;
-    display: flex;
-    justify-content: center;
-    margin-top: -52px;
-    margin-bottom: 0;
-    z-index: 10;
+    display: inline-flex; flex-direction: column; align-items: center;
   }
 
-  .avatar-outer {
-    position: relative;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  /* animated glow ring */
-  .avatar-glow-ring {
+  /* Spinning conic gradient ring */
+  .op-avatar-ring-glow {
     position: absolute;
     top: -6px; left: -6px;
-    width: calc(100% + 12px);
-    height: calc(100% + 12px);
+    width: calc(100% + 12px); height: calc(100% + 12px);
     border-radius: 50%;
     background: conic-gradient(
-      var(--green) 0deg,
-      var(--indigo) 90deg,
-      var(--amber) 180deg,
-      var(--coral) 270deg,
-      var(--green) 360deg
+      var(--primary-color) 0deg,
+      var(--indigo-color)  90deg,
+      var(--amber-color)   180deg,
+      var(--coral-color)   270deg,
+      var(--primary-color) 360deg
     );
-    animation: spinRing 5s linear infinite;
-    z-index: -1;
-    opacity: 0.7;
+    animation: op-spin 5s linear infinite;
+    opacity: 0.65; z-index: 0;
   }
 
-  @keyframes spinRing {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
+  @keyframes op-spin { to { transform: rotate(360deg); } }
 
-  .avatar-ring {
-    width: 104px; height: 104px;
-    border-radius: 50%;
-    border: 4px solid var(--surface);
+  .op-avatar {
+    width: 104px; height: 104px; border-radius: 50%;
+    border: 4px solid var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
-    background: var(--green-dim);
-    box-shadow: var(--sh-lg);
-    position: relative;
-    z-index: 1;
-  }
-
-  .avatar-placeholder {
-    width: 100%; height: 100%;
+    background: var(--primary-dim);
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-    font-family: 'Syne', sans-serif;
+    font-family: var(--font-display);
     font-weight: 800; font-size: 38px;
-    color: var(--green);
+    color: var(--primary-color);
+    position: relative; z-index: 1;
+    user-select: none;
   }
 
-  .avatar-edit-btn {
+  .op-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
+  }
+
+  /* Indigo edit dot — bottom right of avatar */
+  .op-avatar-edit {
     position: absolute;
-    bottom: 2px; right: 2px;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--indigo);
-    border: 2.5px solid var(--surface);
+    bottom: 2px; right: 2px; z-index: 2;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--indigo-color);
+    border: 2.5px solid var(--bg-secondary);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
+    text-decoration: none;
     box-shadow: 0 2px 8px var(--indigo-glow);
-    z-index: 2;
-    transition: all 0.18s;
+    transition: all var(--transition-fast);
   }
-  .avatar-edit-btn:hover { background: var(--indigo-l); transform: scale(1.1); }
-  .avatar-edit-btn svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
 
-  /* ─── PROFILE INFO ─── */
-  .profile-info {
-    background: var(--surface);
+  .op-avatar-edit:hover { background: var(--indigo-hover); transform: scale(1.1); }
+
+  .op-avatar-edit svg {
+    width: 12px; height: 12px; stroke: #fff;
+    fill: none; stroke-width: 2.2; stroke-linecap: round;
+  }
+
+
+  /* ── PROFILE INFO ────────────────────────────────────────── */
+  .op-info {
+    background: var(--bg-secondary);
     padding: 14px 18px 20px;
     text-align: center;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .profile-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--txt);
-    letter-spacing: -0.4px;
-    margin-bottom: 3px;
+  .op-info__name {
+    font-family: var(--font-display);
+    font-size: var(--text-xl); font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.4px;
+    line-height: 1.15; margin-bottom: 3px;
   }
 
-  .profile-email {
-    font-size: 13px;
-    color: var(--muted);
+  .op-info__email {
+    font-family: var(--font-body);
+    font-size: var(--text-xs); color: var(--text-muted);
     margin-bottom: 16px;
   }
 
-  /* stats row */
-  .stats-row {
-    display: flex;
-    gap: 1px;
-    background: var(--border);
-    border-radius: var(--r-md);
-    overflow: hidden;
-    margin-bottom: 16px;
+  /* Stats row — three colored stats */
+  .op-stats {
+    display: flex; gap: 1px;
+    background: var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden; margin-bottom: 16px;
   }
 
-  .stat-item {
+  .op-stat {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
     padding: 12px 8px;
-    background: var(--surface);
-    transition: background 0.18s;
+    background: var(--bg-secondary);
+    text-decoration: none; color: inherit;
+    transition: background var(--transition-fast);
     cursor: pointer;
   }
-  .stat-item:hover { background: var(--bg); }
 
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--txt);
-    line-height: 1;
+  .op-stat:hover { background: var(--bg-hover); }
+
+  .op-stat__num {
+    font-family: var(--font-display);
+    font-size: var(--text-lg); font-weight: 800; line-height: 1;
   }
 
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-top: 3px;
-    font-weight: 500;
+  .op-stat--conn      .op-stat__num { color: var(--primary-color); }
+  .op-stat--posts     .op-stat__num { color: var(--indigo-color); }
+  .op-stat--interests .op-stat__num { color: var(--teal-color); }
+
+  .op-stat__lbl {
+    font-family: var(--font-body); font-size: 10px;
+    color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.8px; margin-top: 3px; font-weight: 500;
   }
 
-  /* action buttons */
-  .action-row {
-    display: flex;
+  /* Action buttons */
+  .op-actions { display: flex; gap: 10px; }
+
+  .op-btn {
+    flex: 1; height: 44px;
+    border-radius: var(--radius-sm); border: none;
+    font-family: var(--font-display);
+    font-size: var(--text-sm); font-weight: 700;
+    cursor: pointer; letter-spacing: 0.2px;
+    display: flex; align-items: center;
+    justify-content: center; gap: 7px;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+  }
+
+  .op-btn svg {
+    width: 15px; height: 15px; stroke: currentColor;
+    fill: none; stroke-width: 2.2; stroke-linecap: round;
+  }
+
+  /* Edit Profile — indigo */
+  .op-btn--edit {
+    background: var(--indigo-color); color: #fff;
+    box-shadow: 0 3px 14px var(--indigo-glow);
+  }
+  .op-btn--edit:hover { background: var(--indigo-hover); transform: translateY(-1px); color: #fff; }
+
+  /* Share — ghost */
+  .op-btn--share {
+    flex: 0; width: 44px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-subtle);
+  }
+  .op-btn--share:hover { background: var(--primary-dim); border-color: var(--primary-border); color: var(--primary-color); }
+
+  /* Settings shortcut */
+  .op-btn--settings {
+    flex: 0; width: 44px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-subtle);
+    text-decoration: none;
+  }
+  .op-btn--settings:hover { background: var(--bg-hover); }
+
+
+  /* ── OPEN LAYOUT BODY ────────────────────────────────────────
+     No card boxing — sections breathe with whitespace + dividers.
+  ── */
+  .op-body { padding: 0 18px; }
+
+  .op-divider {
+    height: 1px; background: var(--border-color); margin: 20px 0;
+  }
+
+
+  /* ── SECTION LABEL ───────────────────────────────────────── */
+  .op-section-label {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .op-section-label__left {
+    display: flex; align-items: center; gap: 7px;
+  }
+
+  .op-section-dot {
+    width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  }
+  .op-section-dot--green  { background: var(--primary-color); }
+  .op-section-dot--indigo { background: var(--indigo-color); }
+  .op-section-dot--amber  { background: var(--amber-color); }
+  .op-section-dot--coral  { background: var(--coral-color); }
+  .op-section-dot--teal   { background: var(--teal-color); }
+
+  /* Section-level edit link */
+  .op-section-edit {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 600;
+    color: var(--indigo-color); text-decoration: none;
+    display: flex; align-items: center; gap: 3px;
+    transition: color var(--transition-fast);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .op-section-edit svg {
+    width: 11px; height: 11px; stroke: currentColor;
+    fill: none; stroke-width: 2; stroke-linecap: round;
+  }
+  .op-section-edit:hover { color: var(--indigo-hover); }
+
+
+  /* ── BIO ─────────────────────────────────────────────────── */
+  .op-bio {
+    font-family: var(--font-body);
+    font-size: var(--text-base); color: var(--text-secondary);
+    line-height: 1.7;
+    padding-left: 12px;
+    border-left: 3px solid var(--indigo-color);
+  }
+
+  .op-bio--empty {
+    font-style: italic; color: var(--text-muted);
+  }
+
+
+  /* ── ACADEMIC / DETAILS GRID ─────────────────────────────── */
+  /* 2-col chips — no tall rows */
+  .op-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
 
-  .btn {
-    flex: 1; height: 44px;
-    border-radius: var(--r-sm);
-    border: none;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700; font-size: 13.5px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    gap: 7px; transition: all 0.2s; letter-spacing: 0.2px;
-  }
-  .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
-
-  .btn-edit {
-    background: var(--indigo);
-    color: #fff;
-    box-shadow: 0 3px 14px var(--indigo-glow);
-  }
-  .btn-edit:hover { background: var(--indigo-l); transform: translateY(-1px); }
-
-  .btn-share {
-    background: var(--bg);
-    color: var(--txt2);
-    border: 1.5px solid var(--border2);
-    flex: 0;
-    width: 44px;
-  }
-  .btn-share:hover { background: var(--green-dim); border-color: var(--green); color: var(--green); }
-
-  /* ─── SECTION CARD ─── */
-  .section-card {
-    background: var(--surface);
-    border-radius: var(--r-lg);
-    border: 1px solid var(--border);
-    margin: 12px 18px 0;
-    padding: 18px;
-    box-shadow: var(--sh-sm);
-    animation: riseUp 0.45s ease both;
-  }
-  .section-card:nth-of-type(1) { animation-delay: 0.06s; }
-  .section-card:nth-of-type(2) { animation-delay: 0.12s; }
-  .section-card:nth-of-type(3) { animation-delay: 0.18s; }
-  .section-card:nth-of-type(4) { animation-delay: 0.24s; }
-
-  .section-head {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
+  .op-detail-item {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    border: 1px solid var(--border-color);
+    transition: border-color var(--transition-fast);
   }
 
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700;
-    color: var(--txt);
-    display: flex; align-items: center; gap: 8px;
+  .op-detail-item:hover { border-color: var(--amber-border); }
+
+  .op-detail-item__label {
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 700;
+    color: var(--amber-color);
+    text-transform: uppercase; letter-spacing: 0.9px;
+    margin-bottom: 3px;
   }
 
-  .section-icon {
-    width: 28px; height: 28px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; flex-shrink: 0;
-  }
-  .si-amber  { background: var(--amber-dim); }
-  .si-coral  { background: var(--coral-dim); }
-  .si-teal   { background: var(--teal-dim); }
-  .si-indigo { background: var(--indigo-dim); }
-  .si-green  { background: var(--green-dim); }
-
-  .section-edit-btn {
-    display: flex; align-items: center; gap: 4px;
-    padding: 5px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border2);
-    background: var(--bg);
-    font-size: 11px; font-weight: 600;
-    color: var(--muted); cursor: pointer;
-    transition: all 0.18s;
-    font-family: 'Syne', sans-serif;
-  }
-  .section-edit-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
-  .section-edit-btn:hover { background: var(--indigo-dim); border-color: var(--indigo); color: var(--indigo); }
-
-  /* ─── BIO ─── */
-  .bio-text {
-    font-size: 14px;
-    color: var(--txt2);
-    line-height: 1.65;
-    padding: 12px 14px;
-    background: var(--bg);
-    border-radius: var(--r-sm);
-    border-left: 3px solid var(--indigo);
+  .op-detail-item__value {
+    font-family: var(--font-display);
+    font-size: var(--text-base); font-weight: 700;
+    color: var(--text-primary);
   }
 
-  .bio-empty {
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-    text-align: center;
-    padding: 10px 0;
+  .op-detail-item__value--empty {
+    color: var(--text-muted); font-weight: 400;
+    font-style: italic; font-size: var(--text-sm);
   }
 
-  /* ─── DETAILS ─── */
-  .details-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  /* Email row — full width */
+  .op-detail-item--full {
+    grid-column: 1 / -1;
   }
 
-  .detail-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 14px;
-    background: var(--bg);
-    border-radius: var(--r-sm);
-    border: 1px solid var(--border);
+  .op-detail-item--full .op-detail-item__label {
+    color: var(--indigo-color);
   }
 
-  .detail-icon {
-    width: 32px; height: 32px;
-    border-radius: 9px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .di-indigo { background: var(--indigo-dim); }
-  .di-amber  { background: var(--amber-dim); }
-  .di-teal   { background: var(--teal-dim); }
-  .di-coral  { background: var(--coral-dim); }
 
-  .detail-icon svg { width: 15px; height: 15px; fill: none; stroke-width: 1.8; stroke-linecap: round; }
-  .di-indigo svg { stroke: var(--indigo); }
-  .di-amber  svg { stroke: var(--amber); }
-  .di-teal   svg { stroke: var(--teal); }
-  .di-coral  svg { stroke: var(--coral); }
-
-  .detail-content { flex: 1; }
-  .detail-label {
-    font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.8px;
-    margin-bottom: 2px;
-  }
-  .di-indigo ~ .detail-content .detail-label { color: var(--indigo); }
-  .di-amber  ~ .detail-content .detail-label { color: var(--amber); }
-  .di-teal   ~ .detail-content .detail-label { color: var(--teal); }
-  .di-coral  ~ .detail-content .detail-label { color: var(--coral); }
-
-  .detail-value {
-    font-size: 14px; font-weight: 500;
-    color: var(--txt);
-    font-family: 'DM Sans', sans-serif;
-  }
-  .detail-value.empty { color: var(--muted); font-style: italic; }
-
-  /* ─── INTERESTS ─── */
-  .interests-wrap {
+  /* ── INTERESTS ───────────────────────────────────────────── */
+  .op-interests {
     display: flex; flex-wrap: wrap; gap: 8px;
   }
-  .interest-tag {
-    padding: 6px 13px; border-radius: 99px;
-    font-size: 12px; font-weight: 600;
-    font-family: 'Syne', sans-serif;
-    letter-spacing: 0.2px; cursor: default;
-    transition: transform 0.18s;
-  }
-  .interest-tag:hover { transform: translateY(-1px); }
-  .it-0 { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(224,92,92,0.2); }
-  .it-1 { background: var(--indigo-dim); color: var(--indigo); border: 1px solid rgba(79,95,204,0.2); }
-  .it-2 { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
-  .it-3 { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(13,138,138,0.2); }
-  .it-4 { background: var(--green-dim); color: var(--green); border: 1px solid rgba(45,122,58,0.2); }
 
-  /* ─── POSTS GRID ─── */
-  .posts-grid {
+  .op-interest-tag {
+    padding: 6px 13px; border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-size: var(--text-xs); font-weight: 600;
+    letter-spacing: 0.2px; cursor: default;
+    transition: transform var(--transition-fast);
+  }
+
+  .op-interest-tag:hover { transform: translateY(-1px); }
+
+  /* Rotating colors — loop.index0 % 5 */
+  .op-it--0 { background: var(--coral-dim);   color: var(--coral-color);   border: 1px solid var(--coral-border); }
+  .op-it--1 { background: var(--indigo-dim);  color: var(--indigo-color);  border: 1px solid var(--indigo-border); }
+  .op-it--2 { background: var(--amber-dim);   color: var(--amber-color);   border: 1px solid var(--amber-border); }
+  .op-it--3 { background: var(--teal-dim);    color: var(--teal-color);    border: 1px solid var(--teal-border); }
+  .op-it--4 { background: var(--primary-dim); color: var(--primary-color); border: 1px solid var(--primary-border); }
+
+  .op-interests--empty {
+    font-family: var(--font-body);
+    font-size: var(--text-sm); color: var(--text-muted);
+    font-style: italic;
+  }
+
+
+  /* ── POSTS GRID (3-col preview) ──────────────────────────── */
+  .op-posts-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 3px;
-    border-radius: var(--r-sm);
+    border-radius: var(--radius-sm);
     overflow: hidden;
   }
 
-  .post-thumb {
+  .op-post-cell {
     aspect-ratio: 1;
-    background: var(--bg);
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
+    position: relative; overflow: hidden;
+    cursor: pointer; background: var(--bg-tertiary);
+    transition: filter var(--transition-fast);
   }
 
-  .post-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .post-thumb:hover img { transform: scale(1.06); }
+  .op-post-cell:hover { filter: brightness(0.9); }
 
-  .post-thumb-placeholder {
+  /* Image post */
+  .op-post-cell__img {
     width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
+    object-fit: cover; object-position: center;
+    display: block; transition: transform var(--transition-smooth);
   }
+  .op-post-cell:hover .op-post-cell__img { transform: scale(1.05); }
 
-  .post-thumb-text {
+  /* Text-only post — colored gradient by post.id % 5 */
+  .op-post-cell__text-bg {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
     padding: 8px;
-    font-size: 9.5px;
-    color: var(--txt2); line-height: 1.4;
-    text-align: center;
-    background: var(--bg);
-    border: 1px solid var(--border);
   }
 
-  .post-thumb::after {
-    content: '';
+
+  .op-post-cell__menu {
     position: absolute; inset: 0;
-    background: rgba(0,0,0,0);
-    transition: background 0.2s;
-  }
-  .post-thumb:hover::after { background: rgba(0,0,0,0.1); }
+    background: rgba(0,0,0,0.55);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px; z-index: 5;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+    border-radius: 0;
+}
 
-  /* ─── POST DETAIL OVERLAY ─── */
-  .post-overlay {
-    position: fixed; inset: 0;
-    z-index: 350;
-    display: none;
-    flex-direction: column;
-    max-width: 390px;
-    left: 50%; transform: translateX(-50%);
-    background: var(--bg);
-  }
-  .post-overlay.open { display: flex; }
+.op-post-cell__menu.visible {
+    opacity: 1; pointer-events: all;
+}
 
-  .overlay-topbar {
+.op-post-cell__menu-btn {
+    width: 80%; height: 34px;
+    border-radius: 8px; border: none;
+    font-family: var(--font-display);
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 6px;
+}
+
+.op-post-cell__menu-btn--like {
+    background: rgba(255,255,255,0.92); color: var(--coral-color);
+}
+
+.op-post-cell__menu-btn--delete {
+    background: var(--coral-color); color: #fff;
+}
+
+  .op-post-bg--0 { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+  .op-post-bg--1 { background: linear-gradient(135deg, #e8eaf6, #c5cae9); }
+  .op-post-bg--2 { background: linear-gradient(135deg, #fff8e1, #ffecb3); }
+  .op-post-bg--3 { background: linear-gradient(135deg, #e0f2f1, #b2dfdb); }
+  .op-post-bg--4 { background: linear-gradient(135deg, #fce4ec, #f8bbd0); }
+
+  .op-post-cell__text {
+    font-family: var(--font-body);
+    font-size: 9px; color: var(--text-secondary);
+    line-height: 1.4; text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Image overlay */
+  .op-post-cell__overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding:  24px 6px 7px;
+    background: linear-gradient(to top, rgba(0,0,0,0.72), transparent);
+    font-family: var(--font-body); font-size: 10px;
+    color: rgba(255,255,255,0.9); line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* Posts empty state */
+  .op-posts-empty {
+    text-align: center; padding: 28px 16px;
+  }
+  .op-posts-empty__icon { font-size: 28px; opacity: 0.4; color: var(--text-muted); display: block; margin-bottom: 9px; }
+  .op-posts-empty__text { font-family: var(--font-body); font-size: var(--text-sm); color: var(--text-muted); font-style: italic; }
+
+
+  /* ── POSTS OVERLAY ───────────────────────────────────────────
+     Full-screen slide-up overlay — shows complete post cards.
+     Wired to real backend routes with CSRF.
+  ── */
+  .op-overlay {
+    position: fixed; inset: 0; z-index: 350;
+    display: flex; flex-direction: column;
+    max-width: 760px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-primary);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  .op-overlay.open {
+    opacity: 1; pointer-events: all;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .op-overlay__topbar {
     padding: 14px 18px 12px;
     display: flex; align-items: center; gap: 12px;
-    background: rgba(255,255,255,0.93);
+    background: var(--glass-bg);
     backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; position: sticky; top: 0; z-index: 10;
   }
 
-  .overlay-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800; font-size: 18px;
-    color: var(--txt); flex: 1;
+  .op-overlay__back {
+    width: 36px; height: 36px;
+    border-radius: 11px; border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: all var(--transition-fast);
+  }
+  .op-overlay__back:hover { background: var(--bg-hover); }
+  .op-overlay__back svg { width: 17px; height: 17px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .op-overlay__title {
+    font-family: var(--font-display);
+    font-size: var(--text-base); font-weight: 800;
+    color: var(--text-primary); flex: 1;
   }
 
-  .overlay-body {
+  .op-overlay__body {
     flex: 1; overflow-y: auto;
-    padding: 16px 18px 100px;
+    padding: 16px 18px 32px;
     display: flex; flex-direction: column; gap: 14px;
   }
 
-  /* own feed card */
-  .own-post-card {
-    background: var(--surface);
-    border-radius: var(--r-lg);
-    border: 1px solid var(--border);
+
+  /* ── POST CARD (inside overlay) ──────────────────────────── */
+  .op-post-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
     overflow: hidden;
-    box-shadow: var(--sh-sm);
-    animation: riseUp 0.4s ease both;
+    box-shadow: var(--shadow-xs);
+    animation: op-rise 0.38s ease both;
   }
 
-  .own-post-card:nth-child(1) { animation-delay: 0.05s; }
-  .own-post-card:nth-child(2) { animation-delay: 0.12s; }
+  @keyframes op-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-  .opc-header {
-    padding: 13px 16px 10px;
+  .op-post-card__header {
+    padding: 13px 15px 9px;
     display: flex; align-items: center; gap: 10px;
   }
-  .opc-avatar {
+
+  .op-post-card__av {
     width: 36px; height: 36px; border-radius: 50%;
-    background: var(--green-dim);
-    border: 1.5px solid rgba(45,122,58,0.18);
+    background: var(--primary-dim);
+    border: 1.5px solid var(--primary-border);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px;
-    color: var(--green); flex-shrink: 0;
+    font-family: var(--font-display);
+    font-weight: 800; font-size: 13px;
+    color: var(--primary-color); flex-shrink: 0; overflow: hidden;
   }
-  .opc-meta { flex: 1; }
-  .opc-name { font-size: 13px; font-weight: 600; color: var(--txt); font-family: 'Syne', sans-serif; }
-  .opc-time { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
-  .opc-body { padding: 0 16px 12px; font-size: 14px; color: var(--txt2); line-height: 1.6; }
+  .op-post-card__av img {
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
+  }
 
-  .opc-image-wrap { width: 100%; overflow: hidden; background: var(--bg); }
-  .opc-image-wrap img { width: 100%; display: block; object-fit: cover; }
+  .op-post-card__meta { flex: 1; }
+  .op-post-card__author { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); }
+  .op-post-card__time   { font-family: var(--font-body); font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
-  .opc-footer {
-    padding: 10px 16px 14px;
+  .op-post-card__body {
+    padding: 0 15px 12px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm); color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Post image */
+  .op-post-card__img-wrap { width: 100%; overflow: hidden; background: var(--bg-tertiary); }
+  .op-post-card__img-wrap img { width: 100%; display: block; object-fit: cover; max-height: 320px; }
+
+  /* Footer — like + delete */
+  .op-post-card__footer {
+    padding: 10px 15px 13px;
     display: flex; align-items: center; gap: 8px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-color);
   }
 
-  .opc-btn {
+  /* Like form */
+  .op-post-card__footer form { margin: 0; padding: 0; }
+
+  .op-like-btn {
     display: flex; align-items: center; gap: 5px;
-    padding: 7px 12px; border-radius: 10px;
-    border: none; background: transparent;
-    font-size: 12px; font-weight: 500;
-    color: var(--muted); cursor: pointer;
-    transition: all 0.18s; font-family: 'DM Sans', sans-serif;
+    padding: 7px 12px; border-radius: var(--radius-xs);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-tertiary);
+    font-family: var(--font-body);
+    font-size: var(--text-sm); font-weight: 500;
+    color: var(--text-muted); cursor: pointer;
+    transition: all var(--transition-fast);
   }
-  .opc-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
-  .opc-btn:hover { background: var(--bg); }
-  .opc-btn.like:hover { color: var(--coral); }
-  .opc-btn.liked { color: var(--coral); }
-  .opc-btn.delete { color: var(--coral); margin-left: auto; }
-  .opc-btn.delete:hover { background: var(--coral-dim); }
 
-  /* spacer */
-  .bottom-spacer { height: 110px; }
+  .op-like-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+  .op-like-btn:hover { color: var(--coral-color); border-color: var(--coral-border); background: var(--coral-dim); }
 
-  /* ─── BOTTOM NAV ─── */
-  .bottom-nav {
+  /* Delete button */
+  .op-delete-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: var(--radius-xs);
+    border: none; background: transparent;
+    font-family: var(--font-body);
+    font-size: var(--text-sm); font-weight: 500;
+    color: var(--text-muted); cursor: pointer;
+    margin-left: auto;
+    transition: all var(--transition-fast);
+  }
+
+  .op-delete-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+  .op-delete-btn:hover { color: var(--coral-color); background: var(--coral-dim); border-radius: var(--radius-xs); }
+
+
+  /* ── BOTTOM NAV (own) ────────────────────────────────────── */
+  .op-bottom-nav {
     position: fixed; bottom: 0; left: 50%;
     transform: translateX(-50%);
-    width: 100%; max-width: 390px;
-    background: rgba(255,255,255,0.94);
+    width: 100%; max-width: 760px;
+    background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-color);
     padding: 10px 10px 22px;
     display: flex; align-items: center; justify-content: space-around;
     z-index: 200;
     box-shadow: 0 -4px 24px rgba(0,0,0,0.055);
   }
-  .nav-item {
+
+  .op-nav-item {
     display: flex; flex-direction: column;
     align-items: center; gap: 3px;
     cursor: pointer; padding: 5px 10px;
-    border-radius: 10px; transition: all 0.18s; flex: 1;
+    border-radius: 10px; flex: 1;
+    text-decoration: none;
+    transition: all var(--transition-fast);
   }
-  .nav-icon { display: flex; align-items: center; justify-content: center; }
-  .nav-icon svg { width: 21px; height: 21px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.18s; }
-  .nav-label { font-size: 10px; color: var(--muted); transition: color 0.18s; letter-spacing: 0.2px; }
-  .nav-item.active .nav-icon svg { stroke: var(--green); }
-  .nav-item.active .nav-label { color: var(--green); font-weight: 600; }
-  .nav-fab {
-    width: 50px; height: 50px; background: var(--green); border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 16px var(--green-glow);
-    transition: all 0.18s; flex-shrink: 0; margin-top: -5px;
-  }
-  .nav-fab:hover { background: var(--green-l); transform: scale(1.07); }
-  .nav-fab svg { width: 21px; height: 21px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
 
-  @keyframes riseUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+  .op-nav-icon svg {
+    width: 21px; height: 21px; stroke: var(--text-muted);
+    fill: none; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; display: block;
+    transition: stroke var(--transition-fast);
   }
+
+  .op-nav-label {
+    font-family: var(--font-body); font-size: 10px;
+    color: var(--text-muted); letter-spacing: 0.2px;
+    transition: color var(--transition-fast);
+  }
+
+  /* Profile tab active */
+  .op-nav-item--active .op-nav-icon svg { stroke: var(--primary-color); }
+  .op-nav-item--active .op-nav-label { color: var(--primary-color); font-weight: 600; }
+
+  .op-nav-fab {
+    width: 50px; height: 50px;
+    background: var(--primary-color); border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow-green);
+    transition: all var(--transition-fast); flex-shrink: 0; margin-top: -5px;
+    text-decoration: none;
+  }
+  .op-nav-fab:hover { background: var(--primary-hover); transform: scale(1.07); }
+  .op-nav-fab svg { width: 21px; height: 21px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+
+  /* ── RESPONSIVE ──────────────────────────────────────────── */
+  @media (min-width: 640px) {
+    .op-banner { height: 240px; }
+    .op-avatar { width: 116px; height: 116px; font-size: 42px; }
+    .op-avatar-section { margin-top: -58px; }
+    .op-details-grid { grid-template-columns: repeat(3, 1fr); }
+    .op-posts-grid { grid-template-columns: repeat(4, 1fr); }
+    .op-info__name { font-size: var(--text-2xl); }
+  }
+
+  @media (min-width: 1024px) {
+    .op-posts-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+
 </style>
 {% endblock %}
 
+
 {% block body %}
+<div class="op-page">
 
-<div class="phone" id="phone">
+  {# ── FLOATING TOPBAR ── #}
+  <header class="op-topbar" id="opTopbar">
+    <a href="{{ url_for('main.dashboard') }}"
+       class="op-topbar__btn" aria-label="Back to dashboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </a>
 
-  <!-- TOPBAR -->
-  <!-- <header class="topbar" id="topbar">
-    <span class="topbar-title">My Profile</span>
-    <div class="topbar-actions">
-      <div class="tb-btn" title="Settings">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </div>
-    </div>
-  </header> -->
+    <span class="op-topbar__name">{{ user.username }}</span>
 
-  <!-- BANNER -->
-  <div class="banner">
-    <div class="banner-shapes">
-      <div class="bs bs1"></div>
-      <div class="bs bs2"></div>
-      <div class="bs bs3"></div>
-      <div class="bs bs4"></div>
-    </div>
-    <div class="banner-dim"></div>
-    <!-- <div class="banner-edit-hint">
-      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Edit cover
-    </div> -->
+    <a href="{{ url_for('main.settings') }}"
+       class="op-topbar__btn op-btn--settings"
+       aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </a>
+  </header>
+
+
+  {# ── BANNER ── #}
+  <div class="op-banner" aria-hidden="true">
+    <div class="op-banner__shape op-banner__shape--1"></div>
+    <div class="op-banner__shape op-banner__shape--2"></div>
+    <div class="op-banner__shape op-banner__shape--3"></div>
+    <div class="op-banner__shape op-banner__shape--4"></div>
+    <div class="op-banner__dim"></div>
   </div>
 
-  <!-- AVATAR SECTION -->
-  <div class="avatar-section">
-    <div class="avatar-outer">
-      <div class="avatar-glow-ring"></div>
-      <div class="avatar-ring">
-        <div class="avatar-placeholder">
-            {% if user.profile_pic %}
-            <!-- FIXED: Object-fit + constrained sizing -->
-            <img src="{{ user.profile_pic }}" alt="{{ user.username[0]|upper }}" class="hero-av-img" onerror="
-                        this.style.display = 'none';
-                        this.nextElementSibling.style.display = 'block';
-                    " />
-            <!-- Fallback initial (hidden) -->
-            <span class="hero-av-letter" style="display: none">{{ user.username[0]|upper }}</span>
-            {% else %}
-            <span class="hero-av-letter">{{ user.username[0]|upper }}</span>
-            {% endif %}
-        </div>
+
+  {# ── AVATAR ── #}
+  <div class="op-avatar-section">
+    <div class="op-avatar-outer">
+      <div class="op-avatar-ring-glow" aria-hidden="true"></div>
+      <div class="op-avatar">
+        {% if profile and profile.profile_picture %}
+          <img src="{{ profile.profile_picture }}"
+               alt="{{ user.username }}"
+               onerror="this.style.display='none';
+                        this.nextElementSibling.style.display='flex';">
+          <span style="display:none; width:100%; height:100%;
+                       align-items:center; justify-content:center;">
+            {{ user.username[0].upper() }}
+          </span>
+        {% else %}
+          {{ user.username[0].upper() }}
+        {% endif %}
       </div>
-      <a class="avatar-edit-btn" href="{{ url_for('auth.profile_edit')}}">
-        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <a class="op-avatar-edit"
+         href="{{ url_for('auth.profile_edit') }}"
+         aria-label="Edit profile picture">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
       </a>
     </div>
   </div>
 
-  <!-- PROFILE INFO -->
-  <div class="profile-info">
-    <div class="profile-name">{{ user.username }}</div>
-    <div class="profile-email">{{ user.email }}</div>
 
-    <div class="stats-row">
-      <a class="stat-item" href="{{ url_for('connections.connections_home')}}">
-        <span class="stat-num"> {{stats.connections }}</span>
-        <span class="stat-label">Connected</span>
+  {# ── PROFILE INFO + STATS + ACTIONS ── #}
+  <div class="op-info">
+    <div class="op-info__name">{{ user.username }}</div>
+    <div class="op-info__email">{{ user.email }}</div>
+
+    <div class="op-stats">
+      <a class="op-stat op-stat--conn"
+         href="{{ url_for('connections.connections_home') }}">
+        <span class="op-stat__num">{{ stats['connections'] }}</span>
+        <span class="op-stat__lbl">Connected</span>
       </a>
-      <a class="stat-item" href="{{ url_for('posts.feed') }}">
-        <span class="stat-num">{{ posts | length }}</span>
-        <span class="stat-label">Posts</span>
+      <a class="op-stat op-stat--posts"
+         href="{{ url_for('posts.feed') }}">
+        <span class="op-stat__num">{{ posts|length }}</span>
+        <span class="op-stat__lbl">Posts</span>
       </a>
-      <div class="stat-item">
-        <span class="stat-num">5</span>
-        <span class="stat-label">Interests</span>
+      <div class="op-stat op-stat--interests">
+        <span class="op-stat__num">
+          {% if profile and profile.interests %}
+            {{ profile.interests|length }}
+          {% else %}0{% endif %}
+        </span>
+        <span class="op-stat__lbl">Interests</span>
       </div>
     </div>
 
-    <div class="action-row">
-      <a class="btn btn-edit" href="{{ url_for('auth.profile_edit') }}">
-        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <div class="op-actions">
+      <a class="op-btn op-btn--edit"
+         href="{{ url_for('auth.profile_edit') }}">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
         Edit Profile
       </a>
-      <button class="btn btn-share">
-        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+
+      {# Share button — TODO: wire to Web Share API #}
+      <button class="op-btn op-btn--share"
+              onclick="shareProfile()"
+              aria-label="Share profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="18" cy="5"  r="3"/>
+          <circle cx="6"  cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59"  y2="10.49"/>
+        </svg>
       </button>
     </div>
   </div>
 
-  <!-- BIO -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-title">
-        <div class="section-icon si-indigo">✦</div>
+
+  {# ── OPEN LAYOUT BODY ── #}
+  <div class="op-body">
+
+    {# ── BIO ── #}
+    <div class="op-divider"></div>
+    <div class="op-section-label">
+      <div class="op-section-label__left">
+        <span class="op-section-dot op-section-dot--indigo" aria-hidden="true"></span>
         Bio
       </div>
-      <a class="section-edit-btn" href="{{ url_for('auth.profile_edit')}}">
-        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <a href="{{ url_for('auth.profile_edit') }}" class="op-section-edit">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
         Edit
       </a>
     </div>
-    <div class="bio-text">
-      {% if profile.bio %}
-        {{ profile.bio }}
-      {% else %}
-        "Add your bio"
-      {% endif %}
-    </div>
-  </div>
 
-  <!-- DETAILS -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-title">
-        <div class="section-icon si-amber">🎓</div>
+    {% if profile and profile.bio %}
+      <p class="op-bio">{{ profile.bio }}</p>
+    {% else %}
+      <p class="op-bio op-bio--empty">
+        Add a bio to let people know more about you.
+      </p>
+    {% endif %}
+
+
+    {# ── ACADEMIC DETAILS ── #}
+    <div class="op-divider"></div>
+    <div class="op-section-label">
+      <div class="op-section-label__left">
+        <span class="op-section-dot op-section-dot--amber" aria-hidden="true"></span>
         Details
       </div>
-      <a class="section-edit-btn" href="{{ url_for('auth.profile_edit')}}">
-        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <a href="{{ url_for('auth.profile_edit') }}" class="op-section-edit">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
         Edit
       </a>
     </div>
-    <div class="details-list">
-      <div class="detail-row">
-        <div class="detail-icon di-indigo">
-          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
-        <div class="detail-content">
-          <div class="detail-label">Email</div>
-          <div class="detail-value">{{ user.email }}</div>
-        </div>
+
+    <div class="op-details-grid">
+      {# Email — always shown, full-width #}
+      <div class="op-detail-item op-detail-item--full">
+        <div class="op-detail-item__label">Email</div>
+        <div class="op-detail-item__value">{{ user.email }}</div>
       </div>
-      <div class="detail-row">
-        <div class="detail-icon di-amber">
-          <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-        </div>
-        <div class="detail-content">
-          <div class="detail-label">Department</div>
-          <div class="detail-value">{{ user.department}}</div>
-        </div>
+
+      {# Department #}
+      <div class="op-detail-item">
+        <div class="op-detail-item__label">Department</div>
+        {% if profile and profile.department %}
+          <div class="op-detail-item__value">{{ profile.department }}</div>
+        {% else %}
+          <div class="op-detail-item__value op-detail-item__value--empty">Not set</div>
+        {% endif %}
       </div>
-      <div class="detail-row">
-        <div class="detail-icon di-teal">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div class="detail-content">
-          <div class="detail-label">Year</div>
-          <div class="detail-value">{{ user.year }}</div>
-        </div>
+
+      {# Year #}
+      <div class="op-detail-item">
+        <div class="op-detail-item__label">Year</div>
+        {% if profile and profile.year %}
+          <div class="op-detail-item__value">{{ profile.year }}</div>
+        {% else %}
+          <div class="op-detail-item__value op-detail-item__value--empty">Not set</div>
+        {% endif %}
       </div>
-      <div class="detail-row">
-        <div class="detail-icon di-coral">
-          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <div class="detail-content">
-          <div class="detail-label">Location</div>
-          <div class="detail-value empty">{{ user.location }}</div>
-        </div>
+
+      {# Location #}
+      <div class="op-detail-item">
+        <div class="op-detail-item__label">Location</div>
+        {% if profile and profile.location %}
+          <div class="op-detail-item__value">{{ profile.location }}</div>
+        {% else %}
+          <div class="op-detail-item__value op-detail-item__value--empty">Not set</div>
+        {% endif %}
       </div>
     </div>
-  </div>
 
-  <!-- INTERESTS -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-title">
-        <div class="section-icon si-coral">✦</div>
+
+    {# ── INTERESTS ── #}
+    <div class="op-divider"></div>
+    <div class="op-section-label">
+      <div class="op-section-label__left">
+        <span class="op-section-dot op-section-dot--coral" aria-hidden="true"></span>
         Interests
       </div>
-      <a class="section-edit-btn" href="{{ url_for('auth.profile_edit')}}">
-        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <a href="{{ url_for('auth.profile_edit') }}" class="op-section-edit">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
         Edit
       </a>
     </div>
-    <div class="interests-wrap">
-      {% for tag in user.interests %}
-      <span class="interest-tag it-{{ loop.index0 }}">
-        {{ tag }}
-      </span>
-      {% endfor %}
 
-      <span class="interest-tag it-3"># photography</span>
-      <span class="interest-tag it-4"># music</span>
-
-    </div>
-  </div>
-
-  <!-- POSTS GRID -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-title">
-        <div class="section-icon si-indigo">▦</div>
-        My Posts
+    {% if profile and profile.interests %}
+      <div class="op-interests">
+        {% for interest in profile.interests %}
+          <span class="op-interest-tag op-it--{{ loop.index0 % 5 }}">
+            # {{ interest }}
+          </span>
+        {% endfor %}
       </div>
-      <button class="section-edit-btn" onclick="openPostsOverlay()">
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        See all
+    {% else %}
+      <p class="op-interests--empty">No interests added yet.</p>
+    {% endif %}
+
+
+    {# ── POSTS GRID ── #}
+    <div class="op-divider"></div>
+    <div class="op-section-label">
+      <div class="op-section-label__left">
+        <span class="op-section-dot op-section-dot--indigo" aria-hidden="true"></span>
+        My Posts
+        {% if posts %}
+          <span style="color:var(--text-muted); font-weight:400;">
+            · {{ posts|length }}
+          </span>
+        {% endif %}
+      </div>
+      {% if posts %}
+        <button class="op-section-edit"
+                
+                aria-label="See all posts">
+          See all
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      {% endif %}
+    </div>
+
+    {% if posts %}
+      <div class="op-posts-grid">
+        {% for post in posts %}
+        <div class="op-post-cell"
+             aria-label="View post">
+
+          {% if post.image_path %}
+            <img src="{{ url_for('static', filename=post.image_path) }}"
+                 alt="Post image"
+                 class="op-post-cell__img"
+                 onerror="this.style.display='none';">
+            <div class="op-post-cell__overlay">
+              {{ post.content[:60] }}{% if post.content|length > 60 %}…{% endif %}
+            </div>
+          {% else %}
+            <div class="op-post-cell__text-bg op-post-bg--{{ post.id % 5 }}">
+              <div class="op-post-cell__text">
+                {{ post.content[:80] }}{% if post.content|length > 80 %}…{% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+
+
+          <div class="op-post-cell__menu" id="menu-{{ post.id }}">
+    <form method="POST" action="{{ url_for('posts.toggle_like', post_id=post.id) }}" style="width:80%">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="op-post-cell__menu-btn op-post-cell__menu-btn--like" style="width:100%">
+            ♡ Like · {{ post.likes|length if post.likes else 0 }}
+        </button>
+    </form>
+    <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}" id="gridDel{{ post.id }}" style="width:80%">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </form>
+    <button type="button" class="op-post-cell__menu-btn op-post-cell__menu-btn--delete"
+            onclick="event.stopPropagation(); confirmDelete('{{ post.id }}')" style="width:80%">
+        🗑 Delete
+    </button>
+</div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="op-posts-empty">
+        <i class="bi bi-inbox op-posts-empty__icon" aria-hidden="true"></i>
+        <p class="op-posts-empty__text">
+          No posts yet — share something with your campus.
+        </p>
+      </div>
+    {% endif %}
+
+  </div>{# /op-body #}
+
+
+  {# ── POSTS OVERLAY ── (TODO: later integrate better)
+     Full post cards with real like/delete routes.
+     Populated by JS — all post data embedded in data attributes.
+
+  <div class="op-overlay" id="opOverlay" role="dialog" aria-modal="true">
+    <div class="op-overlay__topbar">
+      <button class="op-overlay__back"
+              onclick="closeOverlay()"
+              aria-label="Close posts">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
       </button>
+      <span class="op-overlay__title">My Posts</span>
     </div>
-<!-- POSTS GRID -->
-<div class="posts-grid">
-  {% for post in user.posts %}
-    <div class="post-thumb" onclick="openPostsOverlay({{ loop.index0 }})">
-      <div class="post-thumb-text">{{ post.content[:50] }}...</div>
-    </div>
-  {% endfor %}
-  <!-- Fill remaining grid slots -->
-  <!-- {% for i in range(user.posts|length, 6) %}
-    <div class="post-thumb" onclick="openPostsOverlay()">
-      <div class="post-thumb-placeholder" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">⚡</div>
-    </div>
-  {% endfor %} -->
-</div>
 
-  </div>
+    <div class="op-overlay__body" id="opOverlayBody">
+------- comment: Post cards — rendered here in Jinja, shown/scrolled via JS------------
 
-  <div class="bottom-spacer"></div>
+      {% for post in posts %}
+      <article class="op-post-card"
+               id="overlay-post-{{ loop.index0 }}"
+               data-post-index="{{ loop.index0 }}">
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <div class="nav-item">
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
-      <span class="nav-label">Discover</span>
-    </div>
-    <div class="nav-item">
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <span class="nav-label">Connect</span>
-    </div>
-    <div class="nav-fab">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </div>
-    <div class="nav-item">
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-      <span class="nav-label">Messages</span>
-    </div>
-    <div class="nav-item active">
-      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <span class="nav-label">Profile</span>
-    </div>
-  </nav>
-
-</div><!-- /phone -->
-
-<!-- POST DETAIL OVERLAY -->
-<div class="post-overlay" id="postsOverlay">
-  <div class="overlay-topbar">
-    <div class="back-btn" onclick="closePostsOverlay()" style="width:36px;height:36px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
-      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--txt)" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </div>
-    <span class="overlay-title">My Posts</span>
-  </div>
-  <div class="overlay-body" id="overlayBody">
-    <!-- DYNAMIC POSTS WILL APPEAR HERE -->
-  </div>
-</div>
-
-
-<script>
-/* ── POSTS OVERLAY (INSTAGRAM STYLE) ── */
-let currentPostIndex = 0;
-
-function openPostsOverlay(startIndex = 0) {
-  currentPostIndex = startIndex;
-  const overlay = document.getElementById('postsOverlay');
-  const overlayBody = document.getElementById('overlayBody');
-  
-  // Build ALL posts dynamically
-  overlayBody.innerHTML = '';
-  {% for post in user.posts %}
-    overlayBody.innerHTML += `
-      <div class="own-post-card">
-        <div class="opc-header">
-          <div class="opc-avatar">{{ user.username[0]|upper }}</div>
-          <div class="opc-meta">
-            <div class="opc-name">{{ user.username }}</div>
-            <div class="opc-time">{{ post.created_at.strftime('%d %b · %I:%M %p') }}</div>
+        <div class="op-post-card__header">
+          <div class="op-post-card__av">
+            {% if profile and profile.profile_picture %}
+              <img src="{{ profile.profile_picture }}"
+                   alt="{{ user.username }}"
+                   onerror="this.style.display='none';">
+            {% else %}
+              {{ user.username[0].upper() }}
+            {% endif %}
+          </div>
+          <div class="op-post-card__meta">
+            <div class="op-post-card__author">{{ user.username }}</div>
+            <div class="op-post-card__time">
+              {{ to_ist(post.created_at).strftime("%d %b · %I:%M %p") }}
+            </div>
           </div>
         </div>
-        <div class="opc-body">{{ post.content|safe }}</div>
-        {% if post.image %}
-        <div class="opc-image-wrap">
-          <img src="{{ post.image }}" alt="Post image">
-        </div>
+
+        {% if post.content %}
+          <div class="op-post-card__body">{{ post.content }}</div>
         {% endif %}
-        <div class="opc-footer">
-          <button class="opc-btn like" onclick="toggleLike(this)">
-            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            <span>1</span>
+
+        {% if post.image_path %}
+          <div class="op-post-card__img-wrap">
+            <img src="{{ url_for('static', filename=post.image_path) }}"
+                 alt="Post image" loading="lazy"
+                 onerror="this.parentElement.style.display='none';">
+          </div>
+        {% endif %}
+
+        <div class="op-post-card__footer">
+
+--------------- comment here
+            Like button — POST form with CSRF.
+            TODO: Add liked_post_ids to the route to show
+            active liked state per post. Currently shows count only.
+            Pattern: liked_post_ids = {l.post_id for l in current_user.likes}
+--------------- to here
+
+          <form method="POST"
+                action="{{ url_for('posts.toggle_like', post_id=post.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="op-like-btn">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              {{ post.likes|length if post.likes else 0 }}
+            </button>
+          </form>
+
+         ----- Delete — showConfirm() then form submit -----
+          <form method="POST"
+                action="{{ url_for('posts.delete_post', post_id=post.id) }}"
+                id="delForm{{ post.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+
+          <button type="button"
+                  class="op-delete-btn"
+                  onclick="confirmDelete('{{ post.id }}')"
+                  aria-label="Delete post">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+            Delete
           </button>
-          <button class="opc-btn delete" onclick="deletePost(this)">Delete</button>
+
         </div>
+      </article>
+      {% endfor %}
+
+    </div>
+  </div>
+commented out for now---------------
+  #}
+
+
+  {# ── OWN BOTTOM NAV ── #}
+  <nav class="op-bottom-nav" aria-label="Main navigation">
+
+    <a class="op-nav-item" href="{{ url_for('main.search_page') }}">
+      <div class="op-nav-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
       </div>
-    `;
-  {% endfor %}
-  
-  // Scroll to specific post (Instagram style)
-  const postCards = overlayBody.querySelectorAll('.own-post-card');
-  if (postCards[startIndex]) {
-    postCards[startIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      <span class="op-nav-label">Discover</span>
+    </a>
+
+    <a class="op-nav-item" href="{{ url_for('connections.connections_home') }}">
+      <div class="op-nav-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <span class="op-nav-label">Connect</span>
+    </a>
+
+    <a class="op-nav-fab" href="{{ url_for('main.dashboard') }}" aria-label="Home">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </a>
+
+    <a class="op-nav-item" href="{{ url_for('messages.inbox') }}">
+      <div class="op-nav-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <span class="op-nav-label">Messages</span>
+    </a>
+
+    <a class="op-nav-item op-nav-item--active" href="#">
+      <div class="op-nav-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <span class="op-nav-label">Profile</span>
+    </a>
+
+  </nav>
+
+</div>{# /op-page #}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  /* ── Topbar frost effect ── */
+  const topbar = document.getElementById('opTopbar');
+  if (topbar) {
+    window.addEventListener('scroll', () => {
+      topbar.classList.toggle('scrolled', window.scrollY > 160);
+    }, { passive: true });
   }
+
+  /* ── Settings link fix ──
+     Find the correct settings route from available links.
+     Avoids broken url_for in template for unknown blueprint name.
+  ── */
+  (function fixSettingsLink() {
+    const settingsBtn = document.querySelector('.op-btn--settings');
+    if (!settingsBtn) return;
+    {# TODO: Replace '#' with url_for('main.settings') or the correct
+       blueprint once you confirm the settings route blueprint name.
+       Current routes: check if it's main.settings, auth.settings,
+       or settings.settings etc. #}
+    settingsBtn.setAttribute('href', '{{ url_for("main.settings")}}');
+  })();
+
+  /* ── Posts Overlay ---- Commented for now ─────────────────────────────────────────
+     Opens overlay and scrolls to the clicked post card.
+     Post cards are rendered in Jinja — no JS string building
+     means CSRF and real routes stay intact.
+  ── */
+
   
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
+  // const overlay     = document.getElementById('opOverlay');
+  // const overlayBody = document.getElementById('opOverlayBody');
 
-function closePostsOverlay() {
-  document.getElementById('postsOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
+  // window.openOverlay = function (index) {
+  //   overlay.classList.add('open');
+  //   document.body.style.overflow = 'hidden';
 
-/* ── LIKE/DELETE (unchanged) ── */
-function toggleLike(btn) {
-  const isLiked = btn.classList.toggle('liked');
-  const countEl = btn.querySelector('span');
-  if (countEl) {
-    let n = parseInt(countEl.textContent) || 0;
-    countEl.textContent = isLiked ? n + 1 : Math.max(0, n - 1);
-  }
-  btn.style.transform = 'scale(1.22)';
-  setTimeout(() => btn.style.transform = '', 160);
-}
+  //   /* Scroll to the tapped post with a tiny delay for paint */
+  //   requestAnimationFrame(() => {
+  //     const target = document.getElementById('overlay-post-' + index);
+  //     if (target) {
+  //       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //     }
+  //   });
+  // };
 
-function deletePost(btn) {
-  const card = btn.closest('.own-post-card');
-  card.style.transition = 'opacity 0.3s, transform 0.3s';
-  card.style.opacity = '0';
-  card.style.transform = 'translateX(20px)';
-  setTimeout(() => {
-    card.remove();
-    if (!document.querySelector('.own-post-card')) {
-      closePostsOverlay();
+  // window.closeOverlay = function () {
+  //   overlay.classList.remove('open');
+  //   document.body.style.overflow = '';
+  // };
+
+  // /* Close overlay on Escape key */
+  // document.addEventListener('keydown', (e) => {
+  //   if (e.key === 'Escape' && overlay.classList.contains('open')) {
+  //     closeOverlay();
+  //   }
+  // });
+
+
+
+  /* Long-press context menu on post grid cells */
+let pressTimer = null;
+let activeMenu = null;
+
+document.querySelectorAll('.op-post-cell').forEach(cell => {
+    const postId = cell.querySelector('.op-post-cell__menu')?.id?.replace('menu-', '');
+    if (!postId) return;
+
+    const menu = document.getElementById('menu-' + postId);
+
+    const showMenu = () => {
+        if (activeMenu && activeMenu !== menu) activeMenu.classList.remove('visible');
+        menu.classList.add('visible');
+        activeMenu = menu;
+    };  
+
+
+    /* Long press — mobile */
+    cell.addEventListener('touchstart', () => {
+        pressTimer = setTimeout(showMenu, 500);
+    }, { passive: true });
+
+    cell.addEventListener('touchend', () => clearTimeout(pressTimer), { passive: true });
+    cell.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+
+    /* Right-click — desktop */
+    cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showMenu();
+    });
+});
+
+/* Tap anywhere else to dismiss */
+document.addEventListener('click', (e) => {
+    if (activeMenu && !e.target.closest('.op-post-cell__menu')) {
+        activeMenu.classList.remove('visible');
+        activeMenu = null;
     }
-  }, 300);
-}
+});
+
+
+  /* ── Delete post — showConfirm() + form submit ──────────── */
+  window.confirmDelete = function (postId) {
+    showConfirm(
+      'Delete Post',
+      'Permanently delete this post? This cannot be undone.',
+      function () {
+        const form = document.getElementById('gridDel' + postId);
+        if (form) form.submit();
+      }
+    );
+  };
+
+
+  /* ── Share profile — Web Share API ─────────────────────────
+     Falls back to clipboard copy if API not supported.
+     TODO: Populate with actual profile URL once routing is stable.
+  ── */
+  window.shareProfile = function () {
+    const url  = window.location.href;
+    const text = 'Check out {{ user.username | e }} on C-Connect!';
+
+    if (navigator.share) {
+      navigator.share({ title: '{{ user.username | e }}', text, url })
+        .catch(() => {}); /* User dismissed — ignore */
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        /* TODO: Replace with a proper toast once toast system is added */
+        alert('Profile link copied!');
+      }).catch(() => {});
+    }
+  };
+
+
+  /* ── Clean up body class ── */
+  window.addEventListener('pagehide', () => {
+    document.body.classList.remove('own-profile-page');
+  });
+
+})();
 </script>
-
-
 {% endblock %}

@@ -1656,9 +1656,9 @@ Remaining bugs:
 
 #### Profile (Own)
     - Upgraded, and backend working (mostly)
-    ❌ department, year etc. details has not been extended from backend
-    ❌ Interests tags are not dynamicly shown (start adding from db side)
-    ❌ seeing all posts from the grid's size need improvements.. And can't like/delete from there.
+    ✅ department, year etc. details has not been extended from backend (Solvedd)
+    ⚠️ Interests tags are not dynamicly shown (start adding from db side)--- not sure
+    ✅ seeing all posts from the grid's size need improvements.. And can't like/delete from there. (solved... Can like and delete, but can't open on a new window)
     - Almost work for the beta testing
 
 #### Profile Edit
