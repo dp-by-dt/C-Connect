@@ -1700,8 +1700,13 @@ Remaining bugs:
     - Proper modification
     - removed the nav bars of the base.html for better ux
     - textbox focus and other things done properly
-    ❌ The delete option of a chat is not connected to the backend 
+    ⚠️ The delete option of a chat is not connected to the backend (now hidden)
     ⚠️ Just a problem when comes back to the chat page, the nav bars of the base.html file is getting loaded (due to cache). But not much of a problem right now
+
+    ----------
+    - Updated the page
+    ✅ Fixed the crappy UX in mobile screen. Now using `visualViewport` for size determination
+    - Mostly good, But NO LIVE CHATTING available (need to reload the page)
 
 
 #### Campus board
@@ -1740,11 +1745,17 @@ Remaining bugs:
 
 
 ### Problems
-1. Dashboard: bottom nav not working
-2. Message: when soft keyboard, the text box goes down
+1. Message: when soft keyboard, the text box goes down
 3. Time is in utc.. need to convert to ist
 4. Notification: not linked
-5. 
+5. Edit profile page not working
+6. Theme changing not working
+7. Comments for post (can postpone)
+8. showing user's post in open view (can add an overlay for now)
+9. Connections accept - reject - pending logic ❌ some critical error there
+10. Unread messages not marked
+11. No notification or hint or unread marking for new messages
+12. 
 
 
 

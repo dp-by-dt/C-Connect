@@ -1,923 +1,324 @@
-{# ============================================================
-   messages/chat.html  —  Individual Chat Page  (v2)
-   Extends: base.html
-
-   Layout strategy:
-     base.html's topbar, bottom-nav, and sidebar are hidden
-     on this page via .chat-active-page body class (injected
-     by JS before first paint via a <script> in extra_css block).
-     The chat renders its own sticky header and owns 100dvh.
-     This is the correct pattern for full-screen chat UIs.
-
-   Backend variables (from messages.chat route):
-     • target_user   — User object (.id, .username)
-     • messages      — list of Message, ordered created_at ASC
-                       .sender_id, .content, .created_at
-     • profile       — Profile model class (not instance)
-
-   Form:
-     POST to same URL. name="content" must not change.
-     csrf_token() required on form.
-
-   UX fixes in v2:
-     1. Full-height layout — chat fills 100dvh, input always
-        visible, header always sticky at top
-     2. Auto-focus textarea on every page load (including after
-        POST redirect) so user can type continuously
-     3. Timestamps shown inline beside bubble on long-press,
-        not below — eliminates dead space between bubbles
-     4. 24hr notice moved to header as subtle amber pill
-     5. Bubble gap tightened to match messaging app conventions
-============================================================ #}
-
 {% extends "base.html" %}
-
 {% block title %}{{ target_user.username }}{% endblock %}
-
-
 {% block extra_css %}
-
-
 <style>
-
-  /* ============================================================
-     HIDE BASE.HTML CHROME ON CHAT PAGE
-     Scoped to .chat-active-page so zero impact on other pages.
-     Hides: topbar, sidebar, bottom-nav, mobile-menu.
-     The chat page renders its own header.
-  ============================================================ */
+  .chat-active-page { padding-top: 0 !important; padding-bottom: 0 !important; }
+  .chat-active-page header.topbar,
   .chat-active-page .topbar,
-  .chat-active-page .sidebar,
-  .chat-active-page .bottom-nav,
+  .chat-active-page aside.sidebar,
+  .chat-active-page nav.bottom-nav,
   .chat-active-page .mobile-menu,
-  .chat-active-page .guest-nav {
-    display: none !important;
-  }
-
-  /* main-content fills full viewport, no padding */
+  .chat-active-page .guest-nav { display: none !important; }
   .chat-active-page .main-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    padding: 0 !important; margin: 0 !important; max-width: 100% !important;
+    height: 100dvh !important; overflow: hidden !important;
   }
-
-  /* Fallback for browsers without dvh */
-  @supports not (height: 1dvh) {
-    .chat-active-page .main-content {
-      height: 100vh !important;
-    }
-  }
-
-
-  /* ============================================================
-     CHAT PAGE LAYOUT
-     Three-row flex column: header | messages (flex:1) | input
-     Messages area scrolls internally; header and input are fixed.
-  ============================================================ */
+  @supports not (height: 1dvh) { .chat-active-page .main-content { height: 100vh !important; } }
   .chat-wrap {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg-primary);
-    max-width: 760px;      /* comfortable on desktop too */
-    margin: 0 auto;
-    width: 100%;
+    display: flex; flex-direction: column; height: 100dvh; overflow: hidden;
+    background: var(--bg-primary); max-width: 760px; margin: 0 auto; width: 100%;
   }
-
-
-  /* ── CHAT HEADER ─────────────────────────────────────────── */
+  @supports not (height: 1dvh) { .chat-wrap { height: 100vh; } }
   .chat-header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border-color);
-    z-index: 10;
+    flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    background: var(--glass-bg); backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--border-color); z-index: 10;
   }
-
-  /* Back → inbox */
   .chat-header__back {
-    width: 36px; height: 36px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-secondary);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0;
-    text-decoration: none;
-    transition: background var(--transition-fast),
-                border-color var(--transition-fast);
+    width:36px; height:36px; border-radius:var(--radius-xs);
+    border:1px solid var(--border-subtle); background:var(--bg-secondary);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; text-decoration:none; transition:all var(--transition-fast);
   }
-
-  .chat-header__back:hover {
-    background: var(--indigo-dim);
-    border-color: var(--indigo-border);
-  }
-
-  .chat-header__back svg {
-    width: 17px; height: 17px;
-    stroke: var(--text-secondary); fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-  }
-
-  /* Contact — links to profile */
-  .chat-header__contact {
-    display: flex; align-items: center;
-    gap: 10px; flex: 1; min-width: 0;
-    text-decoration: none; color: inherit;
-  }
-
-  .chat-header__av-wrap { position: relative; flex-shrink: 0; }
-
+  .chat-header__back:hover { background:var(--indigo-dim); border-color:var(--indigo-border); }
+  .chat-header__back svg { width:17px; height:17px; stroke:var(--text-secondary); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .chat-header__contact { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; color:inherit; }
+  .chat-header__av-wrap { position:relative; flex-shrink:0; }
   .chat-header__av {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display);
-    font-weight: 800; font-size: 15px;
-    overflow: hidden;
-    background: var(--indigo-dim);
-    color: var(--indigo-color);
-    border: 2px solid var(--indigo-border);
-    user-select: none;
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:800; font-size:15px;
+    overflow:hidden; user-select:none;
+    background:var(--indigo-dim); color:var(--indigo-color); border:2px solid var(--indigo-border);
   }
-
-  .chat-header__av img {
-    width: 100%; height: 100%;
-    object-fit: cover; border-radius: 50%;
-  }
-
-  .chat-header__online-dot {
-    display: none; /* TODO: show when User.last_seen is implemented */
-    position: absolute; bottom: 1px; right: 1px;
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--teal-color);
-    border: 2px solid var(--bg-secondary);
-  }
-
-  .chat-header__info { min-width: 0; flex: 1; }
-
-  .chat-header__name {
-    font-family: var(--font-display);
-    font-size: var(--text-base);
-    font-weight: 700;
-    color: var(--text-primary);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    line-height: 1.2;
-  }
-
-  /* 24hr notice — amber pill in header, subtle but visible */
-  .chat-header__autodel {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    color: var(--amber-color);
-    opacity: 0.75;
-    margin-top: 2px;
-    white-space: nowrap;
-  }
-
-  .chat-header__autodel svg {
-    width: 10px; height: 10px;
-    stroke: currentColor; fill: none;
-    stroke-width: 1.8; stroke-linecap: round;
-    flex-shrink: 0;
-  }
-
-  /* Profile shortcut */
-  .chat-header__action {
-    width: 34px; height: 34px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-secondary);
-    display: flex; align-items: center; justify-content: center;
-    text-decoration: none; flex-shrink: 0;
-    transition: background var(--transition-fast),
-                border-color var(--transition-fast);
-  }
-
-  .chat-header__action:hover {
-    background: var(--indigo-dim);
-    border-color: var(--indigo-border);
-  }
-
-  .chat-header__action svg {
-    width: 15px; height: 15px;
-    stroke: var(--text-secondary); fill: none;
-    stroke-width: 1.8; stroke-linecap: round;
-  }
-
-
-  /* ── MESSAGES AREA ───────────────────────────────────────── */
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 14px 16px 8px;
-    display: flex;
-    flex-direction: column;
-    scrollbar-width: none;
-  }
-  .chat-messages::-webkit-scrollbar { display: none; }
-
-
-  /* ── DATE DIVIDER ────────────────────────────────────────── */
-  .chat-date-div {
-    display: flex; align-items: center;
-    gap: 10px; margin: 14px 0 10px;
-  }
-
-  .chat-date-div::before,
-  .chat-date-div::after {
-    content: ''; flex: 1; height: 1px;
-    background: var(--border-subtle);
-  }
-
-  .chat-date-div span {
-    font-family: var(--font-display);
-    font-size: var(--text-xs); font-weight: 600;
-    color: var(--text-muted);
-    white-space: nowrap; letter-spacing: 0.3px;
-  }
-
-
-  /* ── MESSAGE ROW ─────────────────────────────────────────── */
-  .msg-row {
-    display: flex;
-    align-items: flex-end;      /* timestamp aligns to bubble bottom */
-    gap: 6px;
-    /* Tight default gap — same-sender consecutive messages */
-    margin-bottom: 2px;
-    position: relative;
-  }
-
-  /* Larger gap when sender switches */
-  .msg-row.gap-top { margin-top: 8px; }
-
-  .msg-row.sent  { flex-direction: row-reverse; }
-  .msg-row.recv  { flex-direction: row; }
-
-
-  /* ── BUBBLE ──────────────────────────────────────────────── */
-  .bubble {
-    padding: 9px 13px;
-    border-radius: 18px;
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: 1.5;
-    word-break: break-word;
-    white-space: pre-wrap;
-    cursor: pointer;
-    max-width: min(72vw, 320px);
-    transition: opacity var(--transition-fast);
-    user-select: none;
-  }
-
-  .bubble:active { opacity: 0.8; }
-
-  /* Sent — indigo */
-  .msg-row.sent .bubble {
-    background: var(--indigo-color);
-    color: #fff;
-    border-bottom-right-radius: 4px;
-    box-shadow: 0 2px 8px var(--indigo-glow);
-  }
-
-  /* Received — surface */
-  .msg-row.recv .bubble {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-bottom-left-radius: 4px;
-    box-shadow: var(--shadow-xs);
-  }
-
-  /*
-    Inline timestamp — shown BESIDE the bubble (not below it).
-    Sent: to the LEFT of the bubble (toward center of screen).
-    Recv: to the RIGHT of the bubble (toward center of screen).
-    Hidden by default, revealed on long-press via JS.
-    This eliminates dead vertical space between bubbles.
-  */
-  .bubble-time {
-    font-family: var(--font-display);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-muted);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    flex-shrink: 0;
-    /* Vertically aligned to bubble bottom */
-    padding-bottom: 3px;
-    letter-spacing: 0.2px;
-  }
-
-  .msg-row.show-time .bubble-time { opacity: 1; }
-
-
-  /* ── EMPTY STATE ─────────────────────────────────────────── */
-  .chat-empty {
-    flex: 1;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px; color: var(--text-muted);
-    padding: 40px 24px; text-align: center;
-  }
-
-  .chat-empty__icon {
-    font-size: 38px; opacity: 0.4;
-    color: var(--indigo-color);
-    display: block; margin-bottom: 4px;
-  }
-
-  .chat-empty__text {
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: 1.6; color: var(--text-muted);
-  }
-
-
-  /* ── INPUT AREA ──────────────────────────────────────────── */
-  .chat-input-area {
-    flex-shrink: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid var(--border-color);
-    padding: 10px 16px 12px;
-  }
-
-  /* Emoji tray */
-  .chat-emoji-tray {
-    display: none;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 2px 6px;
-    max-height: 90px;
-    overflow-y: auto;
-    animation: tray-up 0.2s ease;
-    scrollbar-width: none;
-  }
-  .chat-emoji-tray::-webkit-scrollbar { display: none; }
-  .chat-emoji-tray.open { display: flex; }
-
-  @keyframes tray-up {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .chat-emoji-tray__item {
-    font-size: 21px; cursor: pointer;
-    border-radius: 6px; padding: 2px; line-height: 1;
-    transition: transform var(--transition-fast);
-  }
-  .chat-emoji-tray__item:hover { transform: scale(1.28); }
-
-  /* Input row */
-  .chat-input-row {
-    display: flex; align-items: flex-end; gap: 8px;
-  }
-
-  .chat-emoji-btn {
-    width: 40px; height: 40px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border-subtle);
-    background: var(--bg-secondary);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; margin-bottom: 1px;
-    transition: background var(--transition-fast),
-                border-color var(--transition-fast);
-  }
-  .chat-emoji-btn:hover,
-  .chat-emoji-btn.active {
-    background: var(--indigo-dim);
-    border-color: var(--indigo-border);
-  }
-  .chat-emoji-btn svg {
-    width: 18px; height: 18px;
-    stroke: var(--text-muted); fill: none;
-    stroke-width: 1.8; stroke-linecap: round;
-    transition: stroke var(--transition-fast);
-  }
-  .chat-emoji-btn:hover svg,
-  .chat-emoji-btn.active svg { stroke: var(--indigo-color); }
-
-  .chat-input-wrap {
-    flex: 1;
-    background: var(--bg-tertiary);
-    border: 1.5px solid var(--border-subtle);
-    border-radius: 20px;
-    padding: 9px 14px;
-    display: flex; align-items: flex-end; gap: 8px;
-    transition: border-color var(--transition-fast),
-                box-shadow   var(--transition-fast);
-  }
-  .chat-input-wrap:focus-within {
-    border-color: var(--indigo-color);
-    box-shadow: 0 0 0 3px var(--indigo-dim);
-  }
-
-  /* name="content" — do not rename, backend reads this */
-  .chat-textarea {
-    flex: 1; border: none; background: transparent;
-    font-family: var(--font-body);
-    font-size: var(--text-base); color: var(--text-primary);
-    outline: none; resize: none;
-    max-height: 100px; line-height: 1.5; padding: 0;
-  }
-  .chat-textarea::placeholder { color: var(--text-muted); }
-
-  .chat-send-btn {
-    width: 36px; height: 36px;
-    border-radius: var(--radius-sm); border: none;
-    background: var(--indigo-color);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0;
-    box-shadow: 0 2px 10px var(--indigo-glow);
-    transition: background  var(--transition-fast),
-                transform   var(--transition-bounce);
-    margin-bottom: -1px;
-  }
-  .chat-send-btn:hover:not(:disabled) {
-    background: var(--indigo-hover);
-    transform: scale(1.06);
-  }
-  .chat-send-btn:active:not(:disabled) { transform: scale(0.95); }
-  .chat-send-btn:disabled {
-    background: var(--border-subtle);
-    box-shadow: none; cursor: default;
-  }
-  .chat-send-btn svg {
-    width: 15px; height: 15px;
-    stroke: #fff; fill: none;
-    stroke-width: 2.2; stroke-linecap: round;
-  }
-
-
-  /* ── CONTEXT MENU ────────────────────────────────────────── */
-  .chat-ctx-menu {
-    position: fixed; z-index: 900;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    overflow: hidden; display: none; min-width: 160px;
-    animation: ctx-pop 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .chat-ctx-menu.open { display: block; }
-
-  @keyframes ctx-pop {
-    from { opacity: 0; transform: scale(0.92); }
-    to   { opacity: 1; transform: scale(1); }
-  }
-
-  .chat-ctx-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 16px;
-    font-family: var(--font-body);
-    font-size: var(--text-sm); font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background var(--transition-fast);
-  }
-  .chat-ctx-item:hover { background: var(--bg-hover); }
-  .chat-ctx-item svg {
-    width: 15px; height: 15px; stroke: currentColor;
-    fill: none; stroke-width: 1.8; stroke-linecap: round; flex-shrink: 0;
-  }
-  .chat-ctx-item--danger { color: var(--coral-color); }
-  .chat-ctx-item--danger:hover { background: var(--coral-dim); }
-  .chat-ctx-divider { height: 1px; background: var(--border-color); }
-
+  .chat-header__av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .chat-header__online-dot { display:none; position:absolute; bottom:1px; right:1px; width:10px; height:10px; border-radius:50%; background:var(--teal-color); border:2px solid var(--bg-secondary); }
+  .chat-header__info { min-width:0; flex:1; }
+  .chat-header__name { font-family:var(--font-display); font-size:var(--text-base); font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+  .chat-header__autodel { display:inline-flex; align-items:center; gap:4px; font-family:var(--font-body); font-size:var(--text-xs); color:var(--amber-color); opacity:0.8; margin-top:2px; white-space:nowrap; }
+  .chat-header__autodel svg { width:10px; height:10px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; }
+  .chat-header__action { width:34px; height:34px; border-radius:var(--radius-xs); border:1px solid var(--border-subtle); background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; transition:all var(--transition-fast); }
+  .chat-header__action:hover { background:var(--indigo-dim); border-color:var(--indigo-border); }
+  .chat-header__action svg { width:15px; height:15px; stroke:var(--text-secondary); fill:none; stroke-width:1.8; stroke-linecap:round; }
+  .chat-messages { flex:1; overflow-y:auto; overflow-x:hidden; padding:14px 14px 8px; display:flex; flex-direction:column; gap:2px; scrollbar-width:none; overscroll-behavior:contain; }
+  .chat-messages::-webkit-scrollbar { display:none; }
+  .chat-date-div { display:flex; align-items:center; gap:10px; margin:12px 0 8px; align-self:stretch; }
+  .chat-date-div::before, .chat-date-div::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+  .chat-date-div span { font-family:var(--font-display); font-size:var(--text-xs); font-weight:600; color:var(--text-muted); white-space:nowrap; letter-spacing:0.3px; }
+  .msg-row { display:flex; align-items:flex-end; gap:6px; position:relative; max-width:100%; }
+  .msg-row.gap-top { margin-top:6px; }
+  .msg-row.sent { flex-direction:row-reverse; }
+  .msg-row.recv { flex-direction:row; }
+  .bubble { padding:9px 13px; border-radius:18px; font-family:var(--font-body); font-size:var(--text-base); line-height:1.5; word-break:break-word; white-space:pre-wrap; cursor:pointer; max-width:min(72vw,320px); transition:opacity var(--transition-fast); user-select:none; }
+  .bubble:active { opacity:0.8; }
+  .msg-row.sent .bubble { background:var(--indigo-color); color:#fff; border-bottom-right-radius:4px; box-shadow:0 2px 8px var(--indigo-glow); }
+  .msg-row.recv .bubble { background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border-color); border-bottom-left-radius:4px; box-shadow:var(--shadow-xs); }
+  .bubble-time { font-family:var(--font-display); font-size:10px; font-weight:500; color:var(--text-muted); white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s ease; flex-shrink:0; padding-bottom:3px; letter-spacing:0.2px; }
+  .msg-row.show-time .bubble-time { opacity:1; }
+  .bubble-optimistic { animation:bubble-in 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes bubble-in { from{opacity:0;transform:scale(0.88) translateY(6px);} to{opacity:1;transform:scale(1) translateY(0);} }
+  .chat-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:40px 24px; text-align:center; }
+  .chat-empty__icon { font-size:38px; opacity:0.35; color:var(--indigo-color); display:block; margin-bottom:4px; }
+  .chat-empty__text { font-family:var(--font-body); font-size:var(--text-base); line-height:1.6; color:var(--text-muted); }
+  .chat-input-area { flex-shrink:0; background:var(--glass-bg); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid var(--border-color); padding:8px 14px; padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .chat-emoji-tray { display:none; flex-wrap:wrap; gap:4px; padding:6px 2px 4px; max-height:84px; overflow-y:auto; scrollbar-width:none; animation:tray-up 0.2s ease; }
+  .chat-emoji-tray::-webkit-scrollbar { display:none; }
+  .chat-emoji-tray.open { display:flex; }
+  @keyframes tray-up { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+  .chat-emoji-tray__item { font-size:21px; cursor:pointer; border-radius:6px; padding:2px; line-height:1; transition:transform var(--transition-fast); }
+  .chat-emoji-tray__item:hover { transform:scale(1.3); }
+  .chat-input-row { display:flex; align-items:flex-end; gap:8px; }
+  .chat-emoji-btn { width:38px; height:38px; border-radius:var(--radius-sm); border:1.5px solid var(--border-subtle); background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; margin-bottom:1px; transition:all var(--transition-fast); }
+  .chat-emoji-btn:hover, .chat-emoji-btn.active { background:var(--indigo-dim); border-color:var(--indigo-border); }
+  .chat-emoji-btn svg { width:17px; height:17px; stroke:var(--text-muted); fill:none; stroke-width:1.8; stroke-linecap:round; transition:stroke var(--transition-fast); }
+  .chat-emoji-btn:hover svg, .chat-emoji-btn.active svg { stroke:var(--indigo-color); }
+  .chat-input-wrap { flex:1; background:var(--bg-tertiary); border:1.5px solid var(--border-subtle); border-radius:20px; padding:9px 14px; display:flex; align-items:flex-end; gap:8px; transition:border-color var(--transition-fast),box-shadow var(--transition-fast); }
+  .chat-input-wrap:focus-within { border-color:var(--indigo-color); box-shadow:0 0 0 3px var(--indigo-dim); }
+  .chat-textarea { flex:1; border:none; background:transparent; font-family:var(--font-body); font-size:var(--text-base); color:var(--text-primary); outline:none; resize:none; max-height:100px; line-height:1.5; padding:0; }
+  .chat-textarea::placeholder { color:var(--text-muted); }
+  .chat-send-btn { width:36px; height:36px; border-radius:var(--radius-sm); border:none; background:var(--indigo-color); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; box-shadow:0 2px 10px var(--indigo-glow); margin-bottom:-1px; transition:background var(--transition-fast),transform 0.15s cubic-bezier(0.34,1.56,0.64,1); }
+  .chat-send-btn:hover:not(:disabled) { background:var(--indigo-hover); transform:scale(1.06); }
+  .chat-send-btn:active:not(:disabled) { transform:scale(0.93); }
+  .chat-send-btn:disabled { background:var(--border-subtle); box-shadow:none; cursor:default; }
+  .chat-send-btn svg { width:15px; height:15px; stroke:#fff; fill:none; stroke-width:2.2; stroke-linecap:round; }
+  .chat-send-btn.sending { animation:send-pulse 0.5s ease; }
+  @keyframes send-pulse { 0%{transform:scale(1);} 50%{transform:scale(0.88);} 100%{transform:scale(1);} }
+  .chat-ctx-menu { position:fixed; z-index:900; background:var(--bg-secondary); border:1px solid var(--border-subtle); border-radius:var(--radius-md); box-shadow:var(--shadow-md); overflow:hidden; display:none; min-width:155px; animation:ctx-pop 0.18s cubic-bezier(0.4,0,0.2,1); }
+  .chat-ctx-menu.open { display:block; }
+  @keyframes ctx-pop { from{opacity:0;transform:scale(0.9);} to{opacity:1;transform:scale(1);} }
+  .chat-ctx-item { display:flex; align-items:center; gap:10px; padding:12px 15px; font-family:var(--font-body); font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); cursor:pointer; transition:background var(--transition-fast); border:none; background:none; width:100%; text-align:left; }
+  .chat-ctx-item:hover { background:var(--bg-hover); }
+  .chat-ctx-item svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; flex-shrink:0; }
+  .chat-ctx-item--danger { color:var(--coral-color); }
+  .chat-ctx-item--danger:hover { background:var(--coral-dim); }
+  .chat-ctx-divider { height:1px; background:var(--border-color); }
 </style>
 {% endblock %}
 
-
 {% block body %}
-<div class="chat-wrap">
+<script>document.body.classList.add('chat-active-page');</script>
 
-  {# ── CHAT HEADER ── #}
+<div class="chat-wrap" id="chatWrap">
+
   <header class="chat-header">
-
-    <a href="{{ url_for('messages.inbox') }}"
-       class="chat-header__back" aria-label="Back to inbox">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
+    <a href="{{ url_for('messages.inbox') }}" class="chat-header__back" aria-label="Back">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </a>
-
-    <a href="{{ url_for('main.view_user_profile', user_id=target_user.id) }}"
-       class="chat-header__contact"
-       aria-label="View {{ target_user.username }}'s profile">
-
+    <a href="{{ url_for('main.view_user_profile', user_id=target_user.id) }}" class="chat-header__contact">
       <div class="chat-header__av-wrap">
         <div class="chat-header__av">
           {% set tpic = profile.query.filter_by(user_id=target_user.id).first() %}
           {% if tpic and tpic.profile_picture %}
-            <img src="{{ tpic.profile_picture }}"
-                 alt="{{ target_user.username }}"
-                 onerror="this.style.display='none';
-                          this.nextElementSibling.style.display='flex';">
-            <span style="display:none;width:100%;height:100%;
-                         align-items:center;justify-content:center;">
-              {{ target_user.username[0].upper() }}
-            </span>
+            <img src="{{ tpic.profile_picture }}" alt="{{ target_user.username }}"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">{{ target_user.username[0].upper() }}</span>
           {% else %}
             {{ target_user.username[0].upper() }}
           {% endif %}
         </div>
-        {# TODO: remove display:none when User.last_seen is built #}
-        <div class="chat-header__online-dot" aria-hidden="true"></div>
+        <div class="chat-header__online-dot"></div>
       </div>
-
       <div class="chat-header__info">
         <div class="chat-header__name">{{ target_user.username }}</div>
-        {# 24hr notice — amber, subtle, lives in header #}
-        <div class="chat-header__autodel" aria-label="Messages auto-delete after 24 hours">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
+        <div class="chat-header__autodel">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           Auto-deletes in 24 hrs
         </div>
       </div>
     </a>
-
-    <a href="{{ url_for('main.view_user_profile', user_id=target_user.id) }}"
-       class="chat-header__action" aria-label="View profile">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
-      </svg>
+    <a href="{{ url_for('main.view_user_profile', user_id=target_user.id) }}" class="chat-header__action" aria-label="View profile">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </a>
-
   </header>
 
-
-  {# ── MESSAGES AREA ── #}
   <div class="chat-messages" id="chatMessages">
-
     {% if messages %}
       {% set ns = namespace(prev_date=none, prev_sender=none) %}
-
       {% for msg in messages %}
-
-        {# Date divider when date changes #}
-        {% set msg_date = msg.created_at.date() %}
+        {% set msg_ist  = to_ist(msg.created_at) %}
+        {% set msg_date = msg_ist.date() %}
         {% if msg_date != ns.prev_date %}
-          <div class="chat-date-div">
-            <span>{{ msg.created_at.strftime("%A, %d %b") }}</span>
-          </div>
-          {% set ns.prev_date = msg_date %}
+          <div class="chat-date-div"><span>{{ msg_ist.strftime("%d %b, %A") }}</span></div>
+          {% set ns.prev_date = msg_ist.date() %}
         {% endif %}
-
-        {# Direction #}
-        {% if msg.sender_id == current_user.id %}
-          {% set direction = 'sent' %}
-        {% else %}
-          {% set direction = 'recv' %}
-        {% endif %}
-
-        {#
-          Add gap-top class when sender switches — gives visual
-          separation between conversation turns without wasting
-          vertical space between same-sender messages.
-        #}
-        {% if ns.prev_sender is not none and ns.prev_sender != msg.sender_id %}
-          {% set gap = 'gap-top' %}
-        {% else %}
-          {% set gap = '' %}
-        {% endif %}
+        {% set direction = 'sent' if msg.sender_id == current_user.id else 'recv' %}
+        {% set gap = 'gap-top' if ns.prev_sender is not none and ns.prev_sender != msg.sender_id else '' %}
         {% set ns.prev_sender = msg.sender_id %}
-
-        {#
-          Inline timestamp layout:
-            sent row:  [time] [bubble]   ← time to the left, toward center
-            recv row:  [bubble] [time]   ← time to the right, toward center
-          Both hidden by default, shown on long-press via JS.
-        #}
-        <div class="msg-row {{ direction }} {{ gap }}"
-             data-time="{{ msg.created_at.strftime('%I:%M %p') }}">
+        <div class="msg-row {{ direction }} {{ gap }}" data-id="{{ msg.id }}" data-time="{{ msg_ist.strftime('%I:%M %p') }}">
           <div class="bubble">{{ msg.content }}</div>
-          <span class="bubble-time">
-            {{ msg.created_at.strftime("%I:%M %p") }}
-          </span>
+          <span class="bubble-time" aria-hidden="true">{{ msg_ist.strftime("%I:%M %p") }}</span>
         </div>
-
       {% endfor %}
-
     {% else %}
       <div class="chat-empty">
-        <i class="bi bi-chat-dots chat-empty__icon" aria-hidden="true"></i>
+        <i class="bi bi-chat-dots chat-empty__icon"></i>
         <p class="chat-empty__text">No messages yet.<br>Say hello 👋</p>
       </div>
     {% endif %}
+  </div>
 
-  </div>{# /chat-messages #}
-
-
-  {# ── INPUT AREA ── #}
-  <div class="chat-input-area">
-
-    <div class="chat-emoji-tray" id="emojiTray" aria-label="Emoji picker">
-      {% for emoji in ['😊','👋','🔥','❤️','😂','🙌','👀','🎉','🙏','😅',
-                        '💪','🤝','📚','✅','😴','🤔','💡','🎯','⚡','😎',
-                        '🫡','🫂','📝','🏆','👍','💯','🥳','😬','🤯','🫶'] %}
-        <span class="chat-emoji-tray__item"
-              onclick="insertEmoji('{{ emoji }}')"
-              role="button" aria-label="{{ emoji }}">{{ emoji }}</span>
+  <div class="chat-input-area" id="chatInputArea">
+    <div class="chat-emoji-tray" id="emojiTray">
+      {% for emoji in ['😊','👋','🔥','❤️','😂','🙌','👀','🎉','🙏','😅','💪','🤝','📚','✅','😴','🤔','💡','🎯','⚡','😎','🫡','🫂','📝','🏆','👍','💯','🥳','😬','🤯','🫶'] %}
+        <span class="chat-emoji-tray__item" onclick="insertEmoji('{{ emoji }}')">{{ emoji }}</span>
       {% endfor %}
     </div>
-
-    {# POST form — name="content" and csrf_token() must not change #}
-    <form method="POST" id="chatForm" onsubmit="return validateMsg()">
+    <form method="POST" id="chatForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
       <div class="chat-input-row">
-
-        <button type="button"
-                class="chat-emoji-btn" id="emojiToggleBtn"
-                onclick="toggleEmojiTray()"
-                aria-label="Toggle emoji picker" aria-expanded="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-          </svg>
+        <button type="button" class="chat-emoji-btn" id="emojiToggleBtn" onclick="toggleEmojiTray()" aria-label="Emoji">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
         </button>
-
         <div class="chat-input-wrap">
-          {# name="content" — do not rename, backend reads this key #}
-          <textarea
-            class="chat-textarea"
-            id="msgTextarea"
-            name="content"
-            placeholder="Type a message…"
-            rows="1"
-            maxlength="1000"
-            autocomplete="off"
-            oninput="handleInput(this)"
-            onkeydown="handleEnterKey(event)"
-            aria-label="Message"
-          ></textarea>
+          <textarea class="chat-textarea" id="msgTextarea" name="content"
+                    placeholder="Type a message…" rows="1" maxlength="1000" autocomplete="off"
+                    oninput="handleInput(this)" onkeydown="handleEnterKey(event)"></textarea>
         </div>
-
-        <button type="submit"
-                class="chat-send-btn" id="sendBtn"
-                disabled aria-label="Send">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
+        <button type="submit" class="chat-send-btn" id="sendBtn" disabled aria-label="Send">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
-
       </div>
     </form>
-
-  </div>{# /chat-input-area #}
-
-</div>{# /chat-wrap #}
-
-
-{# Context menu — outside chat-wrap so it overlays correctly #}
-<div class="chat-ctx-menu" id="ctxMenu" role="menu">
-
-  <div class="chat-ctx-item" onclick="ctxCopy()" role="menuitem">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="9" y="9" width="13" height="13" rx="2"/>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg>
-    Copy
-  </div>
-
-  <div class="chat-ctx-item" onclick="ctxReply()" role="menuitem">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <polyline points="9 17 4 12 9 7"/>
-      <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
-    </svg>
-    Reply
-  </div>
-
-  <div class="chat-ctx-divider"></div>
-
-  {#
-    TODO: Wire Delete to backend route when message deletion
-    is implemented. Suggested:
-      POST /messages/delete/<msg_id>  with csrf_token
-    Currently visual-only — no server call.
-  #}
-  <div class="chat-ctx-item chat-ctx-item--danger"
-       onclick="ctxDelete()" role="menuitem">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-1 14H6L5 6"/>
-      <path d="M10 11v6M14 11v6"/>
-      <path d="M9 6V4h6v2"/>
-    </svg>
-    Delete
   </div>
 
 </div>
-{% endblock %}
 
+<div class="chat-ctx-menu" id="ctxMenu" role="menu">
+  <button class="chat-ctx-item" onclick="ctxCopy()">
+    <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    Copy
+  </button>
+  <div class="chat-ctx-divider"></div>
+  {#
+    TODO — Delete button (hidden until route ready):
+    Route: POST /messages/delete/<msg_id>
+      Check msg.sender_id == current_user.id
+      Return jsonify({'status': 'ok'})
+    Then remove style="display:none" below and uncomment fetch() in ctxDelete().
+  #}
+  <button class="chat-ctx-item chat-ctx-item--danger" onclick="ctxDelete()" id="ctxDeleteBtn" style="display:none">
+    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    Delete
+  </button>
+</div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
+(function(){
+"use strict";
+const CSRF=document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')||document.querySelector('input[name=csrf_token]')?.value||'';
+const CHAT_URL=window.location.pathname;
+const chatWrap=document.getElementById('chatWrap');
+const chatMsgs=document.getElementById('chatMessages');
+const msgTA=document.getElementById('msgTextarea');
+const sendBtn=document.getElementById('sendBtn');
+const chatForm=document.getElementById('chatForm');
+const emojiTray=document.getElementById('emojiTray');
+const emojiBtn=document.getElementById('emojiToggleBtn');
+const ctxMenu=document.getElementById('ctxMenu');
 
-    {# ── Inject body class BEFORE paint to avoid flash ── #}
-document.body.classList.add('chat-active-page');
-(function () {
-  "use strict";
+function scrollToBottom(smooth){chatMsgs.scrollTo({top:chatMsgs.scrollHeight,behavior:smooth?'smooth':'instant'});}
+scrollToBottom(false);
+msgTA.focus();setTimeout(()=>msgTA.focus(),100);
 
-  /* ============================================================
-     CHAT PAGE v2 — JS
-  ============================================================ */
+window.handleInput=function(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';sendBtn.disabled=!el.value.trim();};
+window.handleEnterKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(msgTA.value.trim())submitMessage();}};
 
-  const chatMessages  = document.getElementById('chatMessages');
-  const msgTextarea   = document.getElementById('msgTextarea');
-  const sendBtn       = document.getElementById('sendBtn');
-  const emojiTray     = document.getElementById('emojiTray');
-  const emojiToggle   = document.getElementById('emojiToggleBtn');
-  const ctxMenu       = document.getElementById('ctxMenu');
+async function submitMessage(){
+  const content=msgTA.value.trim();if(!content)return;
+  msgTA.disabled=true;sendBtn.disabled=true;sendBtn.classList.add('sending');
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true}).replace(/\b(\d):/,'0$1:').toUpperCase();
+  const optRow=appendBubble(content,'sent',timeStr,true);
+  msgTA.value='';msgTA.style.height='auto';scrollToBottom(true);
+  try{
+    const fd=new FormData();fd.append('content',content);fd.append('csrf_token',CSRF);
+    const res=await fetch(CHAT_URL,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
+    if(res.redirected){optRow.remove();window.location.href=res.url;return;}
+    if(res.ok){
+      const data=await res.json();
+      if(data.status==='ok'){const t=optRow.querySelector('.bubble-time');if(t)t.textContent=data.message.created_at;}
+      else{optRow.remove();msgTA.value=content;}
+    }else{optRow.remove();msgTA.value=content;}
+  }catch(_){optRow.remove();msgTA.value=content;}
+  finally{msgTA.disabled=false;sendBtn.classList.remove('sending');sendBtn.disabled=!msgTA.value.trim();msgTA.focus();}
+}
 
-  /* ── 1. Scroll to bottom on load ── */
-  if (chatMessages) {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
+chatForm.addEventListener('submit',(e)=>{e.preventDefault();if(msgTA.value.trim())submitMessage();});
 
-  /* ── 2. Auto-focus textarea on every page load ──────────────
-     This is the fix for the UX issue where after a message
-     is sent (POST → redirect → GET), the textarea loses focus
-     and the user has to tap it again to type.
-     autofocus attribute alone isn't reliable on mobile after
-     redirect, so we also call .focus() in JS after load.     */
-  if (msgTextarea) {
-    msgTextarea.focus();
-    /* Small delay covers iOS Safari focus timing quirk */
-    setTimeout(() => msgTextarea.focus(), 100);
-  }
+function appendBubble(content,dir,timeStr,optimistic){
+  const row=document.createElement('div');row.className='msg-row '+dir;row.dataset.time=timeStr;
+  row.innerHTML=`<div class="bubble${optimistic?' bubble-optimistic':''}">${escapeHtml(content)}</div><span class="bubble-time" aria-hidden="true">${timeStr}</span>`;
+  attachRowListeners(row);chatMsgs.appendChild(row);return row;
+}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-  /* ── 3. Textarea: auto-resize + toggle send button ── */
-  window.handleInput = function (el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
-    sendBtn.disabled = !el.value.trim();
-  };
+let activeTimeRow=null,ctxTarget=null,pressTimer=null,pressStart=0;
+function attachRowListeners(row){
+  const bubble=row.querySelector('.bubble');if(!bubble)return;
+  function onStart(e){pressStart=Date.now();pressTimer=setTimeout(()=>{ctxTarget=bubble;openCtxAt(e);},500);}
+  function onEnd(){const el=Date.now()-pressStart;clearTimeout(pressTimer);if(el<300){if(activeTimeRow&&activeTimeRow!==row)activeTimeRow.classList.remove('show-time');row.classList.toggle('show-time');activeTimeRow=row.classList.contains('show-time')?row:null;}}
+  function onCancel(){clearTimeout(pressTimer);}
+  bubble.addEventListener('mousedown',onStart);bubble.addEventListener('touchstart',onStart,{passive:true});
+  bubble.addEventListener('mouseup',onEnd);bubble.addEventListener('touchend',onEnd,{passive:true});
+  bubble.addEventListener('mousemove',onCancel);bubble.addEventListener('touchmove',onCancel,{passive:true});
+}
+document.querySelectorAll('.msg-row').forEach(attachRowListeners);
 
-  /* ── 4. Enter to send (Shift+Enter = newline) ── */
-  window.handleEnterKey = function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (msgTextarea.value.trim()) {
-        document.getElementById('chatForm').submit();
-      }
-    }
-  };
+function openCtxAt(e){
+  ctxMenu.classList.add('open');
+  const touch=e.touches?e.touches[0]:e;let top=(touch.clientY||0)+8,left=touch.clientX||0;
+  if(left+165>window.innerWidth)left=window.innerWidth-170;
+  if(top+130>window.innerHeight)top=top-145;
+  ctxMenu.style.top=top+'px';ctxMenu.style.left=left+'px';
+}
+document.addEventListener('click',(e)=>{if(!ctxMenu.contains(e.target))ctxMenu.classList.remove('open');});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')ctxMenu.classList.remove('open');});
+window.ctxCopy=function(){if(ctxTarget)navigator.clipboard?.writeText(ctxTarget.textContent.trim()).catch(()=>{});ctxMenu.classList.remove('open');};
+window.ctxDelete=function(){
+  /*
+    TODO: Uncomment when delete route exists:
+    const row=ctxTarget?.closest('.msg-row');const msgId=row?.dataset.id;
+    if(!msgId||!row)return ctxMenu.classList.remove('open');
+    fetch('/messages/delete/'+msgId,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':CSRF}})
+      .then(r=>r.json()).then(data=>{if(data.status==='ok'){row.style.transition='opacity 0.22s,transform 0.22s';row.style.opacity='0';row.style.transform='scale(0.9)';setTimeout(()=>row.remove(),230);}}).catch(()=>{});
+    Also remove style="display:none" from #ctxDeleteBtn in HTML.
+  */
+  ctxMenu.classList.remove('open');
+};
 
-  /* ── 5. Prevent empty form submission ── */
-  window.validateMsg = function () {
-    return msgTextarea.value.trim().length > 0;
-  };
+let emojiOpen=false;
+window.toggleEmojiTray=function(){emojiOpen=!emojiOpen;emojiTray.classList.toggle('open',emojiOpen);emojiBtn.classList.toggle('active',emojiOpen);emojiBtn.setAttribute('aria-expanded',String(emojiOpen));if(emojiOpen)setTimeout(()=>scrollToBottom(true),50);};
+window.insertEmoji=function(emoji){msgTA.value+=emoji;msgTA.focus();sendBtn.disabled=false;};
 
-  /* ── 6. After submit: textarea is cleared by redirect.
-     Re-focus is handled by step 2 on next page load.        ── */
+/*
+  visualViewport API — soft keyboard fix for mobile.
+  When the soft keyboard opens, the OS shrinks the visible area.
+  window.visualViewport.height = actual remaining height.
+  We set chatWrap height to match, keeping input above keyboard.
+  Standard PWA messaging pattern (WhatsApp, Telegram Web).
+*/
+if(window.visualViewport){
+  function onVV(){chatWrap.style.height=window.visualViewport.height+'px';scrollToBottom(false);}
+  window.visualViewport.addEventListener('resize',onVV,{passive:true});
+  window.visualViewport.addEventListener('scroll',onVV,{passive:true});
+}else{
+  window.addEventListener('resize',()=>scrollToBottom(false),{passive:true});
+}
 
-
-  /* ── 7. Long-press to reveal inline timestamp ──────────────
-     Shows bubble-time BESIDE the bubble (not below).
-     Tap same bubble again to hide. Tap different = switch.  */
-  let activeRow      = null;
-  let longPressTimer = null;
-
-  function startLP(e, row) {
-    longPressTimer = setTimeout(() => {
-      if (activeRow && activeRow !== row) {
-        activeRow.classList.remove('show-time');
-      }
-      row.classList.toggle('show-time');
-      activeRow = row.classList.contains('show-time') ? row : null;
-    }, 400);
-  }
-
-  function cancelLP() { clearTimeout(longPressTimer); }
-
-  /* Attach to all server-rendered rows */
-  document.querySelectorAll('.msg-row').forEach(row => {
-    row.addEventListener('mousedown',  (e) => startLP(e, row));
-    row.addEventListener('touchstart', (e) => startLP(e, row), { passive: true });
-    row.addEventListener('mouseup',    cancelLP);
-    row.addEventListener('touchend',   cancelLP);
-    row.addEventListener('mousemove',  cancelLP);
-    row.addEventListener('touchmove',  cancelLP, { passive: true });
-  });
-
-
-  /* ── 8. Context menu (long-press 500ms on bubble) ── */
-  let ctxTarget      = null;
-  let ctxPressTimer  = null;
-
-  function startCtxLP(e, bubble) {
-    ctxPressTimer = setTimeout(() => {
-      ctxTarget = bubble;
-      openCtx(e, bubble);
-    }, 500);
-  }
-
-  function cancelCtxLP() { clearTimeout(ctxPressTimer); }
-
-  function openCtx(e, bubble) {
-    ctxMenu.classList.add('open');
-    const rect = bubble.getBoundingClientRect();
-    let top  = rect.bottom + 6;
-    let left = rect.left;
-    if (left + 170 > window.innerWidth)  left = window.innerWidth - 176;
-    if (top  + 150 > window.innerHeight) top  = rect.top - 156;
-    ctxMenu.style.top  = top  + 'px';
-    ctxMenu.style.left = left + 'px';
-  }
-
-  document.querySelectorAll('.bubble').forEach(b => {
-    b.addEventListener('mousedown',  (e) => startCtxLP(e, b));
-    b.addEventListener('touchstart', (e) => startCtxLP(e, b), { passive: true });
-    b.addEventListener('mouseup',    cancelCtxLP);
-    b.addEventListener('touchend',   cancelCtxLP);
-    b.addEventListener('mousemove',  cancelCtxLP);
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!ctxMenu.contains(e.target)) ctxMenu.classList.remove('open');
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') ctxMenu.classList.remove('open');
-  });
-
-  window.ctxCopy = function () {
-    if (ctxTarget) {
-      navigator.clipboard?.writeText(ctxTarget.textContent.trim()).catch(() => {});
-    }
-    ctxMenu.classList.remove('open');
-  };
-
-  window.ctxReply = function () {
-    msgTextarea.focus();
-    ctxMenu.classList.remove('open');
-  };
-
-  window.ctxDelete = function () {
-    /* TODO: wire to DELETE /messages/<msg_id> when route exists */
-    if (ctxTarget) {
-      const row = ctxTarget.closest('.msg-row');
-      if (row) {
-        row.style.transition = 'opacity 0.22s, transform 0.22s';
-        row.style.opacity    = '0';
-        row.style.transform  = 'scale(0.9)';
-        setTimeout(() => row.remove(), 230);
-      }
-    }
-    ctxMenu.classList.remove('open');
-  };
-
-
-  /* ── 9. Emoji tray ── */
-  let emojiOpen = false;
-
-  window.toggleEmojiTray = function () {
-    emojiOpen = !emojiOpen;
-    emojiTray.classList.toggle('open', emojiOpen);
-    emojiToggle.classList.toggle('active', emojiOpen);
-    emojiToggle.setAttribute('aria-expanded', String(emojiOpen));
-    if (emojiOpen) {
-      setTimeout(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }, 50);
-    }
-  };
-
-  window.insertEmoji = function (emoji) {
-    msgTextarea.value += emoji;
-    msgTextarea.focus();
-    sendBtn.disabled = false;
-  };
-
-
-  /* ── 10. Clean up body class on navigate away ── */
-  window.addEventListener('pagehide', () => {
-    document.body.classList.remove('chat-active-page');
-  });
-
+window.addEventListener('pagehide',()=>{document.body.classList.remove('chat-active-page');});
 })();
 </script>
 {% endblock %}

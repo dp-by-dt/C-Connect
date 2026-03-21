@@ -6099,3 +6099,7 @@ jinja2.exceptions.TemplateNotFound: 404.html
 2026-03-20 18:28:43,888 [WARNING] app: UPLOAD_FOLDER: static/uploads
 2026-03-20 20:55:27,273 [INFO] app: Cleaned up 0 old notifications.
 2026-03-20 20:57:03,986 [INFO] app: Cleaned up 0 old notifications.
+2026-03-21 08:34:29,695 [INFO] app: Cleaned up 0 old notifications.
+2026-03-21 10:56:35,781 [INFO] app: Cleaned up 0 old notifications.
+2026-03-21 10:56:35,829 [INFO] app: ProfileVisit cleanup removed 1 rows
+2026-03-21 10:57:51,152 [INFO] app: Cleaned up 0 old notifications.

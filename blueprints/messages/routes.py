@@ -124,6 +124,18 @@ def chat(user_id):
             db.session.add(msg)
             db.session.commit()
 
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'status': 'ok',
+                    'message': {
+                        'content': content,
+                        'created_at': msg.created_at.strftime('%I:%M %p'),
+                        'sender_id': current_user.id
+                    }
+                })
+            return redirect(url_for("messages.chat", user_id=user_id))
+
             #send notificaiton to the other user
             if current_user.id != user_id:
                 notif = Notification(
